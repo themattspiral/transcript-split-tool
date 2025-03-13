@@ -15,7 +15,7 @@ const SplitTextMenu: React.FC<SplitTextMenuProps> = (props) => {
 
   return (
     <Menu id={SPLIT_MENU_ID}>
-      <Item disabled className="text-black">
+      <Item disabled style={{ opacity: 1 }} className="font-medium">
         {textSelectionString}
       </Item>
       <Separator />
