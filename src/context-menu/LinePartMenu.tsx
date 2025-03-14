@@ -1,4 +1,7 @@
 import { Menu, Item, Separator, Submenu } from "react-contexify";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
+
 import { ColumnDef } from "../data";
 
 interface LinePartMenuProps {
@@ -14,6 +17,7 @@ const LINE_PART_MENU_ID = 'line-part-menu-id';
 const LinePartMenu: React.FC<LinePartMenuProps> = (props) => {
   const { textSelectionString, columnId, groupColumnDefs, onRemove, onMove } = props;
   const columnsExceptCurrent = groupColumnDefs.filter(def => def.id != columnId);
+  const colDef = groupColumnDefs.find(def => def.id === columnId);
 
   return (
     <Menu id={LINE_PART_MENU_ID}>
@@ -22,17 +26,20 @@ const LinePartMenu: React.FC<LinePartMenuProps> = (props) => {
       </Item>
       <Separator />
       <Item onClick={onRemove}>
-        Delete
+        <div className="text-red-400 flex items-center">
+          <FontAwesomeIcon icon={faXmark} className="mr-1" />
+          Remove from {colDef?.label}
+        </div>
       </Item>
 
       {columnsExceptCurrent?.length > 0 &&
         <Submenu label="Change Group">
-          {columnsExceptCurrent.map(colDef => (
+          {columnsExceptCurrent.map(def => (
             <Item
-              key={colDef.id}
-              onClick={() => onMove(colDef.id)}
+              key={def.id}
+              onClick={() => onMove(def.id)}
             >
-              {colDef.label}
+              {def.label}
             </Item>
           ))}
         </Submenu>

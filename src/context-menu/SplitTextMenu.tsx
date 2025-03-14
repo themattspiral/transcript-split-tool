@@ -1,4 +1,7 @@
 import { Menu, Item, Separator, Submenu } from "react-contexify";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPlus, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+
 import { ColumnDef } from "../data";
 
 interface SplitTextMenuProps {
@@ -14,17 +17,28 @@ const SplitTextMenu: React.FC<SplitTextMenuProps> = (props) => {
   const { textSelectionString, groupColumnDefs, onNewGroup, onExistingGroup } = props;
 
   return (
-    <Menu id={SPLIT_MENU_ID}>
-      <Item disabled style={{ opacity: 1 }} className="font-medium">
-        {textSelectionString}
+    <Menu id={SPLIT_MENU_ID} className="max-w-dvw">
+      <Item disabled style={{ opacity: 1 }}>
+        <div className="font-medium text-ellipsis overflow-hidden">
+          {textSelectionString}
+        </div>
       </Item>
       <Separator />
       <Item onClick={onNewGroup}>
-        Create New Group...
+        <div className="flex items-center">
+          <FontAwesomeIcon icon={faPlus} className="mr-1" />
+          Create New Group...
+        </div>
       </Item>
 
       {groupColumnDefs?.length > 0 &&
-        <Submenu label="Add to Existing Group">
+        <Submenu label={
+          <div className="flex items-center">
+            <FontAwesomeIcon icon={faRightFromBracket} className="mr-1" />
+            Add to Existing Group
+          </div>
+          }
+        >
           {groupColumnDefs.map(colDef => (
             <Item
               key={colDef.id}

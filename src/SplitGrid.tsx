@@ -1,6 +1,8 @@
 import React, { useState, useRef, useMemo } from 'react';
 import * as mammoth from 'mammoth';
 import { useContextMenu } from "react-contexify";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFileWord, faFileExcel } from "@fortawesome/free-regular-svg-icons";
 
 import {
   addNewLinePart, removeLinePart, updateLinePartGroup, removeLinePartsForGroup,
@@ -232,6 +234,11 @@ const Split: React.FC = () => {
     const hasSelection: boolean = !!selText;
     const hasMultiLineSelection: boolean = selText?.includes('\n') || false;
 
+    if (!columnIdString) {
+      console.error('Couldnt determine column. Event:', event);
+      return;
+    }
+
     if (isHeaderRow) {
       if (isGroupColumn) {
         event.preventDefault();
@@ -247,7 +254,7 @@ const Split: React.FC = () => {
     } else if (hasSelection && isTextColumn && !isSubline) {
       event.preventDefault();
       setGridClickState({
-        columnId: columnIdString,
+        columnId: columnIdString || '?',
         transcriptLineNumber,
         textSelection: sel,
         textSelectionString: selText
@@ -258,7 +265,7 @@ const Split: React.FC = () => {
       setGridClickState({
         columnId: columnIdString || '?',
         transcriptLineNumber,
-        textSelectionString: transcriptLines[transcriptLineNumber - 1].parts[linePartIdx].text,
+        textSelectionString: transcriptLines[transcriptLineNumber - 1].parts[linePartIdx]?.text,
         linePartIdx
       });
       showContextMenu({ id: LINE_PART_MENU_ID, event });
@@ -271,7 +278,7 @@ const Split: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen p-5 bg-gray-100 overflow-hidden"
+    <div className="flex flex-col h-dvh w-dvw p-5 bg-gray-100 overflow-hidden"
     >
       <SplitTextMenu
         textSelectionString={gridClickState?.textSelectionString || ''}
@@ -288,8 +295,11 @@ const Split: React.FC = () => {
         onMove={handleChangeSelectionGroup}
       />
       <HeaderLinePartMenu
-        groupColumnDefs={groupColumnDefs}
         columnId={gridClickState?.columnId || ''}
+        groupColumnDefs={groupColumnDefs}
+        onRename={columnId => {
+          console.log('raname column:', columnId);
+        }}
         onRemove={handleRemoveGroup}
       />
 
@@ -307,20 +317,22 @@ const Split: React.FC = () => {
           onClick={() => {
             fileInputRef.current?.click();
           }}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer flex items-center"
         >
-          Import New Transcript (Word)
+          Import New Transcript
+          <FontAwesomeIcon icon={faFileWord} className="ml-2" size="lg" />
         </button>
         <button
           onClick={() => {}}
           disabled={transcriptLines.length === 0}
-          className={`px-4 py-2 rounded ${
+          className={`px-4 py-2 rounded flex items-center ${
             transcriptLines.length > 0 
               ? 'bg-green-500 text-white hover:bg-green-600 cursor-pointer' 
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
-          Export Grid (Excel)
+          Export Grid
+          <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
         </button>
 
       </div>
