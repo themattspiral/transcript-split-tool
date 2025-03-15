@@ -24,13 +24,8 @@ const LinePartMenu: React.FC<LinePartMenuProps> = (props) => {
       <Item disabled style={{ opacity: 1 }} className="font-medium">
         {textSelectionString}
       </Item>
+      
       <Separator />
-      <Item onClick={onRemove}>
-        <div className="text-red-400 flex items-center">
-          <FontAwesomeIcon icon={faXmark} className="mr-1" />
-          Remove from {colDef?.label}
-        </div>
-      </Item>
 
       {columnsExceptCurrent?.length > 0 &&
         <Submenu label="Change Group">
@@ -44,6 +39,13 @@ const LinePartMenu: React.FC<LinePartMenuProps> = (props) => {
           ))}
         </Submenu>
       }
+
+      <Item onClick={onRemove}>
+        <div className="text-red-400 flex items-center">
+          <FontAwesomeIcon icon={faXmark} className="mr-1" />
+          Remove from {colDef?.label}
+        </div>
+      </Item>
     </Menu>
   );
 };

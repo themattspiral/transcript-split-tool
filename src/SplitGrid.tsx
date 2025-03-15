@@ -41,34 +41,28 @@ const Split: React.FC = () => {
       displayLineNumber: line.lineNumber,
       transcriptLineNumber: line.lineNumber
     }];
+    groupColumnDefs.forEach(colDef => {
+      lines[lineIdx].parts.push({ start: -1, end: -1, text: '', columnId: colDef.id, linePartIdx: -1 });
+    });
 
-    // fill out lines with no parts
-    if (line.parts.length === 0) {
-      groupColumnDefs.forEach(colDef => {
-        lines[lineIdx].parts.push({ start: -1, end: -1, text: '', columnId: colDef.id, linePartIdx: -1 });
+    while (partIdx < line.parts.length) {
+      lines.push({
+        text: '',
+        isSubline: true,
+        parts: [],
+        displayLineNumber: `${line.lineNumber}.${lines.length}`,
+        transcriptLineNumber: line.lineNumber
       });
-    } else {
-      while (partIdx < line.parts.length) {
-        groupColumnDefs.forEach(colDef => {
-          if (partIdx < line.parts.length && line.parts[partIdx].columnId === colDef.id) {
-            lines[lineIdx].parts.push({ ...line.parts[partIdx], linePartIdx: partIdx });
-            partIdx++;
-          } else {
-            lines[lineIdx].parts.push({ start: -1, end: -1, text: '', columnId: colDef.id, linePartIdx: -1 });
-          }
-        });
+      lineIdx++;
 
-        if (partIdx < line.parts.length) {
-          lines.push({
-            text: '',
-            isSubline: true,
-            parts: [],
-            displayLineNumber: `${line.lineNumber}.${lines.length}`,
-            transcriptLineNumber: line.lineNumber
-          });
-          lineIdx++;
+      groupColumnDefs.forEach(colDef => {
+        if (partIdx < line.parts.length && line.parts[partIdx].columnId === colDef.id) {
+          lines[lineIdx].parts.push({ ...line.parts[partIdx], linePartIdx: partIdx });
+          partIdx++;
+        } else {
+          lines[lineIdx].parts.push({ start: -1, end: -1, text: '', columnId: colDef.id, linePartIdx: -1 });
         }
-      }
+      });
     }
 
     return lines;
@@ -260,7 +254,7 @@ const Split: React.FC = () => {
         textSelectionString: selText
       });
       showContextMenu({ id: SPLIT_MENU_ID, event });
-    } else if (isGroupColumn) {
+    } else if (isGroupColumn && linePartIdx >= 0) {
       event.preventDefault();
       setGridClickState({
         columnId: columnIdString || '?',

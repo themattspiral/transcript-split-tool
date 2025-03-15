@@ -1,4 +1,4 @@
-import { Menu, Item, Separator } from "react-contexify";
+import { Menu, Item } from "react-contexify";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 
@@ -25,7 +25,6 @@ const HeaderLinePartMenu: React.FC<HeaderLinePartMenuProps> = (props) => {
           Rename...
         </div>
       </Item>
-      <Separator />
       <Item onClick={() => onRemove(colDef?.id || '?')}>
         <div className="text-red-400 flex items-center">
           <FontAwesomeIcon icon={faTrash} className="mr-1" />

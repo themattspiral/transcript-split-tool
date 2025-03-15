@@ -23,19 +23,14 @@ const SplitTextMenu: React.FC<SplitTextMenuProps> = (props) => {
           {textSelectionString}
         </div>
       </Item>
+      
       <Separator />
-      <Item onClick={onNewGroup}>
-        <div className="flex items-center">
-          <FontAwesomeIcon icon={faPlus} className="mr-1" />
-          Create New Group...
-        </div>
-      </Item>
 
       {groupColumnDefs?.length > 0 &&
         <Submenu label={
           <div className="flex items-center">
             <FontAwesomeIcon icon={faRightFromBracket} className="mr-1" />
-            Add to Existing Group
+            Add to Group
           </div>
           }
         >
@@ -49,6 +44,13 @@ const SplitTextMenu: React.FC<SplitTextMenuProps> = (props) => {
           ))}
         </Submenu>
       }
+
+      <Item onClick={onNewGroup}>
+        <div className="flex items-center">
+          <FontAwesomeIcon icon={faPlus} className="mr-1" />
+          Create New Group...
+        </div>
+      </Item>
     </Menu>
   );
 };
