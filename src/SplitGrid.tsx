@@ -1,29 +1,35 @@
-import React, { useState, useRef, useMemo } from 'react';
-import * as mammoth from 'mammoth';
+import { useState, useMemo } from 'react';
 import { useContextMenu } from "react-contexify";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileWord, faFileExcel } from "@fortawesome/free-regular-svg-icons";
 
-import {
-  addNewLinePart, removeLinePart, updateLinePartGroup, removeLinePartsForGroup,
-  ColumnDef, DisplayTranscriptLine, GridClickState, TranscriptLine
-} from './data';
+import { ColumnDef, DisplayTranscriptLine, GridClickState, LinePart, TranscriptLine } from './data';
 import SplitterTextCell from './SplitterTextCell';
 import { SPLIT_MENU_ID, SplitTextMenu } from './context-menu/SplitTextMenu';
 import { ERROR_MULTIPLE_LINES_MENU_ID, ErrorMultipleLinesMenu } from './context-menu/ErrorMultipleLinesMenu';
 import { LINE_PART_MENU_ID, LinePartMenu } from './context-menu/LinePartMenu';
 import { HEADER_LINE_PART_MENU_ID, HeaderLinePartMenu } from './context-menu/HeaderLinePartMenu';
 
-// import reactLogo from './assets/react.svg' // src
-// import viteLogo from '/vite.svg'           // public
-
 const LINE_COL_PX = 60;
 const TEXT_COL_MIN_PX = 400;
 const GROUP_COL_MIN_PX = 100;
 
-const Split: React.FC = () => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
+interface SplitGridProps {
+  transcriptLines: TranscriptLine[];
+  onAddTextSelectionToNewGroup: (rowIdx: number, newlinePart: LinePart) => void;
+  onAddTextSelectionToExistingGroup: (rowIdx: number, newlinePart: LinePart) => void;
+  onRemoveTextSelectionFromGroup: (rowIdx: number, linePartIdx: number) => void;
+  onUpdateTextSelectionGroup: (rowIdx: number, linePartIdx: number, newColumnId: string) => void;
+  onDeleteGroup: (columnId: string) => void;
+}
+
+const SplitGrid: React.FC<SplitGridProps> = props => {
+  const {
+    transcriptLines,
+    onAddTextSelectionToNewGroup,
+    onAddTextSelectionToExistingGroup,
+    onRemoveTextSelectionFromGroup,
+    onUpdateTextSelectionGroup,
+    onDeleteGroup
+  } = props;
   const [nextColId, setNextColId] = useState<number>(0);
   const [groupColumnDefs, setGroupColumnDefs] = useState<ColumnDef[]>([]);
   const [gridClickState, setGridClickState] = useState<GridClickState | null>(null);
@@ -67,43 +73,6 @@ const Split: React.FC = () => {
 
     return lines;
   }), [groupColumnDefs, transcriptLines]);
-  
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event?.target?.files?.[0];
-    if (!file) {
-      console.log('No file. Event target (input):', event?.target);
-      return;
-    }
-
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const result = await mammoth.extractRawText({ arrayBuffer });
-      
-      // split on newline, filter out empty lines, and transform
-      const lines: TranscriptLine[] = result.value
-        .split('\n')
-        .filter(line => line.trim() !== '')
-        .map((line, idx) => ({
-          lineNumber: (idx + 1).toString(),
-          text: line,
-          parts: []
-        }));
-
-      setTranscriptLines(lines);
-
-      if (result.messages?.length) {
-        console.log('Document Parsing Messages:', result.messages);
-      }
-
-      // clear input so it may be reused with the same file if desired
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error) {
-      console.error('Error processing document:', error);
-      alert('Error processing document. Please try again.');
-    }
-  };
 
   const addColumn = (): string => {
     const next = nextColId;
@@ -128,12 +97,12 @@ const Split: React.FC = () => {
     if (rowIdx >= 0) {
       const columnId = addColumn();
 
-      setTranscriptLines(lines => addNewLinePart(lines, rowIdx, {
+      onAddTextSelectionToNewGroup(rowIdx, {
         columnId,
         start: range?.startOffset || -1,
         end: range?.endOffset || -1,
         text: gridClickState.textSelectionString || ''
-      }));
+      });
 
       gridClickState?.textSelection?.empty();
       setGridClickState(null);
@@ -152,12 +121,12 @@ const Split: React.FC = () => {
     const range = gridClickState.textSelection.getRangeAt(0);
   
     if (rowIdx >= 0) {
-      setTranscriptLines(lines => addNewLinePart(lines, rowIdx, {
+      onAddTextSelectionToExistingGroup(rowIdx, {
         columnId,
         start: range?.startOffset || -1,
         end: range?.endOffset || -1,
         text: gridClickState.textSelectionString || ''
-      }));
+      });
 
       gridClickState?.textSelection?.empty();
       setGridClickState(null);
@@ -175,7 +144,7 @@ const Split: React.FC = () => {
     const rowIdx = gridClickState.transcriptLineNumber as number - 1;
   
     if (rowIdx >= 0) {
-      setTranscriptLines(lines => removeLinePart(lines, rowIdx, gridClickState.linePartIdx as number));
+      onRemoveTextSelectionFromGroup(rowIdx, gridClickState.linePartIdx as number);
     };
   };
 
@@ -190,12 +159,12 @@ const Split: React.FC = () => {
     const rowIdx = gridClickState.transcriptLineNumber as number - 1;
   
     if (rowIdx >= 0) {
-      setTranscriptLines(lines => updateLinePartGroup(lines, rowIdx, gridClickState.linePartIdx as number, columnId));
+      onUpdateTextSelectionGroup(rowIdx, gridClickState.linePartIdx as number, columnId);
     };
   };
 
   const handleRemoveGroup = (columnId: string) => {
-    setTranscriptLines(lines => removeLinePartsForGroup(lines, columnId));
+    onDeleteGroup(columnId);
     setGroupColumnDefs(colDefs => colDefs.filter(def => def.id != columnId));
   };
 
@@ -271,8 +240,10 @@ const Split: React.FC = () => {
     }
   };
 
-  return (
-    <div className="flex flex-col h-dvh w-dvw p-5 bg-gray-100 overflow-hidden"
+  return !transcriptLines?.length ? null : (
+    <div
+      className="flex flex-col overflow-auto border-1 border-black box-border"
+      onContextMenu={handleGridContextMenu}
     >
       <SplitTextMenu
         textSelectionString={gridClickState?.textSelectionString || ''}
@@ -296,155 +267,104 @@ const Split: React.FC = () => {
         }}
         onRemove={handleRemoveGroup}
       />
-
-      {/* Control Bar */}
-      <div className="mb-4 flex gap-4 items-center">
-
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileUpload}
-          accept=".docx"
-          className="hidden"
-        />
-        <button
-          onClick={() => {
-            fileInputRef.current?.click();
-          }}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer flex items-center"
-        >
-          Import New Transcript
-          <FontAwesomeIcon icon={faFileWord} className="ml-2" size="lg" />
-        </button>
-        <button
-          onClick={() => {}}
-          disabled={transcriptLines.length === 0}
-          className={`px-4 py-2 rounded flex items-center ${
-            transcriptLines.length > 0 
-              ? 'bg-green-500 text-white hover:bg-green-600 cursor-pointer' 
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          Export Grid
-          <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
-        </button>
-
-      </div>
       
-      {/* No Transcript Message */}
-      {!transcriptLines?.length &&
-        <h1 className="text-2xl mt-2">
-          Please import a transcript to get started.
-        </h1>
-      }
-      
-      {/* Transcript Split Grid */}
-      {transcriptLines?.length > 0 &&
+      {/* Header Row */}
+      <div
+        className="flex font-medium sticky top-0 bg-gray-200 shadow-md shadow-gray-400 select-none"
+        style={{ minWidth: `${minWidth}px` }}
+        data-transcript-line-number="header"
+      >
+
         <div
-          className="flex flex-col overflow-auto border-1 border-black box-border"
-          onContextMenu={handleGridContextMenu}
+          className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end`}
+          style={{ flex: `0 0 ${LINE_COL_PX}px` }}
+          data-column
+          data-column-id="line"
+          data-transcript-line-number="header"
         >
-          
-          {/* Header Row */}
-          <div
-            className="flex font-medium sticky top-0 bg-gray-200 shadow-md shadow-gray-400 select-none"
+          Line
+        </div>
+        <div
+          className={`px-2 py-2 border-r-1 border-b-1 border-gray-400`}
+          style={{ flex: `2 0 ${TEXT_COL_MIN_PX}px` }}
+          data-column
+          data-column-id="text"
+          data-transcript-line-number="header"
+        >
+          Transcript Text
+        </div>
+
+        {groupColumnDefs.map(colDef => {
+          return (
+            <div
+              key={colDef.id}
+              className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 text-ellipsis overflow-hidden`}
+              style={{ flex: `1 0 ${GROUP_COL_MIN_PX}px` }}
+              data-column
+              data-column-id={colDef.id}
+              data-transcript-line-number="header"
+            >
+              {colDef.label}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Data Rows */}
+      {displayLines.map(line => {
+        return (
+          <div 
+            key={line.displayLineNumber}
+            className="flex bg-transparent"
             style={{ minWidth: `${minWidth}px` }}
-            data-transcript-line-number="header"
+            data-transcript-line-number={line.transcriptLineNumber}
+            data-is-subline={line.isSubline}
           >
 
             <div
-              className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end`}
+              className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end text-ellipsis overflow-hidden`}
               style={{ flex: `0 0 ${LINE_COL_PX}px` }}
               data-column
               data-column-id="line"
-              data-transcript-line-number="header"
+              data-transcript-line-number={line.transcriptLineNumber}
+              data-is-subline={line.isSubline}
             >
-              Line
+              {line.displayLineNumber}
             </div>
             <div
               className={`px-2 py-2 border-r-1 border-b-1 border-gray-400`}
               style={{ flex: `2 0 ${TEXT_COL_MIN_PX}px` }}
               data-column
               data-column-id="text"
-              data-transcript-line-number="header"
+              data-transcript-line-number={line.transcriptLineNumber}
+              data-is-subline={line.isSubline}
             >
-              Transcript Text
+              <SplitterTextCell line={line} />
             </div>
 
-            {groupColumnDefs.map(colDef => {
+            {line.parts.map(part => {
               return (
                 <div
-                  key={colDef.id}
+                  key={part.columnId}
                   className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 text-ellipsis overflow-hidden`}
                   style={{ flex: `1 0 ${GROUP_COL_MIN_PX}px` }}
                   data-column
-                  data-column-id={colDef.id}
-                  data-transcript-line-number="header"
+                  data-column-id={part.columnId}
+                  data-transcript-line-number={line.transcriptLineNumber}
+                  data-is-subline={line.isSubline}
+                  data-line-part-idx={part.linePartIdx}
                 >
-                  {colDef.label}
+                  {part.text}
                 </div>
               );
             })}
+
           </div>
-
-          {/* Data Rows */}
-          {displayLines.map(line => {
-            return (
-              <div 
-                key={line.displayLineNumber}
-                className="flex bg-transparent"
-                style={{ minWidth: `${minWidth}px` }}
-                data-transcript-line-number={line.transcriptLineNumber}
-                data-is-subline={line.isSubline}
-              >
-
-                <div
-                  className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end text-ellipsis overflow-hidden`}
-                  style={{ flex: `0 0 ${LINE_COL_PX}px` }}
-                  data-column
-                  data-column-id="line"
-                  data-transcript-line-number={line.transcriptLineNumber}
-                  data-is-subline={line.isSubline}
-                >
-                  {line.displayLineNumber}
-                </div>
-                <div
-                  className={`px-2 py-2 border-r-1 border-b-1 border-gray-400`}
-                  style={{ flex: `2 0 ${TEXT_COL_MIN_PX}px` }}
-                  data-column
-                  data-column-id="text"
-                  data-transcript-line-number={line.transcriptLineNumber}
-                  data-is-subline={line.isSubline}
-                >
-                  <SplitterTextCell line={line} />
-                </div>
-
-                {line.parts.map(part => {
-                  return (
-                    <div
-                      key={part.columnId}
-                      className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 text-ellipsis overflow-hidden`}
-                      style={{ flex: `1 0 ${GROUP_COL_MIN_PX}px` }}
-                      data-column
-                      data-column-id={part.columnId}
-                      data-transcript-line-number={line.transcriptLineNumber}
-                      data-is-subline={line.isSubline}
-                      data-line-part-idx={part.linePartIdx}
-                    >
-                      {part.text}
-                    </div>
-                  );
-                })}
-
-              </div>
-            );
-          })}
-
-        </div>
-      }
+        );
+      })}
 
     </div>
   );
 };
 
-export default Split;
+export { SplitGrid };
