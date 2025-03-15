@@ -1,4 +1,4 @@
-import { DisplayTranscriptLine } from "./data"
+import { DisplayTranscriptLine } from "../data"
 
 interface SplitterTextCellProps {
   line: DisplayTranscriptLine;

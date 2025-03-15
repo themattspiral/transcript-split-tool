@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useContextMenu } from "react-contexify";
 
-import { ColumnDef, DisplayTranscriptLine, GridClickState, LinePart, TranscriptLine } from './data';
+import { ColumnDef, DisplayTranscriptLine, GridClickState, LinePart, TranscriptLine } from '../data';
+import { SPLIT_MENU_ID, SplitTextMenu } from '../context-menu/SplitTextMenu';
+import { ERROR_MULTIPLE_LINES_MENU_ID, ErrorMultipleLinesMenu } from '../context-menu/ErrorMultipleLinesMenu';
+import { LINE_PART_MENU_ID, LinePartMenu } from '../context-menu/LinePartMenu';
+import { HEADER_LINE_PART_MENU_ID, HeaderLinePartMenu } from '../context-menu/HeaderLinePartMenu';
 import SplitterTextCell from './SplitterTextCell';
-import { SPLIT_MENU_ID, SplitTextMenu } from './context-menu/SplitTextMenu';
-import { ERROR_MULTIPLE_LINES_MENU_ID, ErrorMultipleLinesMenu } from './context-menu/ErrorMultipleLinesMenu';
-import { LINE_PART_MENU_ID, LinePartMenu } from './context-menu/LinePartMenu';
-import { HEADER_LINE_PART_MENU_ID, HeaderLinePartMenu } from './context-menu/HeaderLinePartMenu';
 
 const LINE_COL_PX = 60;
 const TEXT_COL_MIN_PX = 400;

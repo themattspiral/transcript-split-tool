@@ -1,11 +1,11 @@
 import { useState } from 'react';
 
-import { ControlBar } from './control-bar/ControlBar';
 import {
   addNewLinePart, removeLinePart, updateLinePartGroup, removeLinePartsForGroup,
   TranscriptLine, LinePart
 } from './data';
-import { SplitGrid } from './SplitGrid';
+import { ControlBar } from './control-bar/ControlBar';
+import { SplitGrid } from './split-grid/SplitGrid';
 
 const App: React.FC = () => {
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
