@@ -1,12 +1,26 @@
 import { useState, useMemo } from 'react';
 import { useContextMenu } from "react-contexify";
 
-import { ColumnDef, DisplayTranscriptLine, GridClickState, LinePart, TranscriptLine } from '../data';
+import { ColumnDef, GridClickState, LinePart, TranscriptLine } from '../data';
+import { useViewState } from '../ViewStateContext';
 import { SPLIT_MENU_ID, SplitTextMenu } from '../context-menu/SplitTextMenu';
 import { ERROR_MULTIPLE_LINES_MENU_ID, ErrorMultipleLinesMenu } from '../context-menu/ErrorMultipleLinesMenu';
 import { LINE_PART_MENU_ID, LinePartMenu } from '../context-menu/LinePartMenu';
 import { HEADER_LINE_PART_MENU_ID, HeaderLinePartMenu } from '../context-menu/HeaderLinePartMenu';
 import SplitterTextCell from './SplitterTextCell';
+
+interface DisplayLinePart extends LinePart {
+  linePartIdx: number;
+}
+
+interface DisplayTranscriptLine {
+  displayLineNumber: string;
+  transcriptLineNumber: string;
+  isSubline: boolean;
+  text?: string;
+  author?: string;
+  parts: DisplayLinePart[];
+}
 
 const LINE_COL_PX = 60;
 const TEXT_COL_MIN_PX = 400;
@@ -34,6 +48,7 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
   const [groupColumnDefs, setGroupColumnDefs] = useState<ColumnDef[]>([]);
   const [gridClickState, setGridClickState] = useState<GridClickState | null>(null);
   const { show: showContextMenu } = useContextMenu();
+  const { showConfirmationModal } = useViewState();
 
   const minWidth = LINE_COL_PX + TEXT_COL_MIN_PX + (groupColumnDefs.length * GROUP_COL_MIN_PX);
 
@@ -53,7 +68,6 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
 
     while (partIdx < line.parts.length) {
       lines.push({
-        text: '',
         isSubline: true,
         parts: [],
         displayLineNumber: `${line.lineNumber}.${lines.length}`,
@@ -164,8 +178,15 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
   };
 
   const handleRemoveGroup = (columnId: string) => {
-    onDeleteGroup(columnId);
-    setGroupColumnDefs(colDefs => colDefs.filter(def => def.id != columnId));
+    const colDef = groupColumnDefs.find(def => def.id == columnId);
+
+    showConfirmationModal(
+      `Are you sure you want to delete ${colDef?.label}, including all text selections within it?`,
+      () => {
+        onDeleteGroup(columnId);
+        setGroupColumnDefs(colDefs => colDefs.filter(def => def.id != columnId));
+      }
+    );
   };
 
   const handleGridContextMenu = (event: React.MouseEvent): void => {    
@@ -204,7 +225,7 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
 
     if (isHeaderRow) {
       if (isGroupColumn) {
-        event.preventDefault();
+        if (event.preventDefault) event.preventDefault();
         setGridClickState({
           columnId: columnIdString || '?',
           transcriptLineNumber: NaN
@@ -212,10 +233,10 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
         showContextMenu({ id: HEADER_LINE_PART_MENU_ID, event });
       }
     } else if (hasMultiLineSelection) {
-      event.preventDefault();
+      if (event.preventDefault) event.preventDefault();
       showContextMenu({ id: ERROR_MULTIPLE_LINES_MENU_ID, event });
     } else if (hasSelection && isTextColumn && !isSubline) {
-      event.preventDefault();
+      if (event.preventDefault) event.preventDefault();
       setGridClickState({
         columnId: columnIdString || '?',
         transcriptLineNumber,
@@ -224,7 +245,7 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
       });
       showContextMenu({ id: SPLIT_MENU_ID, event });
     } else if (isGroupColumn && linePartIdx >= 0) {
-      event.preventDefault();
+      if (event.preventDefault) event.preventDefault();
       setGridClickState({
         columnId: columnIdString || '?',
         transcriptLineNumber,

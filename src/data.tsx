@@ -3,23 +3,6 @@ export interface ColumnDef {
   label: string;
 }
 
-export interface DisplayLinePart {
-  start: number;
-  end: number;
-  columnId: string;
-  text: string;
-  linePartIdx: number;
-}
-
-export interface DisplayTranscriptLine {
-  displayLineNumber: string;
-  transcriptLineNumber: string;
-  isSubline: boolean;
-  text: string;
-  author?: string;
-  parts: DisplayLinePart[];
-}
-
 export interface LinePart {
   start: number;
   end: number;

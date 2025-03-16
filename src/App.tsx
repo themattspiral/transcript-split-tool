@@ -6,12 +6,15 @@ import {
 } from './data';
 import { ControlBar } from './control-bar/ControlBar';
 import { SplitGrid } from './split-grid/SplitGrid';
+import { ModalWindow } from './modal/ModalWindow';
 
 const App: React.FC = () => {
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
   
   return (
     <div className="flex flex-col h-dvh w-dvw p-5 bg-gray-100 overflow-hidden">
+      <ModalWindow />
+
       <ControlBar
         transcriptLines={transcriptLines}
         onTranscriptUploaded={setTranscriptLines}

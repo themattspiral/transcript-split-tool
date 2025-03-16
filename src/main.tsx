@@ -5,6 +5,7 @@ import './index.css';
 import "react-contexify/dist/ReactContexify.css";
 
 import { App } from './App';
+import { ViewStateProvider } from './ViewStateContext';
 
 // reference
 // import reactLogo from './assets/react.svg' // src
@@ -12,6 +13,8 @@ import { App } from './App';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ViewStateProvider>
+      <App />
+    </ViewStateProvider>
   </StrictMode>,
 );
