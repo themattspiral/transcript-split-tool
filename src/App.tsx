@@ -22,9 +22,11 @@ const App: React.FC = () => {
       
       {/* No Transcript Message */}
       {!transcriptLines?.length &&
-        <h1 className="text-2xl mt-2">
-          Please import a transcript to get started.
-        </h1>
+        <div className="flex flex-col grow-1 justify-center">
+          <h1 className="flex justify-center text-2xl text-gray-600">
+            Please import a transcript to get started.
+          </h1>
+        </div>
       }
 
       <SplitGrid
