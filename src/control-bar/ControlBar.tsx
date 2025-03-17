@@ -5,6 +5,8 @@ import { faFileWord, faFileExcel } from "@fortawesome/free-regular-svg-icons";
 
 import { TranscriptLine } from '../data';
 
+const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
+
 interface ControlBarProps {
   transcriptLines: TranscriptLine[];
   onTranscriptUploaded: (lines: TranscriptLine[]) => void;
@@ -28,11 +30,25 @@ const ControlBar: React.FC<ControlBarProps> = ({ transcriptLines, onTranscriptUp
       const lines: TranscriptLine[] = result.value
         .split('\n')
         .filter(line => line.trim() !== '')
-        .map((line, idx) => ({
-          lineNumber: (idx + 1).toString(),
-          text: line,
-          parts: []
-        }));
+        .map((line, idx) => {
+          const tl: TranscriptLine = {
+            lineNumber: (idx + 1).toString(),
+            text: line,
+            parts: []
+          };
+
+          // split out author
+          const matches = AUTHOR_RE.exec(line);
+          if (matches?.length) {
+            const speaker: string = matches[0];
+
+            // remove final ": " for speaker 
+            tl.speaker = speaker.substring(0, speaker.length - 2);
+            tl.textWithoutSpeaker = line.substring(speaker.length);
+          }
+
+          return tl;
+        });
 
         onTranscriptUploaded(lines);
 
@@ -60,6 +76,7 @@ const ControlBar: React.FC<ControlBarProps> = ({ transcriptLines, onTranscriptUp
       accept=".docx"
       className="hidden"
     />
+
     <button
       onClick={() => {
         fileInputRef.current?.click();
@@ -69,6 +86,7 @@ const ControlBar: React.FC<ControlBarProps> = ({ transcriptLines, onTranscriptUp
       Import New Transcript
       <FontAwesomeIcon icon={faFileWord} className="ml-2" size="lg" />
     </button>
+
     <button
       onClick={() => {}}
       disabled={transcriptLines.length === 0}

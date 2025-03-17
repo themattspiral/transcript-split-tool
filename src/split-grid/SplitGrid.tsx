@@ -18,11 +18,12 @@ interface DisplayTranscriptLine {
   transcriptLineNumber: string;
   isSubline: boolean;
   text?: string;
-  author?: string;
+  speaker?: string;
   parts: DisplayLinePart[];
 }
 
 const LINE_COL_PX = 60;
+const SPEAKER_COL_MIN_PX = 100;
 const TEXT_COL_MIN_PX = 400;
 const GROUP_COL_MIN_PX = 100;
 
@@ -56,12 +57,14 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
     let lineIdx = 0;
     let partIdx = 0;
     const lines: DisplayTranscriptLine[] = [{
-      text: line.text,
+      text: line.textWithoutSpeaker || line.text,
+      speaker: line.speaker,
       isSubline: false,
       parts: [],
       displayLineNumber: line.lineNumber,
       transcriptLineNumber: line.lineNumber
     }];
+    
     groupColumnDefs.forEach(colDef => {
       lines[lineIdx].parts.push({ start: -1, end: -1, text: '', columnId: colDef.id, linePartIdx: -1 });
     });
@@ -69,6 +72,7 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
     while (partIdx < line.parts.length) {
       lines.push({
         isSubline: true,
+        speaker: line.speaker,
         parts: [],
         displayLineNumber: `${line.lineNumber}.${lines.length}`,
         transcriptLineNumber: line.lineNumber
@@ -213,7 +217,7 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
     const transcriptLineNumber = parseInt(transcriptLineNumberString || '');
     const isSubline = isSublineString === 'true';
     const isTextColumn = columnIdString === 'text';
-    const isGroupColumn = columnIdString != 'line' && columnIdString != 'text';
+    const isGroupColumn = columnIdString != 'line' && columnIdString != 'speaker' && columnIdString != 'text';
     const linePartIdx = parseInt(linePartIdxString || '');
     const hasSelection: boolean = !!selText;
     const hasMultiLineSelection: boolean = selText?.includes('\n') || false;
@@ -291,7 +295,7 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
       
       {/* Header Row */}
       <div
-        className="flex font-medium sticky top-0 bg-gray-200 shadow-md shadow-gray-400 select-none"
+        className="flex font-medium sticky top-0 bg-gray-200 shadow-sm shadow-gray-400 select-none"
         style={{ minWidth: `${minWidth}px` }}
         data-transcript-line-number="header"
       >
@@ -304,6 +308,15 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
           data-transcript-line-number="header"
         >
           Line
+        </div>
+        <div
+          className={`px-2 py-2 border-r-1 border-b-1 border-gray-400`}
+          style={{ flex: `0 0 ${SPEAKER_COL_MIN_PX}px` }}
+          data-column
+          data-column-id="speaker"
+          data-transcript-line-number="header"
+        >
+          Speaker
         </div>
         <div
           className={`px-2 py-2 border-r-1 border-b-1 border-gray-400`}
@@ -351,6 +364,16 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
               data-is-subline={line.isSubline}
             >
               {line.displayLineNumber}
+            </div>
+            <div
+              className={`px-2 py-2 border-r-1 border-b-1 border-gray-400`}
+              style={{ flex: `0 0 ${SPEAKER_COL_MIN_PX}px` }}
+              data-column
+              data-column-id="speaker"
+              data-transcript-line-number={line.transcriptLineNumber}
+              data-is-subline={line.isSubline}
+            >
+              { line.speaker }
             </div>
             <div
               className={`px-2 py-2 border-r-1 border-b-1 border-gray-400`}

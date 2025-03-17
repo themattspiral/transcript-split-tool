@@ -19,13 +19,13 @@ const HeaderLinePartMenu: React.FC<HeaderLinePartMenuProps> = (props) => {
 
   return (
     <Menu id={HEADER_LINE_PART_MENU_ID}>
-      <Item onClick={() => onRename(colDef?.id || '?')}>
+      <Item onClick={() => onRename(columnId)}>
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPenToSquare} className="mr-1" />
           Rename...
         </div>
       </Item>
-      <Item onClick={() => onRemove(colDef?.id || '?')}>
+      <Item onClick={() => onRemove(columnId)}>
         <div className="text-red-400 flex items-center">
           <FontAwesomeIcon icon={faTrash} className="mr-1" />
           Delete {colDef?.label}

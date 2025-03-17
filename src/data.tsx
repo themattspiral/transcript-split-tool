@@ -13,7 +13,8 @@ export interface LinePart {
 export interface TranscriptLine {
   lineNumber: string;
   text: string;
-  author?: string;
+  speaker?: string;
+  textWithoutSpeaker?: string;
   parts: LinePart[];
 }
 
@@ -47,7 +48,7 @@ const addNewLinePart = (lines: TranscriptLine[], rowIdx: number, newPart: LinePa
   const line: TranscriptLine = {
     lineNumber: lines[rowIdx].lineNumber,
     text: lines[rowIdx].text,
-    author: lines[rowIdx].author,
+    speaker: lines[rowIdx].speaker,
     parts: [...lines[rowIdx].parts]
   };
 
@@ -69,7 +70,7 @@ const removeLinePart = (lines: TranscriptLine[], rowIdx: number, partIdx: number
   const line: TranscriptLine = {
     lineNumber: lines[rowIdx].lineNumber,
     text: lines[rowIdx].text,
-    author: lines[rowIdx].author,
+    speaker: lines[rowIdx].speaker,
     parts: [...lines[rowIdx].parts]
   };
 
@@ -91,7 +92,7 @@ const updateLinePartGroup = (lines: TranscriptLine[], rowIdx: number, partIdx: n
   const line: TranscriptLine = {
     lineNumber: lines[rowIdx].lineNumber,
     text: lines[rowIdx].text,
-    author: lines[rowIdx].author,
+    speaker: lines[rowIdx].speaker,
     parts: [...lines[rowIdx].parts]
   };
 
