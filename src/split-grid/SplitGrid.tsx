@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, CSSProperties } from 'react';
 import { useContextMenu } from "react-contexify";
 
 import { ColumnDef, GridClickState, LinePart, TranscriptLine } from '../data';
@@ -34,6 +34,7 @@ interface SplitGridProps {
   onRemoveTextSelectionFromGroup: (rowIdx: number, linePartIdx: number) => void;
   onUpdateTextSelectionGroup: (rowIdx: number, linePartIdx: number, newColumnId: string) => void;
   onDeleteGroup: (columnId: string) => void;
+  style?: CSSProperties | undefined;
 }
 
 const SplitGrid: React.FC<SplitGridProps> = props => {
@@ -43,7 +44,8 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
     onAddTextSelectionToExistingGroup,
     onRemoveTextSelectionFromGroup,
     onUpdateTextSelectionGroup,
-    onDeleteGroup
+    onDeleteGroup,
+    style
   } = props;
   const [nextColId, setNextColId] = useState<number>(0);
   const [groupColumnDefs, setGroupColumnDefs] = useState<ColumnDef[]>([]);
@@ -269,6 +271,7 @@ const SplitGrid: React.FC<SplitGridProps> = props => {
     <div
       className="flex flex-col overflow-auto border-1 border-black box-border"
       onContextMenu={handleGridContextMenu}
+      style={style}
     >
       <SplitTextMenu
         textSelectionString={gridClickState?.textSelectionString || ''}

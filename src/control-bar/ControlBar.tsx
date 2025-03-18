@@ -3,7 +3,8 @@ import { extractRawText } from 'mammoth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from "@fortawesome/free-regular-svg-icons";
 
-import { TranscriptLine } from '../data';
+import { TranscriptLine, TABS } from '../data';
+import { useViewState } from '../ViewStateContext';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
@@ -12,7 +13,10 @@ interface ControlBarProps {
   onTranscriptUploaded: (lines: TranscriptLine[]) => void;
 }
 
-const ControlBar: React.FC<ControlBarProps> = ({ transcriptLines, onTranscriptUploaded }) => {
+const ControlBar: React.FC<ControlBarProps> = props => {
+  const { transcriptLines, onTranscriptUploaded } = props;
+  const { activeTabId, setActiveTabId } = useViewState();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,42 +69,75 @@ const ControlBar: React.FC<ControlBarProps> = ({ transcriptLines, onTranscriptUp
       alert('Error processing document. Please try again.');
     }
   };
+
+  const activeTabClasses = "bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg shadow-[1px 2px 4px rgba(0,0,0,.5)]";
+  const otherTabClasses = "bg-gray-200 hover:bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg cursor-pointer";
   
   return (
-    <div className="mb-4 flex gap-4 items-center">
+    <div className="flex gap-4 items-end">
+    
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        accept=".docx"
+        className="hidden"
+      />
 
-    <input
-      type="file"
-      ref={fileInputRef}
-      onChange={handleFileUpload}
-      accept=".docx"
-      className="hidden"
-    />
+      {/* Left Side Container */}
+      <div className="mb-2 flex gap-2">
+        <button
+          onClick={() => {
+            fileInputRef.current?.click();
+          }}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer flex items-center"
+        >
+          Import New Transcript
+          <FontAwesomeIcon icon={faFileWord} className="ml-2" size="lg" />
+        </button>
 
-    <button
-      onClick={() => {
-        fileInputRef.current?.click();
-      }}
-      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer flex items-center"
-    >
-      Import New Transcript
-      <FontAwesomeIcon icon={faFileWord} className="ml-2" size="lg" />
-    </button>
+        <button
+          onClick={() => {}}
+          disabled={transcriptLines.length === 0}
+          className={`px-4 py-2 rounded flex items-center ${
+            transcriptLines.length === 0 
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+              : 'bg-green-500 text-white hover:bg-green-600 cursor-pointer'
+          }`}
+        >
+          Export Grid
+          <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
+        </button>
+      </div>
 
-    <button
-      onClick={() => {}}
-      disabled={transcriptLines.length === 0}
-      className={`px-4 py-2 rounded flex items-center ${
-        transcriptLines.length > 0 
-          ? 'bg-green-500 text-white hover:bg-green-600 cursor-pointer' 
-          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-      }`}
-    >
-      Export Grid
-      <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
-    </button>
+      {/* Right Side Container */}
+      <div className="ml-auto mr-2 flex gap-2 font-medium">
+        <button
+          onClick={() => setActiveTabId(TABS.Transcript)}
+          className={activeTabId === TABS.Transcript ? activeTabClasses : otherTabClasses}
+          style={activeTabId === TABS.Transcript ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
+        >
+          Transcript
+        </button>
+        
+        <button
+          onClick={() => setActiveTabId(TABS.PhraseBook)}
+          className={activeTabId === TABS.PhraseBook ? activeTabClasses : otherTabClasses}
+          style={activeTabId === TABS.PhraseBook ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
+        >
+          Phrase Book
+        </button>
+        
+        <button
+          onClick={() => setActiveTabId(TABS.Poems)}
+          className={activeTabId === TABS.Poems ? activeTabClasses : otherTabClasses}
+          style={activeTabId === TABS.Poems ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
+        >
+          Poems
+        </button>
+      </div>
 
-  </div>
+    </div>
   );
 };
 

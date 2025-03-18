@@ -26,6 +26,12 @@ export interface GridClickState {
   linePartIdx?: number;
 }
 
+export enum TABS {
+  Transcript = 'transcript',
+  PhraseBook = 'phrases',
+  Poems = 'poems'
+}
+
 const sortByStart = (a: LinePart, b: LinePart): number => {
   if (a.start < b.start) {
     return -1;
