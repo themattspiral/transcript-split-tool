@@ -38,7 +38,7 @@ const ControlBar: React.FC<ControlBarProps> = props => {
           const tl: TranscriptLine = {
             lineNumber: (idx + 1).toString(),
             text: line,
-            parts: []
+            speakerDetected: false
           };
 
           // split out author
@@ -49,6 +49,7 @@ const ControlBar: React.FC<ControlBarProps> = props => {
             // remove final ": " for speaker 
             tl.speaker = speaker.substring(0, speaker.length - 2);
             tl.textWithoutSpeaker = line.substring(speaker.length);
+            tl.speakerDetected = true;
           }
 
           return tl;
@@ -70,8 +71,8 @@ const ControlBar: React.FC<ControlBarProps> = props => {
     }
   };
 
-  const activeTabClasses = "bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg shadow-[1px 2px 4px rgba(0,0,0,.5)]";
-  const otherTabClasses = "bg-gray-200 hover:bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg cursor-pointer";
+  const activeTabClasses = "bg-gray-300 px-3 pt-1 pb-1 rounded-t-lg shadow-[2px 2px 6px rgba(0,0,0,.5)]";
+  const otherTabClasses = "bg-gray-200 hover:bg-gray-300 px-3 pt-1 pb-1 rounded-t-lg cursor-pointer";
   
   return (
     <div className="flex gap-4 items-end">
@@ -85,7 +86,7 @@ const ControlBar: React.FC<ControlBarProps> = props => {
       />
 
       {/* Left Side Container */}
-      <div className="mb-2 flex gap-2">
+      <div className="pb-2 flex gap-2 items-start h-full">
         <button
           onClick={() => {
             fileInputRef.current?.click();
@@ -111,30 +112,36 @@ const ControlBar: React.FC<ControlBarProps> = props => {
       </div>
 
       {/* Right Side Container */}
-      <div className="ml-auto mr-2 flex gap-2 font-medium">
-        <button
-          onClick={() => setActiveTabId(TABS.Transcript)}
-          className={activeTabId === TABS.Transcript ? activeTabClasses : otherTabClasses}
-          style={activeTabId === TABS.Transcript ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
-        >
-          Transcript
-        </button>
-        
-        <button
-          onClick={() => setActiveTabId(TABS.PhraseBook)}
-          className={activeTabId === TABS.PhraseBook ? activeTabClasses : otherTabClasses}
-          style={activeTabId === TABS.PhraseBook ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
-        >
-          Phrase Book
-        </button>
-        
-        <button
-          onClick={() => setActiveTabId(TABS.Poems)}
-          className={activeTabId === TABS.Poems ? activeTabClasses : otherTabClasses}
-          style={activeTabId === TABS.Poems ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
-        >
-          Poems
-        </button>
+      <div className="ml-auto mr-2 h-full flex flex-col gap-1">
+        <div className="flex justify-end text-gray-300 text-xs">
+          v{import.meta.env.PACKAGE_VERSION}
+        </div>
+
+        <div className="flex gap-2 font-medium grow-1 items-end">
+          <button
+            onClick={() => setActiveTabId(TABS.Transcript)}
+            className={activeTabId === TABS.Transcript ? activeTabClasses : otherTabClasses}
+            style={activeTabId === TABS.Transcript ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
+          >
+            Transcript
+          </button>
+          
+          <button
+            onClick={() => setActiveTabId(TABS.PhraseBook)}
+            className={activeTabId === TABS.PhraseBook ? activeTabClasses : otherTabClasses}
+            style={activeTabId === TABS.PhraseBook ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
+          >
+            Phrase Repetitions
+          </button>
+          
+          <button
+            onClick={() => setActiveTabId(TABS.Poems)}
+            className={activeTabId === TABS.Poems ? activeTabClasses : otherTabClasses}
+            style={activeTabId === TABS.Poems ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
+          >
+            Poems
+          </button>
+        </div>
       </div>
 
     </div>

@@ -1,7 +1,7 @@
 {
   "name": "transcript-split-tool",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,6 +16,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@tailwindcss/vite": "4.0.11",
+    "classnames": "^2.5.1",
     "mammoth": "^1.9.0",
     "react": "^19.0.0",
     "react-contexify": "^6.0.0",

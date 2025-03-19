@@ -1,20 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import {
-  addNewLinePart, removeLinePart, updateLinePartGroup, removeLinePartsForGroup,
-  TranscriptLine, LinePart
-} from './data';
+import { PhraseRepetition, TABS, TranscriptLine } from './data';
 import { ControlBar } from './control-bar/ControlBar';
-import { SplitGrid } from './split-grid/SplitGrid';
+import { TranscriptGrid } from './transcript-grid/TranscriptGrid';
 import { ModalWindow } from './modal/ModalWindow';
 import { useViewState } from './ViewStateContext';
+import { PhraseGrid } from './phrase-grid/PhraseGrid';
 
 const App: React.FC = () => {
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
+  const [phraseRepetitions, setPhraseRepetitions] = useState<PhraseRepetition[]>([]);
   const { activeTabId } = useViewState();
-  
+
   return (
-    <div className="flex flex-col h-dvh w-dvw p-2 bg-gray-100 overflow-hidden">
+    <div className="flex flex-col h-dvh w-dvw p-2 overflow-hidden">
       <ModalWindow />
 
       <ControlBar
@@ -23,10 +22,9 @@ const App: React.FC = () => {
       />
       
       {/* Active Tab Wrapper */}
-      <div className="overflow-hidden grow-1 border-gray-300 border-15 rounded-t flex flex-col">
+      <div className="overflow-hidden grow-1 border-gray-300 border-8 rounded-t flex flex-col shadow-md shadow-gray-400">
 
-        {/* No Transcript Message */}
-        {!transcriptLines?.length && activeTabId === 'transcript' &&
+        {!transcriptLines?.length && activeTabId === TABS.Transcript &&
           <div className="flex flex-col grow-1 justify-center">
             <h1 className="flex justify-center text-2xl text-gray-600">
               Please import a transcript to get started.
@@ -34,32 +32,36 @@ const App: React.FC = () => {
           </div>
         }
 
-        <SplitGrid
-          style={activeTabId === 'transcript' ? {} : { display: 'none' }}
+        <TranscriptGrid
+          style={activeTabId === TABS.Transcript ? {} : { display: 'none' }}
           transcriptLines={transcriptLines}
-          onAddTextSelectionToNewGroup={(rowIdx: number, newlinePart: LinePart) => {
-            setTranscriptLines(lines => addNewLinePart(lines, rowIdx, newlinePart));
-          }}
-          onAddTextSelectionToExistingGroup={(rowIdx: number, newlinePart: LinePart) => {
-            setTranscriptLines(lines => addNewLinePart(lines, rowIdx, newlinePart));
-          }}
-          onRemoveTextSelectionFromGroup={(rowIdx: number, linePartIdx: number) => {
-            setTranscriptLines(lines => removeLinePart(lines, rowIdx, linePartIdx));
-          }}
-          onUpdateTextSelectionGroup={(rowIdx: number, linePartIdx: number, newColumnId: string) => {
-            setTranscriptLines(lines => updateLinePartGroup(lines, rowIdx, linePartIdx, newColumnId));
-          }}
-          onDeleteGroup={(columnId: string) => {
-            setTranscriptLines(lines => removeLinePartsForGroup(lines, columnId));
-          }}
+          phraseRepetitions={phraseRepetitions}
         />
 
-        { activeTabId === 'phrases' &&
-          <div>Phrase Book!</div>
+        {!phraseRepetitions?.length && activeTabId === TABS.PhraseBook &&
+          <div className="flex flex-col grow-1 justify-center">
+            <h1 className="flex justify-center text-2xl text-gray-600 mb-4">
+              No phrase repetitions defined yet.
+            </h1>
+            <h1 className="flex justify-center text-2xl text-gray-600">
+              Highlight text within a transcript to get started.
+            </h1>
+          </div>
         }
 
-        { activeTabId === 'poems' &&
-          <div>Poems!</div>
+        <PhraseGrid
+          style={activeTabId === TABS.PhraseBook ? {} : { display: 'none' }}
+          transcriptLines={transcriptLines}
+          phraseRepetitions={phraseRepetitions}
+        />
+          
+
+        {!transcriptLines?.length && activeTabId === TABS.Poems &&
+          <div className="flex flex-col grow-1 justify-center">
+            <h1 className="flex justify-center text-2xl text-gray-600">
+              No poems defined yet.
+            </h1>
+          </div>
         }
 
       </div>
