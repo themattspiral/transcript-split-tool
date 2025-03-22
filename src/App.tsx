@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react';
-
-import { PhraseRepetition, TABS, TranscriptLine } from './data';
+import { TABS } from './data';
 import { ControlBar } from './control-bar/ControlBar';
 import { TranscriptGrid } from './transcript-grid/TranscriptGrid';
 import { ModalWindow } from './modal/ModalWindow';
@@ -8,18 +6,13 @@ import { useViewState } from './ViewStateContext';
 import { PhraseGrid } from './phrase-grid/PhraseGrid';
 
 const App: React.FC = () => {
-  const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
-  const [phraseRepetitions, setPhraseRepetitions] = useState<PhraseRepetition[]>([]);
-  const { activeTabId } = useViewState();
+  const { activeTabId, transcriptLines, phraseRepetitions } = useViewState();
 
   return (
     <div className="flex flex-col h-dvh w-dvw p-2 overflow-hidden">
       <ModalWindow />
 
-      <ControlBar
-        transcriptLines={transcriptLines}
-        onTranscriptUploaded={setTranscriptLines}
-      />
+      <ControlBar />
       
       {/* Active Tab Wrapper */}
       <div className="overflow-hidden grow-1 border-gray-300 border-8 rounded-t flex flex-col shadow-md shadow-gray-400">
@@ -34,8 +27,6 @@ const App: React.FC = () => {
 
         <TranscriptGrid
           style={activeTabId === TABS.Transcript ? {} : { display: 'none' }}
-          transcriptLines={transcriptLines}
-          phraseRepetitions={phraseRepetitions}
         />
 
         {!phraseRepetitions?.length && activeTabId === TABS.PhraseBook &&

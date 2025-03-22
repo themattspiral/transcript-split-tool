@@ -1,10 +1,16 @@
-export interface ColumnDef {
-  id: string;
-  label: string;
-}
+const getPhraseKey = (phrase: Phrase): string => {
+  return `${phrase.transcriptLineIdx}_${phrase.start}:${phrase.end}`;
+};
 
 const getPhraseRepetitionKey = (rep: PhraseRepetition): string => {
-  return `${rep.phrase.transcriptLineIdx}_${rep.phrase.start}:${rep.phrase.end}`
+  return `${getPhraseKey(rep.phrase)}_${getPhraseKey(rep.repetionOf)}`;
+};
+
+// sorting
+const byStart = (a: Phrase, b: Phrase): number => {
+  if (a.start < b.start) return -1;
+  else if (a.start > b.start) return 1;
+  else return 0;
 };
 
 export interface PhraseRepetition {
@@ -17,6 +23,7 @@ export interface Phrase {
   transcriptLineIdx: number;
   start: number;
   end: number;
+  isRepetition: boolean;
 }
   
 export interface TranscriptLine {
@@ -41,4 +48,4 @@ export enum TABS {
   Poems = 'poems'
 }
 
-export { getPhraseRepetitionKey };
+export { getPhraseKey, getPhraseRepetitionKey, byStart };

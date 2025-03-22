@@ -1,21 +1,17 @@
 import { useRef } from 'react';
 import { extractRawText } from 'mammoth';
+import classnames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from "@fortawesome/free-regular-svg-icons";
 
 import { TranscriptLine, TABS } from '../data';
 import { useViewState } from '../ViewStateContext';
+import { PendingPhraseBar } from './PendingPhraseBar';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
-interface ControlBarProps {
-  transcriptLines: TranscriptLine[];
-  onTranscriptUploaded: (lines: TranscriptLine[]) => void;
-}
-
-const ControlBar: React.FC<ControlBarProps> = props => {
-  const { transcriptLines, onTranscriptUploaded } = props;
-  const { activeTabId, setActiveTabId } = useViewState();
+const ControlBar: React.FC = () => {
+  const { activeTabId, setActiveTabId, transcriptLines, setNewTranscript } = useViewState();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,7 +51,7 @@ const ControlBar: React.FC<ControlBarProps> = props => {
           return tl;
         });
 
-        onTranscriptUploaded(lines);
+        setNewTranscript(lines);
 
       if (result.messages?.length) {
         console.log('Document Parsing Messages:', result.messages);
@@ -71,8 +67,8 @@ const ControlBar: React.FC<ControlBarProps> = props => {
     }
   };
 
-  const activeTabClasses = "bg-gray-300 px-3 pt-1 pb-1 rounded-t-lg shadow-[2px 2px 6px rgba(0,0,0,.5)]";
-  const otherTabClasses = "bg-gray-200 hover:bg-gray-300 px-3 pt-1 pb-1 rounded-t-lg cursor-pointer";
+  const activeTabClasses = "bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg text-nowrap";
+  const otherTabClasses = "bg-gray-200 hover:bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg cursor-pointer text-nowrap";
   
   return (
     <div className="flex gap-4 items-end">
@@ -86,29 +82,40 @@ const ControlBar: React.FC<ControlBarProps> = props => {
       />
 
       {/* Left Side Container */}
-      <div className="pb-2 flex gap-2 items-start h-full">
-        <button
-          onClick={() => {
-            fileInputRef.current?.click();
-          }}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer flex items-center"
-        >
-          Import New Transcript
-          <FontAwesomeIcon icon={faFileWord} className="ml-2" size="lg" />
-        </button>
+      <div className="pb-2 h-full grow-1 flex flex-col gap-1 transition-[height] duration-2000 overflow-hidden ease-in-out">
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              fileInputRef.current?.click();
+            }}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer flex items-center"
+          >
+            Import New Transcript
+            <FontAwesomeIcon icon={faFileWord} className="ml-2" size="lg" />
+          </button>
 
-        <button
-          onClick={() => {}}
-          disabled={transcriptLines.length === 0}
-          className={`px-4 py-2 rounded flex items-center ${
-            transcriptLines.length === 0 
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-              : 'bg-green-500 text-white hover:bg-green-600 cursor-pointer'
-          }`}
+          <button
+            onClick={() => {}}
+            disabled={transcriptLines.length === 0}
+            className={`px-4 py-2 rounded flex items-center ${
+              transcriptLines.length === 0 
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                : 'bg-green-500 text-white hover:bg-green-600 cursor-pointer'
+            }`}
+          >
+            Export Grid
+            <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
+          </button>
+        </div>
+        
+        <div className={classnames(
+          // "transition-[height] duration-2000 overflow-hidden ease-in-out border-1",
+          // pendingPhraseRepetition ? 'h-full' : 'h-0'
+        )}
+          // style={{transitionDuration: '10000ms' }}
         >
-          Export Grid
-          <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
-        </button>
+          <PendingPhraseBar />
+        </div>
       </div>
 
       {/* Right Side Container */}

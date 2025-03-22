@@ -2,8 +2,9 @@ import { useState, useMemo, CSSProperties } from 'react';
 import { useContextMenu } from "react-contexify";
 
 import { getPhraseRepetitionKey, GridClickState, PhraseRepetition, TranscriptLine } from '../data';
+import { getGridColumnAttributes } from '../util';
 import { useViewState } from '../ViewStateContext';
-import { SPLIT_MENU_ID, SplitTextMenu } from '../context-menu/SplitTextMenu';
+import { NEW_PHRASE_MENU_ID, NewPhraseMenu } from '../context-menu/NewPhraseMenu';
 import { ERROR_MULTIPLE_LINES_MENU_ID, ErrorMultipleLinesMenu } from '../context-menu/ErrorMultipleLinesMenu';
 
 interface PhraseGridProps {
@@ -69,15 +70,9 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
   };
 
   const handleGridContextMenu = (event: React.MouseEvent): void => {    
-    let attrs: NamedNodeMap | undefined = (event.target as HTMLElement).attributes;
-    if (!attrs?.length || !attrs.getNamedItem('data-column')) {
-      attrs = (event.target as HTMLElement).parentElement?.attributes;
-    }
-    if (!attrs?.length || !attrs.getNamedItem('data-column')) {
-      attrs = (event.target as HTMLElement).parentElement?.parentElement?.attributes;
-    }
+    let attrs: NamedNodeMap | undefined = getGridColumnAttributes(event);
     if (!attrs) {
-      console.error('Couldnt get attributes from target or parents. Event:', event);
+      console.error('Couldnt get attributes from target or immediate parents. Event:', event);
       return;
     }
 
@@ -110,7 +105,7 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
         textSelection: sel,
         textSelectionString: selText
       });
-      showContextMenu({ id: SPLIT_MENU_ID, event });
+      showContextMenu({ id: NEW_PHRASE_MENU_ID, event });
     } else {
       console.log('data row, no selection');
     }
@@ -279,11 +274,9 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
       onContextMenu={handleGridContextMenu}
       style={style}
     >
-      <SplitTextMenu
+      <NewPhraseMenu
         textSelectionString={gridClickState?.textSelectionString || ''}
-        groupColumnDefs={[]}
-        onNewGroup={handleAddSelectionToNewGroup}
-        onExistingGroup={handleAddSelectionToExistingGroup}
+        onSetPhrase={() => {}}
       />
       <ErrorMultipleLinesMenu />
       
