@@ -195,7 +195,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
             </div>
             <SplitterTextCell
               line={line}
-              phrases={phrasesByTranscriptLineIdx[idx]}
+              sortedPhrases={phrasesByTranscriptLineIdx[idx]}
               maskIdx={maskedTextIdx}
               className="border-r-0 border-b-1 border-gray-400 grow-1"
               attributes={{ ['data-column']: 'true', ['data-column-id']: 'text', ['data-transcript-line-idx']: idx.toString() }}

@@ -1,7 +1,7 @@
 import { CSSProperties } from "react";
 import classnames from "classnames";
 
-import { getPhraseKey, Phrase, TranscriptLine } from "../data";
+import { Phrase, TranscriptLine } from "../data";
 
 const phraseClasses = "rounded-xl bg-orange-200 whitespace-pre-wrap px-[5px] mx-[-5px]";
 const repeatedClasses = "rounded-xl bg-blue-200 whitespace-pre-wrap px-[5px] mx-[-5px]";
@@ -12,19 +12,8 @@ const generateTextAndPhrases = (text: string, sortedPhrases: Phrase[], offset: n
   let chunkStartIndex = 0;
 
   sortedPhrases.forEach(phrase => {
-    if (phrase.start === chunkStartIndex) {
-      // phrase alone
-      chunks.push(
-        <span
-          key={getPhraseKey(phrase)}
-          className={phrase.isRepetition ? repeatedClasses : phraseClasses}
-          data-pls-idx={phrase.start}
-        >
-          { text.substring(phrase.start, phrase.end) }
-        </span>
-      );
-    } else {
-      // preceeding plaintext chunk
+    // preceeding plain text span
+    if (chunkStartIndex < phrase.start) {
       chunks.push(
         <span
           className={textClasses}
@@ -33,20 +22,18 @@ const generateTextAndPhrases = (text: string, sortedPhrases: Phrase[], offset: n
           { text.substring(chunkStartIndex, phrase.start) }
         </span>
       );
-
-      // then the phrase
-      chunks.push(
-        <span
-          key={getPhraseKey(phrase)}
-          className={phrase.isRepetition ? repeatedClasses : phraseClasses}
-          data-pls-idx={phrase.start}
-          // onClick={() => { console.log('CLICKED!', phrase)}}
-          // onMouseOver={() => console.log('MOUSE!', phrase) }
-        >
-          { text.substring(phrase.start, phrase.end) }
-        </span>
-      );
     }
+
+    // then the phrase
+    chunks.push(
+      <span
+        key={phrase.start}
+        className={phrase.isRepetition ? repeatedClasses : phraseClasses}
+        data-pls-idx={phrase.start}
+      >
+        { text.substring(phrase.start, phrase.end) }
+      </span>
+    );
 
     // advance just past this chunk
     chunkStartIndex = phrase.end;
@@ -69,7 +56,7 @@ const generateTextAndPhrases = (text: string, sortedPhrases: Phrase[], offset: n
 
 interface SplitterTextCellProps {
   line: TranscriptLine;
-  phrases?: Phrase[];
+  sortedPhrases?: Phrase[];
   maskIdx?: number | null;
   className?: string;
   style?: CSSProperties;
@@ -77,18 +64,18 @@ interface SplitterTextCellProps {
 }
 
 const SplitterTextCell: React.FC<SplitterTextCellProps> = props => {
-  const { line, phrases, maskIdx, className, style, attributes } = props;
+  const { line, sortedPhrases, maskIdx, className, style, attributes } = props;
   const isMasked = Number.isInteger(maskIdx);
   const text = line.textWithoutSpeaker || line.text;
   const cellStyles = isMasked ? 'flex' : 'px-2 py-2 relative';
 
   return (
     <div className={classnames(className, cellStyles)} style={style} {...attributes}>
-      { !isMasked && !phrases?.length &&
+      { !isMasked && !sortedPhrases?.length &&
         <span data-pls-idx="0">{ text }</span>
       }
 
-      { !isMasked && phrases?.length && generateTextAndPhrases(text, phrases) }
+      { !isMasked && sortedPhrases?.length && generateTextAndPhrases(text, sortedPhrases) }
 
       {/* TODO: generate correctly with mask offset */}
       { isMasked &&
