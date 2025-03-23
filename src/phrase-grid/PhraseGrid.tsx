@@ -1,7 +1,7 @@
 import { useState, useMemo, CSSProperties } from 'react';
 import { useContextMenu } from "react-contexify";
 
-import { getPhraseRepetitionKey, GridClickState, PhraseRepetition, TranscriptLine } from '../data';
+import { getPhraseRepetitionKey, GridAction, PhraseRepetition, TranscriptLine } from '../data';
 import { getGridColumnAttributes } from '../util';
 import { useViewState } from '../ViewStateContext';
 import { NEW_PHRASE_MENU_ID, NewPhraseMenu } from '../context-menu/NewPhraseMenu';
@@ -15,7 +15,7 @@ interface PhraseGridProps {
 
 const PhraseGrid: React.FC<PhraseGridProps> = props => {
   const { transcriptLines, phraseRepetitions, style } = props;
-  const [gridClickState, setGridClickState] = useState<GridClickState | null>(null);
+  const [gridClickState, setGridClickState] = useState<GridAction | null>(null);
   const { show: showContextMenu } = useContextMenu();
   const { showConfirmationModal } = useViewState();
 

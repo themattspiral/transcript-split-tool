@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 interface NewPhraseMenuProps {
-  textSelectionString: string;
+  textSelectionString: string | null;
   onSetPhrase: () => void;
 }
 

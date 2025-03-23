@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
-import { Phrase, PhraseRepetition, TranscriptLine, TABS } from './data';
+import { Phrase, PhraseRepetition, TranscriptLine, TABS, sortPhraseRepetitions, getPhraseKey } from './data';
 import { CONFIRM_MODAL_ID } from './modal/ConfirmModal';
 
 interface ViewStateContextProps {
@@ -17,12 +17,14 @@ interface ViewStateContextProps {
   // data
   transcriptLines: TranscriptLine[];
   phraseRepetitions: PhraseRepetition[];
-  pendingPhraseRepetition: PhraseRepetition | null;
+  pendingPhrase: Phrase | null;
+  pendingRepeatedPhrase: Phrase | null;
+  repeatedPhraseRefCounts: { [key: string]: number};
   setNewTranscript: (lines: TranscriptLine[]) => void;
   setPendingPhrase: (phrase: Phrase) => void;
   setPendingRepeatedPhrase: (phrase: Phrase) => void;
-  clearPendingPhraseRepetition: () => void;
-  addPendingPhraseToRepetitions: () => void;
+  clearPendingPhrases: () => void;
+  addPendingPhrasesToRepetitions: () => void;
 }
 
 const ViewStateContext = createContext<ViewStateContextProps>({
@@ -36,12 +38,14 @@ const ViewStateContext = createContext<ViewStateContextProps>({
   modalOnConfirm: null,
   transcriptLines: [],
   phraseRepetitions: [],
-  pendingPhraseRepetition: null,
+  pendingPhrase: null,
+  pendingRepeatedPhrase: null,
+  repeatedPhraseRefCounts: {},
   setNewTranscript: () => {},
   setPendingPhrase: () => {},
   setPendingRepeatedPhrase: () => {},
-  clearPendingPhraseRepetition: () => {},
-  addPendingPhraseToRepetitions: () => {}
+  clearPendingPhrases: () => {},
+  addPendingPhrasesToRepetitions: () => {}
 });
 
 const useViewState = () => {
@@ -63,7 +67,24 @@ const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   // data
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
   const [phraseRepetitions, setPhraseRepetitions] = useState<PhraseRepetition[]>([]);
-  const [pendingPhraseRepetition, setPendingPhraseRepetition] = useState<PhraseRepetition | null>(null);
+  const [pendingPhrase, setPendingPhrase] = useState<Phrase | null>(null);
+  const [pendingRepeatedPhrase, setPendingRepeatedPhrase] = useState<Phrase | null>(null);
+
+  const repeatedPhraseRefCounts = useMemo(() => {
+    const counts = {} as { [key: string]: number };
+
+    phraseRepetitions.forEach(rep => {
+      const key = getPhraseKey(rep.repetionOf);
+
+      if (!counts[key]) {
+        counts[key] = 1;
+      } else {
+        counts[key]++;
+      }
+    });
+
+    return counts;
+  }, [phraseRepetitions]);
 
   const showConfirmationModal = useCallback((message: string, onConfirm: () => void) => {
     setModalMessage(message);
@@ -80,47 +101,46 @@ const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const setNewTranscript = useCallback((lines: TranscriptLine[]) => {
     setTranscriptLines(lines);
   }, [setTranscriptLines]);
-
-  const setPendingPhrase = useCallback((phrase: Phrase) => {
-    setPendingPhraseRepetition({ phrase, repetionOf: {} as Phrase });
-  }, [setPendingPhraseRepetition]);
   
-  const setPendingRepeatedPhrase = useCallback((repeatedPhrase: Phrase) => {
-    setPendingPhraseRepetition(rep => ({
-      phrase: (rep as PhraseRepetition).phrase,
-      repetionOf: repeatedPhrase
-    }));
-  }, [setPendingPhraseRepetition]);
-  
-  const clearPendingPhraseRepetition = useCallback(() => {
-    setPendingPhraseRepetition(null);
-  }, [setPendingPhraseRepetition]);
+  const clearPendingPhrases = useCallback(() => {
+    setPendingPhrase(null);
+    setPendingRepeatedPhrase(null);
+  }, [setPendingPhrase, setPendingRepeatedPhrase]);
 
-  const addPendingPhraseToRepetitions = useCallback(() => {
+  const addPendingPhrasesToRepetitions = useCallback(() => {
     setPhraseRepetitions(prs => {
-      if (pendingPhraseRepetition) {
-        const newPrs = ([] as PhraseRepetition[]).concat(prs).concat(pendingPhraseRepetition);
-        // TODO sort
+      if (pendingPhrase && pendingRepeatedPhrase) {
+
+        const newPrs = ([] as PhraseRepetition[]).concat(prs).concat({
+          phrase: pendingPhrase,
+          repetionOf: pendingRepeatedPhrase
+        });
+        newPrs.sort(sortPhraseRepetitions);
         return newPrs;
       } else {
         return prs;
       }
     });
-    setPendingPhraseRepetition(null);
-  }, [pendingPhraseRepetition, setPhraseRepetitions]);
+
+    setPendingPhrase(null);
+    setPendingRepeatedPhrase(null);
+  }, [
+    pendingPhrase, pendingRepeatedPhrase,
+    setPendingPhrase, setPendingRepeatedPhrase, setPhraseRepetitions
+  ]);
 
   const value = useMemo(() => ({
     activeTabId, setActiveTabId,
     displayedModalId, isModalShowing, showConfirmationModal, hideModals, modalMessage, modalOnConfirm,
-    transcriptLines, phraseRepetitions, pendingPhraseRepetition,
-    setNewTranscript, setPendingPhrase, setPendingRepeatedPhrase, clearPendingPhraseRepetition,
-    addPendingPhraseToRepetitions
+    transcriptLines, phraseRepetitions, pendingPhrase, pendingRepeatedPhrase, repeatedPhraseRefCounts,
+    setNewTranscript, setPendingPhrase, setPendingRepeatedPhrase, clearPendingPhrases,
+    addPendingPhrasesToRepetitions
   }), [
     activeTabId, setActiveTabId,
     displayedModalId, isModalShowing, showConfirmationModal, hideModals, modalMessage, modalOnConfirm,
-    transcriptLines, phraseRepetitions, pendingPhraseRepetition,
-    setNewTranscript, setPendingPhrase, setPendingRepeatedPhrase, clearPendingPhraseRepetition,
-    addPendingPhraseToRepetitions
+    transcriptLines, phraseRepetitions, pendingPhrase, pendingRepeatedPhrase, repeatedPhraseRefCounts,
+    setNewTranscript, setPendingPhrase, setPendingRepeatedPhrase, clearPendingPhrases,
+    addPendingPhrasesToRepetitions
   ]);
 
   return (
