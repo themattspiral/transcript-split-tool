@@ -2,7 +2,7 @@ import { useState, CSSProperties, useMemo } from 'react';
 import { useContextMenu } from "react-contexify";
 import classnames from 'classnames';
 
-import { getPhraseText, GridAction, Phrase, sortPhrases } from '../data';
+import { getPhraseText, GridAction, Phrase } from '../data';
 import { getGridColumnAttributes } from '../util';
 import { useViewState } from '../ViewStateContext';
 import { NEW_PHRASE_MENU_ID, NewPhraseMenu } from '../context-menu/NewPhraseMenu';
@@ -19,7 +19,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
   
   const { show: showContextMenu } = useContextMenu();
   const {
-    transcriptLines, phraseRepetitions, pendingPhrase,
+    transcriptLines, phraseRepetitions, pendingPhrase, pendingRepeatedPhrase,
     setPendingPhrase, setPendingRepeatedPhrase
   } = useViewState();
 
@@ -34,8 +34,18 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       reps[rep.repetionOf.transcriptLineIdx] = repeatedLinePhrases.concat(rep.repetionOf);
     });
 
+    if (pendingPhrase) {
+      const linePhrases = reps[pendingPhrase.transcriptLineIdx] || [];
+      reps[pendingPhrase.transcriptLineIdx] = linePhrases.concat(pendingPhrase);
+    }
+    
+    if (pendingRepeatedPhrase) {
+      const linePhrases = reps[pendingRepeatedPhrase.transcriptLineIdx] || [];
+      reps[pendingRepeatedPhrase.transcriptLineIdx] = linePhrases.concat(pendingRepeatedPhrase);
+    }
+
     return reps;
-  }, [phraseRepetitions]);
+  }, [phraseRepetitions, pendingPhrase, pendingRepeatedPhrase]);
   
 
   const handleSetNewPhrase = () => {
@@ -103,7 +113,8 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
           transcriptLineIdx,
           start: (range.startOffset + beginPhraseLineStartIdx) || 0,
           end: (range.endOffset + endPhraseLineStartIdx) || 0,
-          isRepetition: !!pendingPhrase
+          isRepetition: !!pendingPhrase,
+          isPending: true
         },
         textSelection: sel || undefined
       });
@@ -137,7 +148,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       
       {/* Header Row */}
       <div
-        className="flex font-medium sticky top-0 z-2 bg-gray-200 shadow-sm shadow-gray-400 select-none"
+        className="flex font-medium sticky top-0 z-3 bg-gray-200 shadow-sm shadow-gray-400 select-none"
         data-transcript-line-idx="header"
       >
 

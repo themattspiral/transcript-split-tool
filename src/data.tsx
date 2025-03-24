@@ -55,6 +55,7 @@ export interface Phrase {
   start: number;
   end: number;
   isRepetition: boolean;
+  isPending: boolean;
 }
   
 export interface TranscriptLine {

@@ -112,8 +112,8 @@ const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       if (pendingPhrase && pendingRepeatedPhrase) {
 
         const newPrs = ([] as PhraseRepetition[]).concat(prs).concat({
-          phrase: pendingPhrase,
-          repetionOf: pendingRepeatedPhrase
+          phrase: { ...pendingPhrase, isPending: false },
+          repetionOf: { ...pendingRepeatedPhrase, isPending: false }
         });
         newPrs.sort(sortPhraseRepetitions);
         return newPrs;

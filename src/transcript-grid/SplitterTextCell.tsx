@@ -17,6 +17,7 @@ interface TextSpan {
   spanType: TextSpanType;
   isLeftmostPhrase: boolean;
   isRightmostPhrase: boolean;
+  isPending: boolean;
   classes?: string;
 }
 
@@ -71,10 +72,14 @@ const SplitterTextCell: React.FC<SplitterTextCellProps> = props => {
         }
       }
 
+      let isPending = false;
       let spanType = TextSpanType.Text;
+      
       if (coveredPhrases.length === 1) {
+        isPending = coveredPhrases[0].isPending; 
         spanType = coveredPhrases[0].isRepetition ? TextSpanType.RepeatedPhrase : TextSpanType.Phrase;
       } else if (coveredPhrases.length > 1) {
+        isPending = coveredPhrases.some(phrase => phrase.isPending);
         spanType = TextSpanType.OverlappingPhrases;
       }
       
@@ -84,7 +89,8 @@ const SplitterTextCell: React.FC<SplitterTextCellProps> = props => {
         coveredPhrases,
         spanType,
         isLeftmostPhrase: false,
-        isRightmostPhrase: false
+        isRightmostPhrase: false,
+        isPending
       });
     }
 
@@ -95,12 +101,16 @@ const SplitterTextCell: React.FC<SplitterTextCellProps> = props => {
       const spanMasked = maskIdx !== undefined && maskIdx <= spans[i].start;
       spans[i].classes = classnames(
         'whitespace-pre-wrap',
-        { ['text-gray-400 select-none cursor-not-allowed']: spanMasked },
+        { ['text-gray-400 select-none cursor-not-allowed']: !spans[i].isPending && spanMasked },
+        { ['select-none cursor-not-allowed z-2 relative']: spans[i].isPending && spanMasked },
         { ['bg-gray-200']: spanMasked && spans[i].spanType === TextSpanType.Text },
         { ['z-1 relative']: spans[i].spanType === TextSpanType.Text },
-        { ['bg-orange-200']: spans[i].spanType === TextSpanType.Phrase },
-        { ['bg-blue-200']: spans[i].spanType === TextSpanType.RepeatedPhrase },
-        { ['bg-fuchsia-300']: spans[i].spanType === TextSpanType.OverlappingPhrases },
+        { ['bg-orange-200']: !spans[i].isPending && spans[i].spanType === TextSpanType.Phrase },
+        { ['bg-blue-200']: !spans[i].isPending && spans[i].spanType === TextSpanType.RepeatedPhrase },
+        { ['bg-fuchsia-300']: !spans[i].isPending && spans[i].spanType === TextSpanType.OverlappingPhrases },
+        { ['bg-orange-100 border-orange-300 border-2 border-dashed']: spans[i].isPending && spans[i].spanType === TextSpanType.Phrase },
+        { ['bg-blue-100 border-blue-300 border-2 border-dashed']: spans[i].isPending && spans[i].spanType === TextSpanType.RepeatedPhrase },
+        { ['bg-fuchsia-200 border-fuchsia-400 border-2 border-dashed']: spans[i].isPending && spans[i].spanType === TextSpanType.OverlappingPhrases },
         { ['rounded-l-xl pl-[3px] ml-[-3px]']: spans[i].isLeftmostPhrase },
         { ['rounded-r-xl pr-[3px] mr-[-3px]']: spans[i].isRightmostPhrase }
       );
