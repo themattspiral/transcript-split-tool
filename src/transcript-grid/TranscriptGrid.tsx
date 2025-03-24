@@ -34,10 +34,6 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       reps[rep.repetionOf.transcriptLineIdx] = repeatedLinePhrases.concat(rep.repetionOf);
     });
 
-    Object.values(reps).forEach(phrases => {
-      phrases.sort(sortPhrases);
-    });
-
     return reps;
   }, [phraseRepetitions]);
   
@@ -172,7 +168,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
           ? 'bg-gray-200 text-gray-400 select-none cursor-not-allowed' : '';
 
         const maskedTextIdx = pendingPhrase && idx === pendingPhrase.transcriptLineIdx
-          ? pendingPhrase.start : null;
+          ? pendingPhrase.start : undefined;
         
         return (
           <div 
@@ -195,7 +191,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
             </div>
             <SplitterTextCell
               line={line}
-              sortedPhrases={phrasesByTranscriptLineIdx[idx]}
+              phrases={phrasesByTranscriptLineIdx[idx]}
               maskIdx={maskedTextIdx}
               className="border-r-0 border-b-1 border-gray-400 grow-1"
               attributes={{ ['data-column']: 'true', ['data-column-id']: 'text', ['data-transcript-line-idx']: idx.toString() }}

@@ -1,92 +1,125 @@
-import { CSSProperties } from "react";
+import { CSSProperties, useMemo } from "react";
 import classnames from "classnames";
 
 import { Phrase, TranscriptLine } from "../data";
 
-const phraseClasses = "rounded-xl bg-orange-200 whitespace-pre-wrap px-[5px] mx-[-5px]";
-const repeatedClasses = "rounded-xl bg-blue-200 whitespace-pre-wrap px-[5px] mx-[-5px]";
-const textClasses = "";
-
-const generateTextAndPhrases = (text: string, sortedPhrases: Phrase[], offset: number = 0) => {
-  const chunks = [];
-  let chunkStartIndex = 0;
-
-  sortedPhrases.forEach(phrase => {
-    // preceeding plain text span
-    if (chunkStartIndex < phrase.start) {
-      chunks.push(
-        <span
-          className={textClasses}
-          data-pls-idx={chunkStartIndex}
-        >
-          { text.substring(chunkStartIndex, phrase.start) }
-        </span>
-      );
-    }
-
-    // then the phrase
-    chunks.push(
-      <span
-        key={phrase.start}
-        className={phrase.isRepetition ? repeatedClasses : phraseClasses}
-        data-pls-idx={phrase.start}
-      >
-        { text.substring(phrase.start, phrase.end) }
-      </span>
-    );
-
-    // advance just past this chunk
-    chunkStartIndex = phrase.end;
-  });
-
-  if (chunkStartIndex < text.length) {
-    // final non-highlighted chunk
-    chunks.push(
-      <span
-        className={textClasses}
-        data-pls-idx={chunkStartIndex}
-      >
-        { text.substring(chunkStartIndex) }
-      </span>
-    );
+enum TextSpanType {
+  Phrase = 'phrase',
+  RepeatedPhrase = 'repeated',
+  OverlappingPhrases = 'overlap',
+  Text = 'text'
 }
 
-  return <> { chunks } </>;
-};
+interface TextSpan {
+  start: number;
+  end: number;
+  coveredPhrases: Phrase[];
+  spanType: TextSpanType;
+  isLeftmostPhrase: boolean;
+  isRightmostPhrase: boolean;
+  classes?: string;
+}
 
 interface SplitterTextCellProps {
   line: TranscriptLine;
-  sortedPhrases?: Phrase[];
-  maskIdx?: number | null;
+  phrases?: Phrase[];
+  maskIdx?: number;
   className?: string;
   style?: CSSProperties;
   attributes?: any;
 }
 
 const SplitterTextCell: React.FC<SplitterTextCellProps> = props => {
-  const { line, sortedPhrases, maskIdx, className, style, attributes } = props;
-  const isMasked = Number.isInteger(maskIdx);
+  const { line, phrases, maskIdx, className, style, attributes } = props;
   const text = line.textWithoutSpeaker || line.text;
-  const cellStyles = isMasked ? 'flex' : 'px-2 py-2 relative';
+
+  // flatten potential range overlaps
+  const textSpans: TextSpan[] = useMemo(() => {
+    const idxSpanSplitPoints = new Set<number>([0, line.text.length]);
+    phrases?.forEach(phrase => {
+      idxSpanSplitPoints.add(phrase.start);
+      idxSpanSplitPoints.add(phrase.end);
+    });
+    if (maskIdx !== undefined) {
+      idxSpanSplitPoints.add(maskIdx);
+    }
+
+    const sortedPoints = Array.from(idxSpanSplitPoints).sort((a, b) => a - b);
+
+    // create discrete ranges between adjacent points
+    const spans: TextSpan[] = [];
+    
+    for (let i = 0; i < sortedPoints.length - 1; i++) {
+      const start = sortedPoints[i];
+      const end = sortedPoints[i + 1];
+      
+      // find which original phrases cover this section
+      const coveredPhrases: Phrase[] = [];
+      
+      if (phrases) {
+        for (let j = 0; j < phrases.length; j++) {
+          const phrase = phrases[j];
+          
+          // A phrase covers this section if:
+          // 1. the phrase's start is less than this section's end
+          // 2. the phrase's end is greater than this section's start
+          //
+          // i.e. fully contained, or overlapping on either side
+          if (phrase.start < end && phrase.end > start) {
+            coveredPhrases.push(phrase);
+          }
+        }
+      }
+
+      let spanType = TextSpanType.Text;
+      if (coveredPhrases.length === 1) {
+        spanType = coveredPhrases[0].isRepetition ? TextSpanType.RepeatedPhrase : TextSpanType.Phrase;
+      } else if (coveredPhrases.length > 1) {
+        spanType = TextSpanType.OverlappingPhrases;
+      }
+      
+      spans.push({
+        start,
+        end,
+        coveredPhrases,
+        spanType,
+        isLeftmostPhrase: false,
+        isRightmostPhrase: false
+      });
+    }
+
+    for (let i = 0; i < spans.length; i++) {
+      spans[i].isLeftmostPhrase = spans[i].spanType != TextSpanType.Text && (i === 0 || spans[i - 1].spanType === TextSpanType.Text);
+      spans[i].isRightmostPhrase = spans[i].spanType != TextSpanType.Text && (i === (spans.length - 1) || spans[i + 1].spanType === TextSpanType.Text);
+      
+      const spanMasked = maskIdx !== undefined && maskIdx <= spans[i].start;
+      spans[i].classes = classnames(
+        'whitespace-pre-wrap',
+        { ['text-gray-400 select-none cursor-not-allowed']: spanMasked },
+        { ['bg-gray-200']: spanMasked && spans[i].spanType === TextSpanType.Text },
+        { ['z-1 relative']: spans[i].spanType === TextSpanType.Text },
+        { ['bg-orange-200']: spans[i].spanType === TextSpanType.Phrase },
+        { ['bg-blue-200']: spans[i].spanType === TextSpanType.RepeatedPhrase },
+        { ['bg-fuchsia-300']: spans[i].spanType === TextSpanType.OverlappingPhrases },
+        { ['rounded-l-xl pl-[3px] ml-[-3px]']: spans[i].isLeftmostPhrase },
+        { ['rounded-r-xl pr-[3px] mr-[-3px]']: spans[i].isRightmostPhrase }
+      );
+    }
+
+    return spans;
+  }, [line, phrases, maskIdx]);
 
   return (
-    <div className={classnames(className, cellStyles)} style={style} {...attributes}>
-      { !isMasked && !sortedPhrases?.length &&
-        <span data-pls-idx="0">{ text }</span>
-      }
-
-      { !isMasked && sortedPhrases?.length && generateTextAndPhrases(text, sortedPhrases) }
-
-      {/* TODO: generate correctly with mask offset */}
-      { isMasked &&
-        <>
-        <div className="pl-2 py-2 inline-block whitespace-pre-wrap">{ text.substring(0, maskIdx as number) }</div>
-        <div className="whitespace-pre-wrap grow-1 pr-2 py-2 inline-block bg-gray-200 text-gray-400 select-none cursor-not-allowed">
-          { text.substring(maskIdx as number) }
-        </div>
-        </>
-      }
-
+    <div className={classnames('px-2 py-2 relative', className)} style={style} {...attributes}>
+      { textSpans.map(span => (
+        <span
+          key={`${span.start}:${span.end}`}
+          data-pls-idx={span.start}
+          className={span.classes}
+        >
+          { text.substring(span.start, span.end) }
+        </span>
+      )) }
     </div>
   );
 };
