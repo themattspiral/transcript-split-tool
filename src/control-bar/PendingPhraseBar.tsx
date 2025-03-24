@@ -11,7 +11,7 @@ const PendingPhraseBar: React.FC = () => {
     clearPendingPhrases, addPendingPhrasesToRepetitions
   } = useViewState();
 
-  if (!pendingPhrase) {
+  if (!pendingPhrase && !pendingRepeatedPhrase) {
     return null;
   }
 

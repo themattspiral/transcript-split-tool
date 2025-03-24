@@ -15,13 +15,11 @@ interface TextSpan {
   end: number;
   coveredPhrases: Phrase[];
   spanType: TextSpanType;
-  isLeftmostPhrase: boolean;
-  isRightmostPhrase: boolean;
   isPending: boolean;
   classes?: string;
 }
 
-interface SplitterTextCellProps {
+interface HighlightableTextCellProps {
   line: TranscriptLine;
   phrases?: Phrase[];
   maskIdx?: number;
@@ -30,7 +28,7 @@ interface SplitterTextCellProps {
   attributes?: any;
 }
 
-const SplitterTextCell: React.FC<SplitterTextCellProps> = props => {
+const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
   const { line, phrases, maskIdx, className, style, attributes } = props;
   const text = line.textWithoutSpeaker || line.text;
 
@@ -88,31 +86,32 @@ const SplitterTextCell: React.FC<SplitterTextCellProps> = props => {
         end,
         coveredPhrases,
         spanType,
-        isLeftmostPhrase: false,
-        isRightmostPhrase: false,
         isPending
       });
     }
 
+    // determine correct styling for each span
     for (let i = 0; i < spans.length; i++) {
-      spans[i].isLeftmostPhrase = spans[i].spanType != TextSpanType.Text && (i === 0 || spans[i - 1].spanType === TextSpanType.Text);
-      spans[i].isRightmostPhrase = spans[i].spanType != TextSpanType.Text && (i === (spans.length - 1) || spans[i + 1].spanType === TextSpanType.Text);
+      const isMasked = maskIdx !== undefined && maskIdx <= spans[i].start;
+      const isPending = spans[i].isPending;
+      const spanType = spans[i].spanType;
+      const isLeftmostPhrase = spanType != TextSpanType.Text && (i === 0 || spans[i - 1].spanType === TextSpanType.Text);
+      const isRightmostPhrase = spanType != TextSpanType.Text && (i === (spans.length - 1) || spans[i + 1].spanType === TextSpanType.Text);
       
-      const spanMasked = maskIdx !== undefined && maskIdx <= spans[i].start;
       spans[i].classes = classnames(
         'whitespace-pre-wrap',
-        { ['text-gray-400 select-none cursor-not-allowed']: !spans[i].isPending && spanMasked },
-        { ['select-none cursor-not-allowed z-2 relative']: spans[i].isPending && spanMasked },
-        { ['bg-gray-200']: spanMasked && spans[i].spanType === TextSpanType.Text },
-        { ['z-1 relative']: spans[i].spanType === TextSpanType.Text },
-        { ['bg-orange-200']: !spans[i].isPending && spans[i].spanType === TextSpanType.Phrase },
-        { ['bg-blue-200']: !spans[i].isPending && spans[i].spanType === TextSpanType.RepeatedPhrase },
-        { ['bg-fuchsia-300']: !spans[i].isPending && spans[i].spanType === TextSpanType.OverlappingPhrases },
-        { ['bg-orange-100 border-orange-300 border-2 border-dashed']: spans[i].isPending && spans[i].spanType === TextSpanType.Phrase },
-        { ['bg-blue-100 border-blue-300 border-2 border-dashed']: spans[i].isPending && spans[i].spanType === TextSpanType.RepeatedPhrase },
-        { ['bg-fuchsia-200 border-fuchsia-400 border-2 border-dashed']: spans[i].isPending && spans[i].spanType === TextSpanType.OverlappingPhrases },
-        { ['rounded-l-xl pl-[3px] ml-[-3px]']: spans[i].isLeftmostPhrase },
-        { ['rounded-r-xl pr-[3px] mr-[-3px]']: spans[i].isRightmostPhrase }
+        { ['text-gray-400 select-none cursor-not-allowed']: !isPending && isMasked },
+        { ['select-none cursor-not-allowed z-2 relative']: isPending && isMasked },  // don't gray-out masked text for pending phrase, ensure pending parts sit over other masked parts
+        { ['bg-gray-200']: isMasked && spanType === TextSpanType.Text },
+        { ['z-1 relative']: spanType === TextSpanType.Text },  // ensure text (w/ transparent bg) sits on top of extended phrase bubble padding
+        { ['bg-orange-200']: !isPending && spanType === TextSpanType.Phrase },
+        { ['bg-blue-200']: !isPending && spanType === TextSpanType.RepeatedPhrase },
+        { ['bg-fuchsia-300']: !isPending && spanType === TextSpanType.OverlappingPhrases },
+        { ['bg-orange-100 border-orange-300 border-2 border-dashed']: isPending && spanType === TextSpanType.Phrase },
+        { ['bg-blue-100 border-blue-300 border-2 border-dashed']: isPending && spanType === TextSpanType.RepeatedPhrase },
+        { ['bg-fuchsia-200 border-fuchsia-400 border-2 border-dashed']: isPending && spanType === TextSpanType.OverlappingPhrases },
+        { ['rounded-l-xl pl-[3px] ml-[-3px]']: isLeftmostPhrase },
+        { ['rounded-r-xl pr-[3px] mr-[-3px]']: isRightmostPhrase }
       );
     }
 
@@ -120,13 +119,9 @@ const SplitterTextCell: React.FC<SplitterTextCellProps> = props => {
   }, [line, phrases, maskIdx]);
 
   return (
-    <div className={classnames('px-2 py-2 relative', className)} style={style} {...attributes}>
+    <div  className={classnames('px-2 py-2 relative', className)} style={style} {...attributes}>
       { textSpans.map(span => (
-        <span
-          key={`${span.start}:${span.end}`}
-          data-pls-idx={span.start}
-          className={span.classes}
-        >
+        <span key={`${span.start}:${span.end}`} className={span.classes} data-pls-idx={span.start}>
           { text.substring(span.start, span.end) }
         </span>
       )) }
@@ -134,4 +129,4 @@ const SplitterTextCell: React.FC<SplitterTextCellProps> = props => {
   );
 };
 
-export { SplitterTextCell };
+export { HighlightableTextCell };

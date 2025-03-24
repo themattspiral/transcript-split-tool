@@ -8,7 +8,7 @@ import { useViewState } from '../ViewStateContext';
 import { NEW_PHRASE_MENU_ID, NewPhraseMenu } from '../context-menu/NewPhraseMenu';
 import { REPEATED_PHRASE_MENU_ID, RepeatedPhraseMenu } from '../context-menu/RepeatedPhraseMenu';
 import { ERROR_MULTIPLE_LINES_MENU_ID, ErrorMultipleLinesMenu } from '../context-menu/ErrorMultipleLinesMenu';
-import { SplitterTextCell } from './SplitterTextCell';
+import { HighlightableTextCell } from './HighlightableTextCell';
 
 interface TranscriptGridProps {
   style?: CSSProperties | undefined;
@@ -194,13 +194,15 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
             >
               {line.lineNumber}
             </div>
+
             <div
               className="px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[100px] shrink-0"
               data-column data-column-id="speaker" data-transcript-line-idx={idx}
             >
               { line.speaker }
             </div>
-            <SplitterTextCell
+
+            <HighlightableTextCell
               line={line}
               phrases={phrasesByTranscriptLineIdx[idx]}
               maskIdx={maskedTextIdx}
