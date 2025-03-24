@@ -148,7 +148,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       
       {/* Header Row */}
       <div
-        className="flex font-medium sticky top-0 z-3 bg-gray-200 shadow-sm shadow-gray-400 select-none"
+        className="flex font-medium sticky top-0 z-4 bg-gray-200 shadow-sm shadow-gray-400 select-none"
         data-transcript-line-idx="header"
       >
 

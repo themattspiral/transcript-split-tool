@@ -1,5 +1,5 @@
 const getPhraseKey = (phrase: Phrase): string => {
-  return `${phrase.transcriptLineIdx}_${phrase.start}:${phrase.end}`;
+  return `${phrase.transcriptLineIdx}_${phrase.start}:${phrase.end}:${phrase.isRepetition ? 'r' : ''}`;
 };
 
 const getPhraseRepetitionKey = (rep: PhraseRepetition): string => {

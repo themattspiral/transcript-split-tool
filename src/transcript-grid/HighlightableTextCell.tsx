@@ -1,13 +1,14 @@
-import { CSSProperties, useMemo } from "react";
+import { CSSProperties, useCallback, useMemo } from "react";
 import classnames from "classnames";
 
-import { Phrase, TranscriptLine } from "../data";
+import { getPhraseKey, Phrase, TranscriptLine } from "../data";
+import { useViewState } from "../ViewStateContext";
 
 enum TextSpanType {
-  Phrase = 'phrase',
-  RepeatedPhrase = 'repeated',
-  OverlappingPhrases = 'overlap',
-  Text = 'text'
+  Phrase,
+  RepeatedPhrase,
+  OverlappingPhrases,
+  Text
 }
 
 interface TextSpan {
@@ -16,6 +17,7 @@ interface TextSpan {
   coveredPhrases: Phrase[];
   spanType: TextSpanType;
   isPending: boolean;
+  refCount?: number;
   classes?: string;
 }
 
@@ -31,6 +33,14 @@ interface HighlightableTextCellProps {
 const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
   const { line, phrases, maskIdx, className, style, attributes } = props;
   const text = line.textWithoutSpeaker || line.text;
+
+  const { repeatedPhraseRefCounts, pendingPhrase, setPendingRepeatedPhrase } = useViewState();
+
+  const handleRepeatedPhraseClick = useCallback((phrase: Phrase) => {
+    if (pendingPhrase) {
+      setPendingRepeatedPhrase({ ...phrase, isPending: true });
+    }
+  }, [pendingPhrase, setPendingRepeatedPhrase]);
 
   // flatten potential range overlaps
   const textSpans: TextSpan[] = useMemo(() => {
@@ -52,9 +62,8 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
       const start = sortedPoints[i];
       const end = sortedPoints[i + 1];
       
-      // find which original phrases cover this section
-      const coveredPhrases: Phrase[] = [];
-      
+      // find which original phrases cover this span
+      const uniqueCoveredPhrases: { [key: string]: Phrase } = {};
       if (phrases) {
         for (let j = 0; j < phrases.length; j++) {
           const phrase = phrases[j];
@@ -65,17 +74,23 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
           //
           // i.e. fully contained, or overlapping on either side
           if (phrase.start < end && phrase.end > start) {
-            coveredPhrases.push(phrase);
+            uniqueCoveredPhrases[getPhraseKey(phrase)] = phrase;
           }
         }
       }
+      const coveredPhrases = Object.values(uniqueCoveredPhrases);
 
       let isPending = false;
       let spanType = TextSpanType.Text;
+      let refCount = undefined;
       
       if (coveredPhrases.length === 1) {
         isPending = coveredPhrases[0].isPending; 
         spanType = coveredPhrases[0].isRepetition ? TextSpanType.RepeatedPhrase : TextSpanType.Phrase;
+        
+        if (spanType === TextSpanType.RepeatedPhrase) {
+          refCount = repeatedPhraseRefCounts[getPhraseKey(coveredPhrases[0])];
+        }
       } else if (coveredPhrases.length > 1) {
         isPending = coveredPhrases.some(phrase => phrase.isPending);
         spanType = TextSpanType.OverlappingPhrases;
@@ -86,7 +101,8 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
         end,
         coveredPhrases,
         spanType,
-        isPending
+        isPending,
+        refCount
       });
     }
 
@@ -99,11 +115,12 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
       const isRightmostPhrase = spanType != TextSpanType.Text && (i === (spans.length - 1) || spans[i + 1].spanType === TextSpanType.Text);
       
       spans[i].classes = classnames(
-        'whitespace-pre-wrap',
+        'whitespace-pre-wrap relative',
         { ['text-gray-400 select-none cursor-not-allowed']: !isPending && isMasked },
-        { ['select-none cursor-not-allowed z-2 relative']: isPending && isMasked },  // don't gray-out masked text for pending phrase, ensure pending parts sit over other masked parts
+        { ['select-none cursor-not-allowed z-2']: isPending && isMasked },  // don't gray-out masked text for pending phrase, ensure pending parts sit over other masked parts
+        { ['cursor-pointer']: !!pendingPhrase && spanType === TextSpanType.RepeatedPhrase },
         { ['bg-gray-200']: isMasked && spanType === TextSpanType.Text },
-        { ['z-1 relative']: spanType === TextSpanType.Text },  // ensure text (w/ transparent bg) sits on top of extended phrase bubble padding
+        { ['z-1']: spanType === TextSpanType.Text },  // ensure text (w/ transparent bg) sits on top of extended phrase bubble padding
         { ['bg-orange-200']: !isPending && spanType === TextSpanType.Phrase },
         { ['bg-blue-200']: !isPending && spanType === TextSpanType.RepeatedPhrase },
         { ['bg-fuchsia-300']: !isPending && spanType === TextSpanType.OverlappingPhrases },
@@ -116,13 +133,36 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
     }
 
     return spans;
-  }, [line, phrases, maskIdx]);
+  }, [line, phrases, maskIdx, repeatedPhraseRefCounts, pendingPhrase]);
 
   return (
     <div  className={classnames('px-2 py-2 relative', className)} style={style} {...attributes}>
       { textSpans.map(span => (
-        <span key={`${span.start}:${span.end}`} className={span.classes} data-pls-idx={span.start}>
+        <span
+          key={`${span.start}:${span.end}`}
+          className={span.classes}
+          data-pls-idx={span.start}
+          onClick={() => {
+            if (span.spanType === TextSpanType.RepeatedPhrase) {
+              handleRepeatedPhraseClick(span.coveredPhrases[0]);
+            }
+          }}
+        >
           { text.substring(span.start, span.end) }
+
+          {/* Count Badge */}
+          { span.spanType === TextSpanType.RepeatedPhrase &&
+            <span
+              className={classnames(
+                'inline-block w-[15px] h-[15px] rounded-[15px] z-3',
+                'font-sans text-[10px] text-center pb-[1px]',
+                'absolute top-[-8px] right-[-6px] bg-gray-100 border-gray-700',
+                span.isPending ? 'border-1 border-dashed' : 'border-1'
+              )}
+            >
+              { span.isPending ? (span.refCount || 0)  + 1 : span.refCount }
+            </span>
+          }
         </span>
       )) }
     </div>
