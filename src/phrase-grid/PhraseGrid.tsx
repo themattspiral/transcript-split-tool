@@ -1,11 +1,9 @@
 import { useState, useMemo, CSSProperties } from 'react';
 import { useContextMenu } from "react-contexify";
 
-import { getPhraseRepetitionKey, GridAction, PhraseRepetition, TranscriptLine } from '../data';
-import { getGridColumnAttributes } from '../util';
+import { GridAction, PhraseRepetition, TranscriptLine, HEADER_ROW_ID } from '../data/data';
+import { getPhraseRepetitionKey, getGridColumnAttributes, getPhraseText } from '../util/util';
 import { useViewState } from '../ViewStateContext';
-import { NEW_PHRASE_MENU_ID, NewPhraseMenu } from '../context-menu/NewPhraseMenu';
-import { ERROR_MULTIPLE_LINES_MENU_ID, ErrorMultipleLinesMenu } from '../context-menu/ErrorMultipleLinesMenu';
 
 interface PhraseGridProps {
   transcriptLines: TranscriptLine[];
@@ -19,56 +17,7 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
   const { show: showContextMenu } = useContextMenu();
   const { showConfirmationModal } = useViewState();
 
-  const handleAddSelectionToNewGroup = () => {
-    if (!Number.isInteger(gridClickState?.transcriptLineIdx)
-      || !gridClickState?.textSelection
-      || !gridClickState?.textSelectionString
-    ) {
-      return;
-    }
-
-    const rowIdx = gridClickState?.transcriptLineIdx as number;
-    const range = gridClickState.textSelection.getRangeAt(0);
-  
-    if (rowIdx >= 0) {
-      // const columnId = addColumn();
-
-      // onAddTextSelectionToNewGroup(rowIdx, {
-      //   columnId,
-      //   start: range?.startOffset || -1,
-      //   end: range?.endOffset || -1,
-      //   text: gridClickState.textSelectionString || ''
-      // });
-
-      gridClickState?.textSelection?.empty();
-      setGridClickState(null);
-    };
-  };
-
-  const handleAddSelectionToExistingGroup = (columnId: string) => {
-    if (!Number.isInteger(gridClickState?.transcriptLineIdx)
-      || !gridClickState?.textSelection
-      || !gridClickState?.textSelectionString
-    ) {
-      return;
-    }
-
-    const rowIdx = gridClickState?.transcriptLineIdx as number;
-    const range = gridClickState.textSelection.getRangeAt(0);
-  
-    if (rowIdx >= 0) {
-      // onAddTextSelectionToExistingGroup(rowIdx, {
-      //   columnId,
-      //   start: range?.startOffset || -1,
-      //   end: range?.endOffset || -1,
-      //   text: gridClickState.textSelectionString || ''
-      // });
-
-      gridClickState?.textSelection?.empty();
-      setGridClickState(null);
-    };
-  };
-
+  // TODO
   const handleGridContextMenu = (event: React.MouseEvent): void => {    
     let attrs: NamedNodeMap | undefined = getGridColumnAttributes(event);
     if (!attrs) {
@@ -76,7 +25,7 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
       return;
     }
 
-    const transcriptLineIdxString = attrs.getNamedItem('data-transcript-line-idx')?.value;
+    const transcriptLineIdxString = attrs.getNamedItem('data-phrase-rep-idx')?.value;
     const columnIdString = attrs.getNamedItem('data-column-id')?.value;
     const sel = document.getSelection();
     const selText = sel?.toString();
@@ -96,16 +45,9 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
       console.log('header');
     } else if (hasMultiLineSelection) {
       if (event.preventDefault) event.preventDefault();
-      showContextMenu({ id: ERROR_MULTIPLE_LINES_MENU_ID, event });
     } else if (hasSelection && isTextColumn) {
+      // no selections here right?
       if (event.preventDefault) event.preventDefault();
-      setGridClickState({
-        columnId: columnIdString || '?',
-        transcriptLineIdx,
-        textSelection: sel,
-        textSelectionString: selText
-      });
-      showContextMenu({ id: NEW_PHRASE_MENU_ID, event });
     } else {
       console.log('data row, no selection');
     }
@@ -115,65 +57,65 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
     return (
       <div
         className="flex font-medium sticky top-0 bg-gray-200 shadow-sm shadow-gray-400 select-none"
-        data-transcript-line-idx="header"
+        data-phrase-rep-idx={HEADER_ROW_ID}
       >
 
         {/* Phrase */}
         <div
-          className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0`}
-          data-column data-column-id="line" data-transcript-line-idx="header"
+          className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0`}
+          data-phrase-rep-idx={HEADER_ROW_ID}
         >
           Line
         </div>
         <div
-          className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[100px] shrink-0`}
-          data-column data-column-id="speaker" data-transcript-line-idx="header"
+          className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[100px] shrink-0`}
+          data-phrase-rep-idx={HEADER_ROW_ID}
         >
           Speaker
         </div>
         <div
-          className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[400px] grow-1`}
-          data-column data-column-id="text" data-transcript-line-idx="header"
+          className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[30%] grow-1`}
+          data-phrase-rep-idx={HEADER_ROW_ID}
         >
           Phrase
         </div>
 
         {/* Repetition Of */}
         <div
-          className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0`}
-          data-column data-column-id="line" data-transcript-line-idx="header"
+          className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0`}
+          data-phrase-rep-idx={HEADER_ROW_ID}
         >
           Line
         </div>
         <div
-          className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[100px] shrink-0`}
-          data-column data-column-id="speaker" data-transcript-line-idx="header"
+          className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[100px] shrink-0`}
+          data-phrase-rep-idx={HEADER_ROW_ID}
         >
           Speaker
         </div>
         <div
-          className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[400px] grow-1`}
-          data-column data-column-id="text" data-transcript-line-idx="header"
+          className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[30%] grow-1`}
+          data-phrase-rep-idx={HEADER_ROW_ID}
         >
           Repeated Phrase (Repetition Of)
         </div>
 
         {/* Other Info */}
         <div
-          className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 flex justify-end basis-[50px] shrink-0`}
-          data-column data-column-id="line" data-transcript-line-idx="header"
+          className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0`}
+          data-phrase-rep-idx={HEADER_ROW_ID}
         >
-          Identical
+          Same
         </div>
         <div
-          className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[50px] shrink-0`}
-          data-column data-column-id="speaker" data-transcript-line-idx="header"
+          className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[75px] shrink-0`}
+          data-phrase-rep-idx={HEADER_ROW_ID}
         >
           Type
         </div>
         <div
-          className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[200px] grow-1`}
-          data-column data-column-id="text" data-transcript-line-idx="header"
+          className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[10%] grow-1`}
+          data-phrase-rep-idx={HEADER_ROW_ID}
         >
           Notes
         </div>
@@ -187,76 +129,70 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
       <>
       {phraseRepetitions.map((rep, idx) => {
         const tl = transcriptLines[rep.phrase.transcriptLineIdx];
-        const tlText = tl.speakerDetected ? tl.textWithoutSpeaker : tl.text;
-        const phraseText = tlText?.substring(rep.phrase.start, rep.phrase.end);
+        const phraseText = getPhraseText(rep.phrase, transcriptLines);
 
         const repTl = transcriptLines[rep.repetionOf.transcriptLineIdx];
-        const repTlText = repTl.speakerDetected ? repTl.textWithoutSpeaker : repTl.text;
-        const repPhraseText = repTlText?.substring(rep.repetionOf.start, rep.repetionOf.end);
+        const repPhraseText = getPhraseText(rep.repetionOf, transcriptLines);
 
         return (
-          <div 
-            key={getPhraseRepetitionKey(rep)}
-            className="flex"
-            data-transcript-line-idx={idx}
-          >
+          <div className="flex" key={getPhraseRepetitionKey(rep)} data-phrase-rep-idx={idx}>
 
             {/* Phrase */}
             <div
-              className="px-2 py-2 border-r-0 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
-              data-column data-column-id="line" data-transcript-line-idx="header"
+              className="px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
+              data-phrase-rep-idx={idx}
             >
               { tl.lineNumber }
             </div>
             <div
-              className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[100px] shrink-0`}
-              data-column data-column-id="speaker" data-transcript-line-idx="header"
+              className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[100px] shrink-0`}
+              data-phrase-rep-idx={idx}
             >
               { tl.speaker }
             </div>
             <div
-              className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[400px] grow-1`}
-              data-column data-column-id="text" data-transcript-line-idx="header"
+              className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[30%] grow-1`}
+              data-phrase-rep-idx={idx}
             >
               { phraseText }
             </div>
 
             {/* Repetition Of */}
             <div
-              className="px-2 py-2 border-r-0 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
-              data-column data-column-id="line" data-transcript-line-idx="header"
+              className="px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
+              data-phrase-rep-idx={idx}
             >
               { repTl.lineNumber }
             </div>
             <div
-              className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[100px] shrink-0`}
-              data-column data-column-id="speaker" data-transcript-line-idx="header"
+              className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[100px] shrink-0`}
+              data-phrase-rep-idx={idx}
             >
               { repTl.speaker }
             </div>
             <div
-              className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[400px] grow-1`}
-              data-column data-column-id="text" data-transcript-line-idx="header"
+              className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[30%] grow-1`}
+              data-phrase-rep-idx={idx}
             >
               { repPhraseText }
             </div>
 
             {/* Other Info */}
             <div
-              className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 flex justify-end basis-[50px] shrink-0`}
-              data-column data-column-id="line" data-transcript-line-idx="header"
+              className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0`}
+              data-phrase-rep-idx={idx}
             >
               { phraseText === repPhraseText ? '==' : '!=' }
             </div>
             <div
-              className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[50px] shrink-0`}
-              data-column data-column-id="speaker" data-transcript-line-idx="header"
+              className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[75px] shrink-0`}
+              data-phrase-rep-idx={idx}
             >
               { tl.lineNumber === repTl.lineNumber ? 'Internal' : 'Across' }
             </div>
             <div
-              className={`px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[200px] grow-1`}
-              data-column data-column-id="text" data-transcript-line-idx="header"
+              className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[10%] grow-1`}
+              data-phrase-rep-idx={idx}
             >
               { rep.note }
             </div>
@@ -268,24 +204,19 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
     );
   }, [transcriptLines, phraseRepetitions]);
 
-  return !phraseRepetitions?.length ? null : (
+  return phraseRepetitions?.length ? (
     <div
       className="flex flex-col overflow-auto box-border w-full"
       onContextMenu={handleGridContextMenu}
       style={style}
     >
-      <NewPhraseMenu
-        textSelectionString={gridClickState?.textSelectionString || ''}
-        onSetPhrase={() => {}}
-      />
-      <ErrorMultipleLinesMenu />
       
       { headerRow }
 
       { dataRows }
 
     </div>
-  );
+  ) : null;
 };
 
 export { PhraseGrid };

@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faX } from "@fortawesome/free-solid-svg-icons";
 
 import { useViewState } from "../ViewStateContext";
-import { getPhraseLineNumber, getPhraseText } from '../data';
+import { getPhraseLineNumber, getPhraseText } from '../util/util';
 
 const PendingPhraseBar: React.FC = () => {
   const {

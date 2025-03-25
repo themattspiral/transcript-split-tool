@@ -1,0 +1,82 @@
+[
+  {
+      "phrase": {
+          "transcriptLineIdx": 8,
+          "start": 5,
+          "end": 27,
+          "isRepetition": false,
+          "isPending": false
+      },
+      "repetionOf": {
+          "transcriptLineIdx": 6,
+          "start": 59,
+          "end": 66,
+          "isRepetition": true,
+          "isPending": false
+      }
+  },
+  {
+      "phrase": {
+          "transcriptLineIdx": 13,
+          "start": 68,
+          "end": 94,
+          "isRepetition": false,
+          "isPending": false
+      },
+      "repetionOf": {
+          "transcriptLineIdx": 9,
+          "start": 48,
+          "end": 74,
+          "isRepetition": true,
+          "isPending": false
+      }
+  },
+  {
+      "phrase": {
+          "transcriptLineIdx": 14,
+          "start": 23,
+          "end": 49,
+          "isRepetition": false,
+          "isPending": false
+      },
+      "repetionOf": {
+          "transcriptLineIdx": 8,
+          "start": 130,
+          "end": 156,
+          "isRepetition": true,
+          "isPending": false
+      }
+  },
+  {
+      "phrase": {
+          "transcriptLineIdx": 20,
+          "start": 30,
+          "end": 56,
+          "isRepetition": false,
+          "isPending": false
+      },
+      "repetionOf": {
+          "transcriptLineIdx": 8,
+          "start": 130,
+          "end": 156,
+          "isRepetition": true,
+          "isPending": false
+      }
+  },
+  {
+      "phrase": {
+          "transcriptLineIdx": 26,
+          "start": 153,
+          "end": 179,
+          "isRepetition": false,
+          "isPending": false
+      },
+      "repetionOf": {
+          "transcriptLineIdx": 26,
+          "start": 74,
+          "end": 100,
+          "isRepetition": true,
+          "isPending": false
+      }
+  }
+]

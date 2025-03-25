@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from "@fortawesome/free-regular-svg-icons";
 
-import { TranscriptLine, TABS } from '../data';
+import { TranscriptLine, TabId } from '../data/data';
 import { useViewState } from '../ViewStateContext';
 import { PendingPhraseBar } from './PendingPhraseBar';
 
@@ -126,25 +126,25 @@ const ControlBar: React.FC = () => {
 
         <div className="flex gap-2 font-medium grow-1 items-end">
           <button
-            onClick={() => setActiveTabId(TABS.Transcript)}
-            className={activeTabId === TABS.Transcript ? activeTabClasses : otherTabClasses}
-            style={activeTabId === TABS.Transcript ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
+            onClick={() => setActiveTabId(TabId.Transcript)}
+            className={activeTabId === TabId.Transcript ? activeTabClasses : otherTabClasses}
+            style={activeTabId === TabId.Transcript ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
           >
             Transcript
           </button>
           
           <button
-            onClick={() => setActiveTabId(TABS.PhraseBook)}
-            className={activeTabId === TABS.PhraseBook ? activeTabClasses : otherTabClasses}
-            style={activeTabId === TABS.PhraseBook ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
+            onClick={() => setActiveTabId(TabId.PhraseBook)}
+            className={activeTabId === TabId.PhraseBook ? activeTabClasses : otherTabClasses}
+            style={activeTabId === TabId.PhraseBook ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
           >
             Phrase Repetitions
           </button>
           
           <button
-            onClick={() => setActiveTabId(TABS.Poems)}
-            className={activeTabId === TABS.Poems ? activeTabClasses : otherTabClasses}
-            style={activeTabId === TABS.Poems ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
+            onClick={() => setActiveTabId(TabId.Poems)}
+            className={activeTabId === TabId.Poems ? activeTabClasses : otherTabClasses}
+            style={activeTabId === TabId.Poems ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
           >
             Poems
           </button>

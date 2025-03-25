@@ -13,10 +13,10 @@ const RepeatedPhraseMenu: React.FC<RepeatedPhraseMenuProps> = props => {
   const { textSelectionString, onSetPhrase } = props;
 
   return (
-    <Menu id={REPEATED_PHRASE_MENU_ID} className="max-w-dvw">
+    <Menu id={REPEATED_PHRASE_MENU_ID} className="max-w-dvw font-sans">
       <Item disabled style={{ opacity: 1 }}>
-        <div className="font-medium text-ellipsis overflow-hidden">
-          {textSelectionString}
+        <div className="font-medium font-mono text-ellipsis overflow-hidden">
+          { textSelectionString }
         </div>
       </Item>
       

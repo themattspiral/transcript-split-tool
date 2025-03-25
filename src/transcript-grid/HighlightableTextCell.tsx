@@ -1,7 +1,8 @@
 import { CSSProperties, useCallback, useMemo } from "react";
 import classnames from "classnames";
 
-import { getPhraseKey, Phrase, TranscriptLine } from "../data";
+import { Phrase, TranscriptLine } from "../data/data";
+import { getPhraseKey } from "../util/util";
 import { useViewState } from "../ViewStateContext";
 
 enum TextSpanType {
@@ -17,7 +18,7 @@ interface TextSpan {
   coveredPhrases: Phrase[];
   spanType: TextSpanType;
   isPending: boolean;
-  refCount?: number;
+  displayRefCount?: number;
   classes?: string;
 }
 
@@ -35,12 +36,6 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
   const text = line.textWithoutSpeaker || line.text;
 
   const { repeatedPhraseRefCounts, pendingPhrase, setPendingRepeatedPhrase } = useViewState();
-
-  const handleRepeatedPhraseClick = useCallback((phrase: Phrase) => {
-    if (pendingPhrase) {
-      setPendingRepeatedPhrase({ ...phrase, isPending: true });
-    }
-  }, [pendingPhrase, setPendingRepeatedPhrase]);
 
   // flatten potential range overlaps
   const textSpans: TextSpan[] = useMemo(() => {
@@ -102,7 +97,7 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
         coveredPhrases,
         spanType,
         isPending,
-        refCount
+        displayRefCount: isPending ? (refCount || 0)  + 1 : refCount
       });
     }
 
@@ -115,7 +110,7 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
       const isRightmostPhrase = spanType != TextSpanType.Text && (i === (spans.length - 1) || spans[i + 1].spanType === TextSpanType.Text);
       
       spans[i].classes = classnames(
-        'whitespace-pre-wrap relative',
+        'relative',
         { ['text-gray-400 select-none cursor-not-allowed']: !isPending && isMasked },
         { ['select-none cursor-not-allowed z-2']: isPending && isMasked },  // don't gray-out masked text for pending phrase, ensure pending parts sit over other masked parts
         { ['cursor-pointer']: !!pendingPhrase && spanType === TextSpanType.RepeatedPhrase },
@@ -135,32 +130,37 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
     return spans;
   }, [line, phrases, maskIdx, repeatedPhraseRefCounts, pendingPhrase]);
 
+  const handleSpanClick = useCallback((span: TextSpan) => {
+    if (span.spanType === TextSpanType.RepeatedPhrase && pendingPhrase) {
+      setPendingRepeatedPhrase({ ...span.coveredPhrases[0], isPending: true });
+    }
+  }, [pendingPhrase, setPendingRepeatedPhrase]);
+
+
+
   return (
-    <div  className={classnames('px-2 py-2 relative', className)} style={style} {...attributes}>
+    <div  className={classnames('px-2 py-2 relative whitespace-pre-wrap', className)} style={style} {...attributes}>
       { textSpans.map(span => (
         <span
           key={`${span.start}:${span.end}`}
           className={span.classes}
           data-pls-idx={span.start}
-          onClick={() => {
-            if (span.spanType === TextSpanType.RepeatedPhrase) {
-              handleRepeatedPhraseClick(span.coveredPhrases[0]);
-            }
-          }}
+          onClick={() => handleSpanClick(span)}
         >
           { text.substring(span.start, span.end) }
 
           {/* Count Badge */}
-          { span.spanType === TextSpanType.RepeatedPhrase &&
+          { span.spanType === TextSpanType.RepeatedPhrase && (span.displayRefCount || 0) > 1 &&
             <span
+              data-pls-idx={span.end}
               className={classnames(
-                'inline-block w-[15px] h-[15px] rounded-[15px] z-3',
-                'font-sans text-[10px] text-center pb-[1px]',
+                'block w-[15px] h-[15px] rounded-[15px] z-3',
+                'font-sans text-[10px] text-center pb-[1px] select-none',
                 'absolute top-[-8px] right-[-6px] bg-gray-100 border-gray-700',
                 span.isPending ? 'border-1 border-dashed' : 'border-1'
               )}
             >
-              { span.isPending ? (span.refCount || 0)  + 1 : span.refCount }
+              { span.displayRefCount }
             </span>
           }
         </span>

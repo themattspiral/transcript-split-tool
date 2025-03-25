@@ -1,4 +1,4 @@
-import { TABS } from './data';
+import { TabId } from './data/data';
 import { ControlBar } from './control-bar/ControlBar';
 import { TranscriptGrid } from './transcript-grid/TranscriptGrid';
 import { ModalWindow } from './modal/ModalWindow';
@@ -17,7 +17,7 @@ const App: React.FC = () => {
       {/* Active Tab Wrapper */}
       <div className="overflow-hidden grow-1 border-gray-300 border-8 rounded-t flex flex-col shadow-md shadow-gray-400">
 
-        {!transcriptLines?.length && activeTabId === TABS.Transcript &&
+        {!transcriptLines?.length && activeTabId === TabId.Transcript &&
           <div className="flex flex-col grow-1 justify-center">
             <h1 className="flex justify-center text-2xl text-gray-600">
               Please import a transcript to get started.
@@ -26,10 +26,10 @@ const App: React.FC = () => {
         }
 
         <TranscriptGrid
-          style={activeTabId === TABS.Transcript ? {} : { display: 'none' }}
+          style={activeTabId === TabId.Transcript ? {} : { display: 'none' }}
         />
 
-        {!phraseRepetitions?.length && activeTabId === TABS.PhraseBook &&
+        {!phraseRepetitions?.length && activeTabId === TabId.PhraseBook &&
           <div className="flex flex-col grow-1 justify-center">
             <h1 className="flex justify-center text-2xl text-gray-600 mb-4">
               No phrase repetitions defined yet.
@@ -41,13 +41,13 @@ const App: React.FC = () => {
         }
 
         <PhraseGrid
-          style={activeTabId === TABS.PhraseBook ? {} : { display: 'none' }}
+          style={activeTabId === TabId.PhraseBook ? {} : { display: 'none' }}
           transcriptLines={transcriptLines}
           phraseRepetitions={phraseRepetitions}
         />
           
 
-        {!transcriptLines?.length && activeTabId === TABS.Poems &&
+        {!transcriptLines?.length && activeTabId === TabId.Poems &&
           <div className="flex flex-col grow-1 justify-center">
             <h1 className="flex justify-center text-2xl text-gray-600">
               No poems defined yet.

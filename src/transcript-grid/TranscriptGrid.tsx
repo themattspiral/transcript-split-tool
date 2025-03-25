@@ -1,9 +1,8 @@
 import { useState, CSSProperties, useMemo } from 'react';
 import { useContextMenu } from "react-contexify";
-import classnames from 'classnames';
 
-import { getPhraseText, GridAction, Phrase } from '../data';
-import { getGridColumnAttributes } from '../util';
+import { GridAction, Phrase, TranscriptGridColumnId, HEADER_ROW_ID } from '../data/data';
+import { getPhraseText, getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../util/util';
 import { useViewState } from '../ViewStateContext';
 import { NEW_PHRASE_MENU_ID, NewPhraseMenu } from '../context-menu/NewPhraseMenu';
 import { REPEATED_PHRASE_MENU_ID, RepeatedPhraseMenu } from '../context-menu/RepeatedPhraseMenu';
@@ -84,8 +83,8 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
     const selText = sel?.toString();
     const range = sel?.getRangeAt(0);
     
-    const beginPhraseLineStartIdxString = range?.startContainer.parentElement?.attributes?.getNamedItem('data-pls-idx')?.value;
-    const endPhraseLineStartIdxString = range?.endContainer.parentElement?.attributes?.getNamedItem('data-pls-idx')?.value;
+    const beginPhraseLineStartIdxString = getSelectionRangeContainerAttribute(range?.startContainer, 'data-pls-idx');
+    const endPhraseLineStartIdxString = getSelectionRangeContainerAttribute(range?.endContainer, 'data-pls-idx');
     const beginPhraseLineStartIdx = parseInt(beginPhraseLineStartIdxString || '0');
     const endPhraseLineStartIdx = parseInt(endPhraseLineStartIdxString || '0');
     
@@ -99,12 +98,10 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       return;
     }
 
-    if (isHeaderRow) {
-      console.log('header');
-    } else if (hasMultiLineSelection) {
+    if (hasMultiLineSelection) {
       if (event.preventDefault) event.preventDefault();
       showContextMenu({ id: ERROR_MULTIPLE_LINES_MENU_ID, event });
-    } else if (hasSelection && range && isTextColumn) {
+    } else if (!isHeaderRow && isTextColumn && hasSelection && range) {
       if (event.preventDefault) event.preventDefault();
       setGridAction({
         columnId: columnIdString,
@@ -122,14 +119,12 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
         event,
         id: pendingPhrase || handleAsPrimaryClick ? REPEATED_PHRASE_MENU_ID : NEW_PHRASE_MENU_ID
       });
-    } else {
-      console.log('data row, no selection');
     }
   };
 
   return !transcriptLines?.length ? null : (
     <div
-      className="flex flex-col overflow-auto box-border w-full"
+      className="flex flex-col overflow-auto box-border w-full font-mono"
       onClick={event => handleGridAction(event, true)}
       onContextMenu={event => handleGridAction(event, false)}
       style={style}
@@ -148,25 +143,25 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       
       {/* Header Row */}
       <div
-        className="flex font-medium sticky top-0 z-4 bg-gray-200 shadow-sm shadow-gray-400 select-none"
-        data-transcript-line-idx="header"
+        className="flex font-medium font-sans sticky top-0 z-4 bg-gray-200 shadow-sm shadow-gray-400 select-none"
+        data-transcript-line-idx={HEADER_ROW_ID}
       >
 
         <div
           className="px-2 py-2 border-r-0 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0"
-          data-column data-column-id="line" data-transcript-line-idx="header"
+          data-column data-column-id={TranscriptGridColumnId.Line} data-transcript-line-idx={HEADER_ROW_ID}
         >
           Line
         </div>
         <div
           className="px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[100px] shrink-0"
-          data-column data-column-id="speaker" data-transcript-line-idx="header"
+          data-column data-column-id={TranscriptGridColumnId.Speaker} data-transcript-line-idx={HEADER_ROW_ID}
         >
           Speaker
         </div>
         <div
           className="px-2 py-2 border-r-0 border-b-1 border-gray-400 grow-1"
-          data-column data-column-id="text" data-transcript-line-idx="header"
+          data-column data-column-id={TranscriptGridColumnId.Text} data-transcript-line-idx={HEADER_ROW_ID}
         >
           Transcript Text
         </div>
@@ -175,29 +170,26 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
 
       {/* Data Rows */}
       {transcriptLines.map((line, idx) => {
-        const maskedRowClasses = pendingPhrase && idx > pendingPhrase.transcriptLineIdx
-          ? 'bg-gray-200 text-gray-400 select-none cursor-not-allowed' : '';
-
-        const maskedTextIdx = pendingPhrase && idx === pendingPhrase.transcriptLineIdx
-          ? pendingPhrase.start : undefined;
+        let maskedTextIdx: number | undefined = undefined;
+        if (pendingPhrase && idx === pendingPhrase.transcriptLineIdx) {
+          maskedTextIdx = pendingPhrase.start;
+        } else if (pendingPhrase && idx > pendingPhrase.transcriptLineIdx) {
+          maskedTextIdx = 0;
+        }
         
         return (
-          <div 
-            key={line.lineNumber}
-            className={classnames('flex font-mono', maskedRowClasses)}
-            data-transcript-line-idx={idx}
-          >
+          <div className="flex" key={line.lineNumber} data-transcript-line-idx={idx}>
 
             <div
-              className="px-2 py-2 border-r-0 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
-              data-column data-column-id="line" data-transcript-line-idx={idx}
+              className="px-2 py-2 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
+              data-column data-column-id={TranscriptGridColumnId.Line} data-transcript-line-idx={idx}
             >
               {line.lineNumber}
             </div>
 
             <div
-              className="px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[100px] shrink-0"
-              data-column data-column-id="speaker" data-transcript-line-idx={idx}
+              className="px-2 py-2 border-b-1 border-gray-400 basis-[100px] shrink-0"
+              data-column data-column-id={TranscriptGridColumnId.Speaker} data-transcript-line-idx={idx}
             >
               { line.speaker }
             </div>
@@ -206,8 +198,12 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
               line={line}
               phrases={phrasesByTranscriptLineIdx[idx]}
               maskIdx={maskedTextIdx}
-              className="border-r-0 border-b-1 border-gray-400 grow-1"
-              attributes={{ ['data-column']: 'true', ['data-column-id']: 'text', ['data-transcript-line-idx']: idx.toString() }}
+              className="border-b-1 border-gray-400 grow-1"
+              attributes={{
+                ['data-column']: 'true',
+                ['data-column-id']: TranscriptGridColumnId.Text,
+                ['data-transcript-line-idx']: idx.toString()
+              }}
             />
 
           </div>

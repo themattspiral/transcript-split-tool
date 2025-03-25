@@ -1,3 +1,5 @@
+import { Phrase, PhraseRepetition, TranscriptLine } from "../data/data";
+
 const getPhraseKey = (phrase: Phrase): string => {
   return `${phrase.transcriptLineIdx}_${phrase.start}:${phrase.end}:${phrase.isRepetition ? 'r' : ''}`;
 };
@@ -44,40 +46,34 @@ const sortPhraseRepetitions = (a: PhraseRepetition, b: PhraseRepetition): number
   return pSort === 0 ? sortPhrases(a.repetionOf, b.repetionOf) : pSort;
 };
 
-export interface PhraseRepetition {
-  phrase: Phrase;
-  repetionOf: Phrase;
-  note?: string | null;
-}
+const getGridColumnAttributes = (event: React.MouseEvent): NamedNodeMap | undefined => {
+  let attrs: NamedNodeMap | undefined = (event.target as HTMLElement).attributes;
+  if (!attrs?.length || !attrs.getNamedItem('data-column')) {
+    attrs = (event.target as HTMLElement).parentElement?.attributes;
+  }
+  if (!attrs?.length || !attrs.getNamedItem('data-column')) {
+    attrs = (event.target as HTMLElement).parentElement?.parentElement?.attributes;
+  }
 
-export interface Phrase {
-  transcriptLineIdx: number;
-  start: number;
-  end: number;
-  isRepetition: boolean;
-  isPending: boolean;
-}
+  return attrs;
+};
+
+const TEXT_NODE_NAME = '#text';
+
+const getSelectionRangeContainerAttribute = (node: Node | undefined, attribute: string): string | undefined => {
+  if (!node || !attribute) {
+    return undefined;
+  }
+
+  let value: string | undefined = undefined;
   
-export interface TranscriptLine {
-  lineNumber: string;
-  text: string;
-  speakerDetected: boolean;
-  speaker?: string;
-  textWithoutSpeaker?: string;
-}
-
-export interface GridAction {
-  columnId: string;
-  transcriptLineIdx: number;
-  selectedPhrase?: Phrase;
-  textSelection?: Selection;
-}
-
-export enum TABS {
-  Transcript = 'transcript',
-  PhraseBook = 'phrases',
-  Poems = 'poems'
-}
+  if (node.nodeName === TEXT_NODE_NAME) {
+    value = node.parentElement?.attributes?.getNamedItem(attribute)?.value 
+  } else {
+    value = (node as HTMLElement)?.attributes?.getNamedItem(attribute)?.value;
+  }
+  return value;
+};
 
 export {
   getPhraseKey,
@@ -85,5 +81,7 @@ export {
   getPhraseLineNumber,
   getPhraseText,
   sortPhrases,
-  sortPhraseRepetitions
+  sortPhraseRepetitions,
+  getGridColumnAttributes,
+  getSelectionRangeContainerAttribute
 };

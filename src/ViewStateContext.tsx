@@ -1,12 +1,15 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
-import { Phrase, PhraseRepetition, TranscriptLine, TABS, sortPhraseRepetitions, getPhraseKey } from './data';
+import { Phrase, PhraseRepetition, TranscriptLine, TabId } from './data/data';
+import { sortPhraseRepetitions, getPhraseKey } from './util/util';
 import { CONFIRM_MODAL_ID } from './modal/ConfirmModal';
+
+import reps from './data/reps.data.json';
 
 interface ViewStateContextProps {
   // cross-app state
-  activeTabId: string;
-  setActiveTabId: (tabId: string) => void;
+  activeTabId: TabId;
+  setActiveTabId: (tab: TabId) => void;
   displayedModalId: string | null;
   isModalShowing: boolean;
   showConfirmationModal: (message: string, onConfirm: () => void) => void;
@@ -28,7 +31,7 @@ interface ViewStateContextProps {
 }
 
 const ViewStateContext = createContext<ViewStateContextProps>({
-  activeTabId: '',
+  activeTabId: TabId.Transcript,
   setActiveTabId: () => {},
   displayedModalId: null,
   isModalShowing: false,
@@ -58,7 +61,7 @@ const useViewState = () => {
 
 const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // cross-app state
-  const [activeTabId, setActiveTabId] = useState<string>(TABS.Transcript);
+  const [activeTabId, setActiveTabId] = useState<TabId>(TabId.Transcript);
   const [displayedModalId, setDisplayedModalId] = useState<string | null>(null);
   const isModalShowing = !!displayedModalId;
   const [modalMessage, setModalMessage] = useState<string | null>(null);
@@ -100,6 +103,9 @@ const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   const setNewTranscript = useCallback((lines: TranscriptLine[]) => {
     setTranscriptLines(lines);
+    
+    // TEST DATA
+    setPhraseRepetitions(reps);
   }, [setTranscriptLines]);
   
   const clearPendingPhrases = useCallback(() => {
