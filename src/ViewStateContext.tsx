@@ -17,17 +17,24 @@ interface ViewStateContextProps {
   modalMessage: string | null;
   modalOnConfirm: (() => void) | null;
 
-  // data
+  // serializable data
   transcriptLines: TranscriptLine[];
-  phraseRepetitions: PhraseRepetition[];
-  pendingPhrase: Phrase | null;
-  pendingRepeatedPhrase: Phrase | null;
-  repeatedPhraseRefCounts: { [key: string]: number};
   setNewTranscript: (lines: TranscriptLine[]) => void;
+  phraseRepetitions: PhraseRepetition[];
+  addPendingPhrasesToRepetitions: () => void;
+
+  // ephemeral data
+  phraseLinks: { [key: string]: Set<string> };
+  pendingPhrase: Phrase | null;
   setPendingPhrase: (phrase: Phrase) => void;
+  pendingRepeatedPhrase: Phrase | null;
   setPendingRepeatedPhrase: (phrase: Phrase) => void;
   clearPendingPhrases: () => void;
-  addPendingPhrasesToRepetitions: () => void;
+  hoveredPhraseKeys: Set<string>;
+  setHoveredPhraseKeys: (key: Set<string>) => void;
+  clickedPhraseKeys: Set<string>;
+  setClickedPhraseKeys: (key: Set<string>) => void;
+
 }
 
 const ViewStateContext = createContext<ViewStateContextProps>({
@@ -41,12 +48,16 @@ const ViewStateContext = createContext<ViewStateContextProps>({
   modalOnConfirm: null,
   transcriptLines: [],
   phraseRepetitions: [],
+  phraseLinks: {},
   pendingPhrase: null,
   pendingRepeatedPhrase: null,
-  repeatedPhraseRefCounts: {},
+  hoveredPhraseKeys: new Set(),
+  clickedPhraseKeys: new Set(),
   setNewTranscript: () => {},
   setPendingPhrase: () => {},
   setPendingRepeatedPhrase: () => {},
+  setHoveredPhraseKeys: () => {},
+  setClickedPhraseKeys: () => {},
   clearPendingPhrases: () => {},
   addPendingPhrasesToRepetitions: () => {}
 });
@@ -67,26 +78,37 @@ const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [modalMessage, setModalMessage] = useState<string | null>(null);
   const [modalOnConfirm, setModalOnConfirm] = useState<(() => void) | null>(null);
   
-  // data
+  // serializable data
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
   const [phraseRepetitions, setPhraseRepetitions] = useState<PhraseRepetition[]>([]);
+
+  // ephemeral data
   const [pendingPhrase, setPendingPhrase] = useState<Phrase | null>(null);
   const [pendingRepeatedPhrase, setPendingRepeatedPhrase] = useState<Phrase | null>(null);
+  const [hoveredPhraseKeys, setHoveredPhraseKeys] = useState<Set<string>>(new Set());
+  const [clickedPhraseKeys, setClickedPhraseKeys] = useState<Set<string>>(new Set());
 
-  const repeatedPhraseRefCounts = useMemo(() => {
-    const counts = {} as { [key: string]: number };
+  const phraseLinks = useMemo(() => {
+    const links = {} as { [key: string]: Set<string> };
 
     phraseRepetitions.forEach(rep => {
-      const key = getPhraseKey(rep.repetionOf);
+      const phraseKey = getPhraseKey(rep.phrase);
+      const repKey = getPhraseKey(rep.repetionOf);
 
-      if (!counts[key]) {
-        counts[key] = 1;
+      if (!links[phraseKey]) {
+        links[phraseKey] = new Set([repKey]);
       } else {
-        counts[key]++;
+        links[phraseKey].add(repKey);
+      }
+
+      if (!links[repKey]) {
+        links[repKey] = new Set([phraseKey]);
+      } else {
+        links[repKey].add(phraseKey);
       }
     });
 
-    return counts;
+    return links;
   }, [phraseRepetitions]);
 
   const showConfirmationModal = useCallback((message: string, onConfirm: () => void) => {
@@ -138,15 +160,17 @@ const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const value = useMemo(() => ({
     activeTabId, setActiveTabId,
     displayedModalId, isModalShowing, showConfirmationModal, hideModals, modalMessage, modalOnConfirm,
-    transcriptLines, phraseRepetitions, pendingPhrase, pendingRepeatedPhrase, repeatedPhraseRefCounts,
-    setNewTranscript, setPendingPhrase, setPendingRepeatedPhrase, clearPendingPhrases,
-    addPendingPhrasesToRepetitions
+    transcriptLines, phraseRepetitions, phraseLinks,
+    pendingPhrase, pendingRepeatedPhrase, hoveredPhraseKeys, clickedPhraseKeys,
+    setNewTranscript, setPendingPhrase, setPendingRepeatedPhrase, setHoveredPhraseKeys, setClickedPhraseKeys,
+    clearPendingPhrases, addPendingPhrasesToRepetitions
   }), [
     activeTabId, setActiveTabId,
     displayedModalId, isModalShowing, showConfirmationModal, hideModals, modalMessage, modalOnConfirm,
-    transcriptLines, phraseRepetitions, pendingPhrase, pendingRepeatedPhrase, repeatedPhraseRefCounts,
-    setNewTranscript, setPendingPhrase, setPendingRepeatedPhrase, clearPendingPhrases,
-    addPendingPhrasesToRepetitions
+    transcriptLines, phraseRepetitions, phraseLinks,
+    pendingPhrase, pendingRepeatedPhrase, hoveredPhraseKeys, clickedPhraseKeys,
+    setNewTranscript, setPendingPhrase, setPendingRepeatedPhrase, setHoveredPhraseKeys, setClickedPhraseKeys,
+    clearPendingPhrases, addPendingPhrasesToRepetitions
   ]);
 
   return (

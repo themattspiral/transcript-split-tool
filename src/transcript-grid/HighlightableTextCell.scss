@@ -1,0 +1,117 @@
+.text-span {
+  position: relative;
+
+  /* TextSpanType.Phrase */
+  &.phrase {
+    background-color: var(--color-orange-200);
+
+    &.deemphasized {
+      background-color: var(--color-orange-100);
+    }
+
+    &.pending {
+      background-color: var(--color-orange-200);
+      border: 2px dashed var(--color-orange-400);
+      font-weight: 600;
+    }
+
+    &.highlighted {
+      background-color: var(--color-orange-300);
+    }
+  }
+  
+  /* TextSpanType.RepeatedPhrase */
+  &.repeated-phrase {
+    background-color: var(--color-blue-200);
+    
+    &.deemphasized {
+      background-color: var(--color-blue-100);
+    }
+
+    &.pending {
+      background-color: var(--color-blue-200);
+      border: 2px dashed var(--color-blue-400);
+      font-weight: 600;
+    }
+
+    &.highlighted {
+      background-color: var(--color-blue-300);
+    }
+  }
+
+  /* TextSpanType.OverlappingPhrases */
+  &.overlapping-phrases {
+    background-color: var(--color-fuchsia-300);
+
+    &.deemphasized {
+      background-color: var(--color-orange-200);
+    }
+    
+    &.pending {
+      background-color: var(--color-fuchsia-300);
+      border: 2px dashed var(--color-fuchsia-400);
+      font-weight: 600;
+    }
+
+    &.highlighted {
+      background-color: var(--color-fuchsia-400);
+    }
+  }
+
+  /* TextSpanType.Text */
+  &.text {
+    /* ensure plaintext spans sit on top of slightly-overlapping phrase bubbles */
+    z-index: 1;
+  }
+  
+  &.pending {
+    /* pending bubble spans sit on top of phrase bubbles and plain text spans */
+    z-index: 2;
+  }
+  
+  .count-badge {
+    /* badge should be on top of all possible bubbles */
+    z-index: 3;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 15px;
+    height: 15px;
+    border-radius: 15px;
+    overflow: hidden;
+    position: absolute;
+    top: -8px;
+    right: -6px;
+
+    border: 1px solid var(--color-gray-700);
+    background-color: var(--color-gray-100);
+    font-family: var(--font-sans);
+    font-size: 10px;
+    line-height: 10px;
+    user-select: none;
+
+    &.pending {
+      border-style: dashed;
+    }
+  }
+
+  &.clickable {
+    cursor: pointer;
+  }
+
+  &.leftmost {
+    border-top-left-radius: var(--radius-xl);
+    border-bottom-left-radius: var(--radius-xl);
+    padding-left: 3px;
+    margin-left: -3px;
+  }
+
+  &.rightmost {
+    border-top-right-radius: var(--radius-xl);
+    border-bottom-right-radius: var(--radius-xl);
+    padding-right: 3px;
+    margin-right: -3px;
+  }
+}

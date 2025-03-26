@@ -1,3 +1,3 @@
-.text-always-gray {
-  color: #333333 !important;
+.text-always-menu-gray {
+  color: var(--contexify-item-color) !important;
 }

@@ -135,24 +135,24 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       
       {/* Header Row */}
       <div
-        className="flex font-medium font-sans sticky top-0 z-4 bg-gray-200 shadow-sm shadow-gray-400 select-none"
+        className="flex font-medium font-sans sticky top-0 z-5 bg-gray-200 shadow-sm shadow-gray-400 select-none"
         data-transcript-line-idx={HEADER_ROW_ID}
       >
 
         <div
-          className="px-2 py-2 border-r-0 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0"
+          className="px-2 py-2 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0"
           data-column data-column-id={TranscriptGridColumnId.Line} data-transcript-line-idx={HEADER_ROW_ID}
         >
           Line
         </div>
         <div
-          className="px-2 py-2 border-r-0 border-b-1 border-gray-400 basis-[100px] shrink-0"
+          className="px-2 py-2 border-b-1 border-gray-400 basis-[100px] shrink-0"
           data-column data-column-id={TranscriptGridColumnId.Speaker} data-transcript-line-idx={HEADER_ROW_ID}
         >
           Speaker
         </div>
         <div
-          className="px-2 py-2 border-r-0 border-b-1 border-gray-400 grow-1"
+          className="px-2 py-2 border-b-1 border-gray-400 grow-1"
           data-column data-column-id={TranscriptGridColumnId.Text} data-transcript-line-idx={HEADER_ROW_ID}
         >
           Transcript Text

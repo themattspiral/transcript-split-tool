@@ -4,12 +4,13 @@ import classnames from "classnames";
 import { Phrase, TranscriptLine } from "../data/data";
 import { getPhraseKey } from "../util/util";
 import { useViewState } from "../ViewStateContext";
+import './HighlightableTextCell.scss';
 
 enum TextSpanType {
-  Phrase,
-  RepeatedPhrase,
-  OverlappingPhrases,
-  Text
+  Phrase = 'phrase',
+  RepeatedPhrase = 'repeated-phrase',
+  OverlappingPhrases = 'overlapping-phrases',
+  Text = 'text'
 }
 
 interface TextSpan {
@@ -35,7 +36,10 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
   const { line, phrases, maskIdx, className, style, attributes } = props;
   const text = line.textWithoutSpeaker || line.text;
 
-  const { repeatedPhraseRefCounts, pendingPhrase, setPendingRepeatedPhrase } = useViewState();
+  const {
+    phraseLinks, pendingPhrase, pendingRepeatedPhrase, hoveredPhraseKeys, clickedPhraseKeys,
+    setPendingRepeatedPhrase, setHoveredPhraseKeys, setClickedPhraseKeys
+  } = useViewState();
 
   // flatten potential range overlaps
   const textSpans: TextSpan[] = useMemo(() => {
@@ -84,7 +88,7 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
         spanType = coveredPhrases[0].isRepetition ? TextSpanType.RepeatedPhrase : TextSpanType.Phrase;
         
         if (spanType === TextSpanType.RepeatedPhrase) {
-          refCount = repeatedPhraseRefCounts[getPhraseKey(coveredPhrases[0])];
+          refCount = phraseLinks[getPhraseKey(coveredPhrases[0])]?.size;
         }
       } else if (coveredPhrases.length > 1) {
         isPending = coveredPhrases.some(phrase => phrase.isPending);
@@ -103,40 +107,48 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
 
     // determine correct styling for each span
     for (let i = 0; i < spans.length; i++) {
-      const isMasked = maskIdx !== undefined && maskIdx <= spans[i].start;
-      const isPending = spans[i].isPending;
       const spanType = spans[i].spanType;
+      const isPending = spans[i].isPending;
+      const isHighlighted = (spanType === TextSpanType.Phrase || spanType === TextSpanType.RepeatedPhrase) && hoveredPhraseKeys.has(getPhraseKey(spans[i].coveredPhrases[0]));
+      const isDeemphasized = (!isHighlighted && hoveredPhraseKeys.size > 0) || (!isPending && (pendingPhrase || pendingRepeatedPhrase));
       const isLeftmostPhrase = spanType != TextSpanType.Text && (i === 0 || spans[i - 1].spanType === TextSpanType.Text);
       const isRightmostPhrase = spanType != TextSpanType.Text && (i === (spans.length - 1) || spans[i + 1].spanType === TextSpanType.Text);
       
       spans[i].classes = classnames(
-        'relative',
-        { ['text-gray-400 select-none cursor-not-allowed']: !isPending && isMasked },
-        { ['select-none cursor-not-allowed z-2']: isPending && isMasked },  // don't gray-out masked text for pending phrase, ensure pending parts sit over other masked parts
-        { ['cursor-pointer']: !!pendingPhrase && spanType === TextSpanType.RepeatedPhrase },
-        { ['bg-gray-200']: isMasked && spanType === TextSpanType.Text },
-        { ['z-1']: spanType === TextSpanType.Text },  // ensure text (w/ transparent bg) sits on top of extended phrase bubble padding
-        { ['bg-orange-100']: !isPending && spanType === TextSpanType.Phrase },
-        { ['bg-blue-100']: !isPending && spanType === TextSpanType.RepeatedPhrase },
-        { ['bg-fuchsia-200']: !isPending && spanType === TextSpanType.OverlappingPhrases },
-        { ['bg-orange-200 border-orange-400 border-2 border-dashed font-semibold']: isPending && spanType === TextSpanType.Phrase },
-        { ['bg-blue-200 border-blue-400 border-2 border-dashed font-semibold']: isPending && spanType === TextSpanType.RepeatedPhrase },
-        { ['bg-fuchsia-300 border-fuchsia-400 border-2 border-dashed font-semibold']: isPending && spanType === TextSpanType.OverlappingPhrases },
-        { ['rounded-l-xl pl-[3px] ml-[-3px]']: isLeftmostPhrase },
-        { ['rounded-r-xl pr-[3px] mr-[-3px]']: isRightmostPhrase }
+        'text-span',
+        spanType,
+        { pending: isPending },
+        { highlighted: isHighlighted },
+        { deemphasized: isDeemphasized },
+        { clickable: pendingPhrase && spanType === TextSpanType.RepeatedPhrase },
+        { leftmost: isLeftmostPhrase },
+        { rightmost: isRightmostPhrase }
       );
     }
 
     return spans;
-  }, [line, phrases, maskIdx, repeatedPhraseRefCounts, pendingPhrase]);
+  }, [line, phrases, maskIdx, phraseLinks, pendingPhrase, pendingRepeatedPhrase, hoveredPhraseKeys, clickedPhraseKeys]);
 
-  const handleSpanClick = useCallback((span: TextSpan) => {
-    if (span.spanType === TextSpanType.RepeatedPhrase && pendingPhrase) {
-      setPendingRepeatedPhrase({ ...span.coveredPhrases[0], isPending: true });
-    }
-  }, [pendingPhrase, setPendingRepeatedPhrase]);
+  const isSpanClickable = useCallback((span: TextSpan): boolean => {
+    return !!pendingPhrase && span.spanType === TextSpanType.RepeatedPhrase;
+  }, [pendingPhrase]);
 
+  const handleSpanClick = useCallback((span: TextSpan): void => {
+    setPendingRepeatedPhrase({ ...span.coveredPhrases[0], isPending: true });
+  }, [setPendingRepeatedPhrase]);
 
+  const handleSpanMouseOver = useCallback((span: TextSpan) => {
+    const keys = new Set(span.coveredPhrases.flatMap(p => {
+      const phraseKey = getPhraseKey(p);
+      return [phraseKey, ...Array.from(phraseLinks[phraseKey])];
+    }));
+
+    setHoveredPhraseKeys(new Set(keys));
+  }, [setHoveredPhraseKeys, phraseLinks]);
+
+  const handleSpanMouseOut = useCallback(() => {
+    setHoveredPhraseKeys(new Set());
+  }, [setHoveredPhraseKeys]);
 
   return (
     <div  className={classnames('px-2 py-2 relative whitespace-pre-wrap', className)} style={style} {...attributes}>
@@ -145,7 +157,9 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
           key={`${span.start}:${span.end}`}
           className={span.classes}
           data-pls-idx={span.start}
-          onClick={() => handleSpanClick(span)}
+          onClick={isSpanClickable(span) ? () => handleSpanClick(span) : undefined}
+          onMouseOver={span.spanType !== TextSpanType.Text ? () => handleSpanMouseOver(span) : undefined}
+          onMouseOut={span.spanType !== TextSpanType.Text ? handleSpanMouseOut : undefined}
         >
           { text.substring(span.start, span.end) }
 
@@ -153,12 +167,7 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
           { span.spanType === TextSpanType.RepeatedPhrase && (span.displayRefCount || 0) > 1 &&
             <span
               data-pls-idx={span.end}
-              className={classnames(
-                'block w-[15px] h-[15px] rounded-[15px] z-3',
-                'font-sans text-[10px] text-center pb-[1px] select-none',
-                'absolute top-[-8px] right-[-6px] bg-gray-100 border-gray-700',
-                span.isPending ? 'border-1 border-dashed' : 'border-1'
-              )}
+              className={classnames('count-badge', { pending: span.isPending })}
             >
               { span.displayRefCount }
             </span>
