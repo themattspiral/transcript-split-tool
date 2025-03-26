@@ -1,5 +1,6 @@
 import { useState, CSSProperties, useMemo } from 'react';
 import { useContextMenu } from "react-contexify";
+import classnames from 'classnames';
 
 import { GridAction, Phrase, TranscriptGridColumnId, HEADER_ROW_ID } from '../data/data';
 import { getPhraseText, getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../util/util';
@@ -14,6 +15,7 @@ interface TranscriptGridProps {
 
 const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
   const [gridAction, setGridAction] = useState<GridAction | null>(null);
+  const [hoveredRowIdx, setHoveredRowIdx] = useState<number | null>(null);
   
   const { show: showContextMenu } = useContextMenu();
   const {
@@ -118,51 +120,44 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
     }
   };
 
-  return !transcriptLines?.length ? null : (
+  const headerRow = useMemo(() => (
     <div
-      className="flex flex-col overflow-auto box-border w-full font-mono"
-      onClick={event => handleGridAction(event, true)}
-      onContextMenu={event => handleGridAction(event, false)}
-      style={style}
+      className="flex font-medium font-sans sticky top-0 z-5 bg-gray-200 shadow-sm shadow-gray-400 select-none"
+      data-transcript-line-idx={HEADER_ROW_ID}
     >
-      <TranscriptSelectionMenu
-        textSelectionString={getPhraseText(gridAction?.selectedPhrase, transcriptLines)}
-        onSetPhrase={handleSetNewPhrase}
-        onSetRepeatedPhrase={handleSetRepeatedPhrase}
-      />
 
-      <ErrorMultipleLinesMenu />
-      
-      {/* Header Row */}
       <div
-        className="flex font-medium font-sans sticky top-0 z-5 bg-gray-200 shadow-sm shadow-gray-400 select-none"
-        data-transcript-line-idx={HEADER_ROW_ID}
+        className="px-2 py-2 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0"
+        data-column data-column-id={TranscriptGridColumnId.Line} data-transcript-line-idx={HEADER_ROW_ID}
       >
-
-        <div
-          className="px-2 py-2 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0"
-          data-column data-column-id={TranscriptGridColumnId.Line} data-transcript-line-idx={HEADER_ROW_ID}
-        >
-          Line
-        </div>
-        <div
-          className="px-2 py-2 border-b-1 border-gray-400 basis-[100px] shrink-0"
-          data-column data-column-id={TranscriptGridColumnId.Speaker} data-transcript-line-idx={HEADER_ROW_ID}
-        >
-          Speaker
-        </div>
-        <div
-          className="px-2 py-2 border-b-1 border-gray-400 grow-1"
-          data-column data-column-id={TranscriptGridColumnId.Text} data-transcript-line-idx={HEADER_ROW_ID}
-        >
-          Transcript Text
-        </div>
-
+        Line
+      </div>
+      <div
+        className="px-2 py-2 border-b-1 border-gray-400 basis-[100px] shrink-0"
+        data-column data-column-id={TranscriptGridColumnId.Speaker} data-transcript-line-idx={HEADER_ROW_ID}
+      >
+        Speaker
+      </div>
+      <div
+        className="px-2 py-2 border-b-1 border-gray-400 grow-1"
+        data-column data-column-id={TranscriptGridColumnId.Text} data-transcript-line-idx={HEADER_ROW_ID}
+      >
+        Transcript Text
       </div>
 
-      {/* Data Rows */}
-      { transcriptLines.map((line, idx) => (
-        <div className="flex" key={line.lineNumber} data-transcript-line-idx={idx}>
+    </div>
+  ), []);
+
+  const dataRows = useMemo(() => (
+    <>
+    { transcriptLines.map((line, idx) => (
+        <div
+          key={line.lineNumber}
+          data-transcript-line-idx={idx}
+          className={classnames('flex', { ['bg-gray-100']: hoveredRowIdx === idx })}
+          onMouseOver={() => setHoveredRowIdx(idx)}
+          onMouseOut={() => setHoveredRowIdx(null)}
+        >
 
           <div
             className="px-2 py-2 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
@@ -190,10 +185,31 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
           />
 
         </div>
-      ))}
+      )) }
+    </>
+  ), [transcriptLines, hoveredRowIdx, setHoveredRowIdx, phrasesByTranscriptLineIdx]);
+
+  return transcriptLines?.length ? (
+    <div
+      className="flex flex-col overflow-auto box-border w-full font-mono"
+      onClick={event => handleGridAction(event, true)}
+      onContextMenu={event => handleGridAction(event, false)}
+      style={style}
+    >
+      <TranscriptSelectionMenu
+        textSelectionString={getPhraseText(gridAction?.selectedPhrase, transcriptLines)}
+        onSetPhrase={handleSetNewPhrase}
+        onSetRepeatedPhrase={handleSetRepeatedPhrase}
+      />
+
+      <ErrorMultipleLinesMenu />
+      
+      { headerRow }
+
+      { dataRows }
 
     </div>
-  );
+  ) : null;
 };
 
 export { TranscriptGrid };

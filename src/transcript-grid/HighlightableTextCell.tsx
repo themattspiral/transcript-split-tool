@@ -26,14 +26,13 @@ interface TextSpan {
 interface HighlightableTextCellProps {
   line: TranscriptLine;
   phrases?: Phrase[];
-  maskIdx?: number;
   className?: string;
   style?: CSSProperties;
   attributes?: any;
 }
 
 const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
-  const { line, phrases, maskIdx, className, style, attributes } = props;
+  const { line, phrases, className, style, attributes } = props;
   const text = line.textWithoutSpeaker || line.text;
 
   const {
@@ -48,9 +47,6 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
       idxSpanSplitPoints.add(phrase.start);
       idxSpanSplitPoints.add(phrase.end);
     });
-    if (maskIdx !== undefined) {
-      idxSpanSplitPoints.add(maskIdx);
-    }
 
     const sortedPoints = Array.from(idxSpanSplitPoints).sort((a, b) => a - b);
 
@@ -127,7 +123,7 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
     }
 
     return spans;
-  }, [line, phrases, maskIdx, phraseLinks, pendingPhrase, pendingRepeatedPhrase, hoveredPhraseKeys, clickedPhraseKeys]);
+  }, [line, phrases, phraseLinks, pendingPhrase, pendingRepeatedPhrase, hoveredPhraseKeys, clickedPhraseKeys]);
 
   const isSpanClickable = useCallback((span: TextSpan): boolean => {
     return !!pendingPhrase && span.spanType === TextSpanType.RepeatedPhrase;
