@@ -116,12 +116,12 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
         { ['cursor-pointer']: !!pendingPhrase && spanType === TextSpanType.RepeatedPhrase },
         { ['bg-gray-200']: isMasked && spanType === TextSpanType.Text },
         { ['z-1']: spanType === TextSpanType.Text },  // ensure text (w/ transparent bg) sits on top of extended phrase bubble padding
-        { ['bg-orange-200']: !isPending && spanType === TextSpanType.Phrase },
-        { ['bg-blue-200']: !isPending && spanType === TextSpanType.RepeatedPhrase },
-        { ['bg-fuchsia-300']: !isPending && spanType === TextSpanType.OverlappingPhrases },
-        { ['bg-orange-100 border-orange-300 border-2 border-dashed']: isPending && spanType === TextSpanType.Phrase },
-        { ['bg-blue-100 border-blue-300 border-2 border-dashed']: isPending && spanType === TextSpanType.RepeatedPhrase },
-        { ['bg-fuchsia-200 border-fuchsia-400 border-2 border-dashed']: isPending && spanType === TextSpanType.OverlappingPhrases },
+        { ['bg-orange-100']: !isPending && spanType === TextSpanType.Phrase },
+        { ['bg-blue-100']: !isPending && spanType === TextSpanType.RepeatedPhrase },
+        { ['bg-fuchsia-200']: !isPending && spanType === TextSpanType.OverlappingPhrases },
+        { ['bg-orange-200 border-orange-400 border-2 border-dashed font-semibold']: isPending && spanType === TextSpanType.Phrase },
+        { ['bg-blue-200 border-blue-400 border-2 border-dashed font-semibold']: isPending && spanType === TextSpanType.RepeatedPhrase },
+        { ['bg-fuchsia-300 border-fuchsia-400 border-2 border-dashed font-semibold']: isPending && spanType === TextSpanType.OverlappingPhrases },
         { ['rounded-l-xl pl-[3px] ml-[-3px]']: isLeftmostPhrase },
         { ['rounded-r-xl pr-[3px] mr-[-3px]']: isRightmostPhrase }
       );

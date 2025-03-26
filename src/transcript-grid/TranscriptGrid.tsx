@@ -4,8 +4,7 @@ import { useContextMenu } from "react-contexify";
 import { GridAction, Phrase, TranscriptGridColumnId, HEADER_ROW_ID } from '../data/data';
 import { getPhraseText, getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../util/util';
 import { useViewState } from '../ViewStateContext';
-import { NEW_PHRASE_MENU_ID, NewPhraseMenu } from '../context-menu/NewPhraseMenu';
-import { REPEATED_PHRASE_MENU_ID, RepeatedPhraseMenu } from '../context-menu/RepeatedPhraseMenu';
+import { TRANSCRIPT_SELECTION_MENU_ID, TranscriptSelectionMenu } from '../context-menu/TranscriptSelectionMenu';
 import { ERROR_MULTIPLE_LINES_MENU_ID, ErrorMultipleLinesMenu } from '../context-menu/ErrorMultipleLinesMenu';
 import { HighlightableTextCell } from './HighlightableTextCell';
 
@@ -49,7 +48,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
 
   const handleSetNewPhrase = () => {
     if (gridAction?.selectedPhrase) {
-      setPendingPhrase(gridAction.selectedPhrase);
+      setPendingPhrase({ ...gridAction.selectedPhrase, isRepetition: false });
       gridAction?.textSelection?.empty();
       setGridAction(null);
     }
@@ -57,7 +56,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
 
   const handleSetRepeatedPhrase = () => {
     if (gridAction?.selectedPhrase) {
-      setPendingRepeatedPhrase(gridAction.selectedPhrase);
+      setPendingRepeatedPhrase({ ...gridAction.selectedPhrase, isRepetition: true });
       gridAction?.textSelection?.empty();
       setGridAction(null);
     }
@@ -115,10 +114,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
         },
         textSelection: sel || undefined
       });
-      showContextMenu({
-        event,
-        id: pendingPhrase || handleAsPrimaryClick ? REPEATED_PHRASE_MENU_ID : NEW_PHRASE_MENU_ID
-      });
+      showContextMenu({ event, id: TRANSCRIPT_SELECTION_MENU_ID });
     }
   };
 
@@ -129,14 +125,10 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       onContextMenu={event => handleGridAction(event, false)}
       style={style}
     >
-      <NewPhraseMenu
+      <TranscriptSelectionMenu
         textSelectionString={getPhraseText(gridAction?.selectedPhrase, transcriptLines)}
         onSetPhrase={handleSetNewPhrase}
-      />
-
-      <RepeatedPhraseMenu
-        textSelectionString={getPhraseText(gridAction?.selectedPhrase, transcriptLines)}
-        onSetPhrase={handleSetRepeatedPhrase}
+        onSetRepeatedPhrase={handleSetRepeatedPhrase}
       />
 
       <ErrorMultipleLinesMenu />
@@ -169,46 +161,36 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       </div>
 
       {/* Data Rows */}
-      {transcriptLines.map((line, idx) => {
-        let maskedTextIdx: number | undefined = undefined;
-        if (pendingPhrase && idx === pendingPhrase.transcriptLineIdx) {
-          maskedTextIdx = pendingPhrase.start;
-        } else if (pendingPhrase && idx > pendingPhrase.transcriptLineIdx) {
-          maskedTextIdx = 0;
-        }
-        
-        return (
-          <div className="flex" key={line.lineNumber} data-transcript-line-idx={idx}>
+      { transcriptLines.map((line, idx) => (
+        <div className="flex" key={line.lineNumber} data-transcript-line-idx={idx}>
 
-            <div
-              className="px-2 py-2 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
-              data-column data-column-id={TranscriptGridColumnId.Line} data-transcript-line-idx={idx}
-            >
-              {line.lineNumber}
-            </div>
-
-            <div
-              className="px-2 py-2 border-b-1 border-gray-400 basis-[100px] shrink-0"
-              data-column data-column-id={TranscriptGridColumnId.Speaker} data-transcript-line-idx={idx}
-            >
-              { line.speaker }
-            </div>
-
-            <HighlightableTextCell
-              line={line}
-              phrases={phrasesByTranscriptLineIdx[idx]}
-              maskIdx={maskedTextIdx}
-              className="border-b-1 border-gray-400 grow-1"
-              attributes={{
-                ['data-column']: 'true',
-                ['data-column-id']: TranscriptGridColumnId.Text,
-                ['data-transcript-line-idx']: idx.toString()
-              }}
-            />
-
+          <div
+            className="px-2 py-2 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
+            data-column data-column-id={TranscriptGridColumnId.Line} data-transcript-line-idx={idx}
+          >
+            {line.lineNumber}
           </div>
-        );
-      })}
+
+          <div
+            className="px-2 py-2 border-b-1 border-gray-400 basis-[100px] shrink-0"
+            data-column data-column-id={TranscriptGridColumnId.Speaker} data-transcript-line-idx={idx}
+          >
+            { line.speaker }
+          </div>
+
+          <HighlightableTextCell
+            line={line}
+            phrases={phrasesByTranscriptLineIdx[idx]}
+            className="border-b-1 border-gray-400 grow-1"
+            attributes={{
+              ['data-column']: 'true',
+              ['data-column-id']: TranscriptGridColumnId.Text,
+              ['data-transcript-line-idx']: idx
+            }}
+          />
+
+        </div>
+      ))}
 
     </div>
   );
