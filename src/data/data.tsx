@@ -34,15 +34,3 @@ export enum TabId {
 }
 
 export const HEADER_ROW_ID = 'header';
-
-export enum TranscriptGridColumnId {
-  Line = 'line',
-  Speaker = 'speaker',
-  Text = 'text'
-}
-
-export enum PhraseGridColumnId {
-  Line = 'line',
-  Speaker = 'speaker',
-  Text = 'text'
-}

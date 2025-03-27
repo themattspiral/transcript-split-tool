@@ -19,6 +19,11 @@ interface TextSpan {
   coveredPhrases: Phrase[];
   spanType: TextSpanType;
   isPending: boolean;
+  isHoverable: boolean;
+  isClickable: boolean;
+  isHovered: boolean;
+  isClicked: boolean;
+  isDeemphasized: boolean;
   displayRefCount?: number;
   classes?: string;
 }
@@ -37,8 +42,24 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
 
   const {
     phraseLinks, pendingPhrase, pendingRepeatedPhrase, hoveredPhraseKeys, clickedPhraseKeys,
-    setPendingRepeatedPhrase, setHoveredPhraseKeys, setClickedPhraseKeys
+    setPendingPhrase, setPendingRepeatedPhrase, setHoveredPhraseKeys, setClickedPhraseKeys
   } = useViewState();
+
+  const isSpanClickable = useCallback((spanType: TextSpanType, pending: Phrase | null, pendingRepeated: Phrase | null): boolean => {
+    let clickable = true;
+    
+    if (spanType === TextSpanType.Text) {
+      clickable = false;
+    } else if (pending && spanType !== TextSpanType.RepeatedPhrase) {
+      clickable = false;
+    } else if (pendingRepeated && spanType !== TextSpanType.Phrase) {
+      clickable = false;
+    } else if ((pending || pendingRepeated) && spanType === TextSpanType.OverlappingPhrases) {
+      clickable = false;
+    }
+
+    return clickable;
+  }, []);
 
   // flatten potential range overlaps
   const textSpans: TextSpan[] = useMemo(() => {
@@ -90,6 +111,18 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
         isPending = coveredPhrases.some(phrase => phrase.isPending);
         spanType = TextSpanType.OverlappingPhrases;
       }
+
+      const isShowingPendingBar = !!pendingPhrase || !!pendingRepeatedPhrase;
+
+      const isSingleHovered = (spanType === TextSpanType.Phrase || spanType === TextSpanType.RepeatedPhrase) && hoveredPhraseKeys.has(getPhraseKey(coveredPhrases[0]));
+      const isMultiHovered = (spanType === TextSpanType.OverlappingPhrases) && coveredPhrases.some(p => hoveredPhraseKeys.has(getPhraseKey(p)));
+      const isHovered = isSingleHovered || isMultiHovered;
+      
+      const isSingleClicked = (spanType === TextSpanType.Phrase || spanType === TextSpanType.RepeatedPhrase) && clickedPhraseKeys.has(getPhraseKey(coveredPhrases[0]));
+      const isMultiClicked = (spanType === TextSpanType.OverlappingPhrases) && coveredPhrases.some(p => clickedPhraseKeys.has(getPhraseKey(p)));
+      const isClicked = isSingleClicked || isMultiClicked;
+
+      const isDeemphasized = (!isHovered && hoveredPhraseKeys.size > 0) || (!isPending && isShowingPendingBar);
       
       spans.push({
         start,
@@ -97,46 +130,64 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
         coveredPhrases,
         spanType,
         isPending,
+        isHoverable: spanType !== TextSpanType.Text,
+        isClickable: isSpanClickable(spanType, pendingPhrase, pendingRepeatedPhrase),
+        isHovered,
+        isClicked,
+        isDeemphasized,
         displayRefCount: isPending ? (refCount || 0)  + 1 : refCount
       });
     }
 
-    // determine correct styling for each span
+    // determine styling for each span
     for (let i = 0; i < spans.length; i++) {
       const spanType = spans[i].spanType;
-      const isPending = spans[i].isPending;
-      const isHighlighted = (spanType === TextSpanType.Phrase || spanType === TextSpanType.RepeatedPhrase) && hoveredPhraseKeys.has(getPhraseKey(spans[i].coveredPhrases[0]));
-      const isDeemphasized = (!isHighlighted && hoveredPhraseKeys.size > 0) || (!isPending && (pendingPhrase || pendingRepeatedPhrase));
       const isLeftmostPhrase = spanType != TextSpanType.Text && (i === 0 || spans[i - 1].spanType === TextSpanType.Text);
       const isRightmostPhrase = spanType != TextSpanType.Text && (i === (spans.length - 1) || spans[i + 1].spanType === TextSpanType.Text);
       
       spans[i].classes = classnames(
         'text-span',
-        spanType,
-        { pending: isPending },
-        { highlighted: isHighlighted },
-        { deemphasized: isDeemphasized },
-        { clickable: pendingPhrase && spanType === TextSpanType.RepeatedPhrase },
+        spanType, // TextSpanType string enum values match class names
+        { hoverable: spans[i].isHoverable },
+        { clickable: spans[i].isClickable },
+        { pending: spans[i].isPending },
+        { hovered: spans[i].isHovered },
+        { clicked: spans[i].isClicked },
+        { deemphasized: spans[i].isDeemphasized },
         { leftmost: isLeftmostPhrase },
         { rightmost: isRightmostPhrase }
       );
     }
 
     return spans;
-  }, [line, phrases, phraseLinks, pendingPhrase, pendingRepeatedPhrase, hoveredPhraseKeys, clickedPhraseKeys]);
+  }, [line, phrases, phraseLinks, pendingPhrase, pendingRepeatedPhrase, isSpanClickable, hoveredPhraseKeys, clickedPhraseKeys]);
 
-  const isSpanClickable = useCallback((span: TextSpan): boolean => {
-    return !!pendingPhrase && span.spanType === TextSpanType.RepeatedPhrase;
-  }, [pendingPhrase]);
+  const handleSpanClick = useCallback((event: React.MouseEvent, span: TextSpan): void => {
+    event.stopPropagation();
 
-  const handleSpanClick = useCallback((span: TextSpan): void => {
-    setPendingRepeatedPhrase({ ...span.coveredPhrases[0], isPending: true });
-  }, [setPendingRepeatedPhrase]);
+    if (pendingPhrase && !pendingRepeatedPhrase) { 
+      // replace pending repeated phrase
+      setPendingRepeatedPhrase({ ...span.coveredPhrases[0], isPending: true });
+    } else if (!pendingPhrase && pendingRepeatedPhrase) {
+      // replace pending phrase
+      setPendingPhrase({ ...span.coveredPhrases[0], isPending: true });
+    } else if (span.isClicked) {
+      setClickedPhraseKeys(new Set());
+    } else {
+      // select click
+      const keys = new Set(span.coveredPhrases.flatMap(p => {
+        const phraseKey = getPhraseKey(p);
+        return [phraseKey, ...Array.from(phraseLinks[phraseKey] || new Set())];
+      }));
+
+      setClickedPhraseKeys(keys);
+    }
+  }, [pendingPhrase, pendingRepeatedPhrase, setPendingPhrase, setPendingRepeatedPhrase, setClickedPhraseKeys]);
 
   const handleSpanMouseOver = useCallback((span: TextSpan) => {
     const keys = new Set(span.coveredPhrases.flatMap(p => {
       const phraseKey = getPhraseKey(p);
-      return [phraseKey, ...Array.from(phraseLinks[phraseKey])];
+      return [phraseKey, ...Array.from(phraseLinks[phraseKey] || new Set())];
     }));
 
     setHoveredPhraseKeys(new Set(keys));
@@ -153,9 +204,9 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
           key={`${span.start}:${span.end}`}
           className={span.classes}
           data-pls-idx={span.start}
-          onClick={isSpanClickable(span) ? () => handleSpanClick(span) : undefined}
-          onMouseOver={span.spanType !== TextSpanType.Text ? () => handleSpanMouseOver(span) : undefined}
-          onMouseOut={span.spanType !== TextSpanType.Text ? handleSpanMouseOut : undefined}
+          onMouseOver={span.isHoverable ? () => handleSpanMouseOver(span) : undefined}
+          onMouseOut={span.isHoverable ? handleSpanMouseOut : undefined}
+          onClick={span.isClickable ? event => handleSpanClick(event, span) : undefined}
         >
           { text.substring(span.start, span.end) }
 

@@ -14,7 +14,7 @@
       border-color: var(--color-orange-400);
     }
 
-    &.highlighted {
+    &.hovered, &.clicked {
       background-color: var(--color-orange-300);
     }
   }
@@ -32,7 +32,7 @@
       border-color: var(--color-blue-400);
     }
 
-    &.highlighted {
+    &.hovered, &.clicked {
       background-color: var(--color-blue-300);
     }
   }
@@ -50,7 +50,7 @@
       border-color: var(--color-fuchsia-400);
     }
 
-    &.highlighted {
+    &.hovered, &.clicked {
       background-color: var(--color-fuchsia-400);
     }
   }
@@ -64,8 +64,13 @@
   &.pending {
     border: 2px dashed;
   }
+  
+  &.clicked {
+    border: 2px solid;
+    border-color: var(--color-gray-600);
+  }
 
-  &.pending, &.highlighted {
+  &.pending, &.hovered, &.clicked {
     font-weight: 600;
   }
   

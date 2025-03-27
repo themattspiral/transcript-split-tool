@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-/* Make tailwind parse variables used in component styles */
+/* Ensure tailwind parses variables used in component styles */
+/* https://tailwindcss.com/docs/detecting-classes-in-source-files#explicitly-registering-sources */
 @source "./transcript-grid/HighlightableTextCell.scss";
 
 :root {

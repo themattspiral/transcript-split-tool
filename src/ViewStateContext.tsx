@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Phrase, PhraseRepetition, TranscriptLine, TabId } from './data/data';
 import { sortPhraseRepetitions, getPhraseKey } from './util/util';
@@ -87,6 +87,13 @@ const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [pendingRepeatedPhrase, setPendingRepeatedPhrase] = useState<Phrase | null>(null);
   const [hoveredPhraseKeys, setHoveredPhraseKeys] = useState<Set<string>>(new Set());
   const [clickedPhraseKeys, setClickedPhraseKeys] = useState<Set<string>>(new Set());
+
+  // unset any clicked phrases while defining/editing a repetition
+  useEffect(() => {
+    if (pendingPhrase || pendingRepeatedPhrase) {
+      setClickedPhraseKeys(new Set());
+    }
+  }, [pendingPhrase, pendingRepeatedPhrase]);
 
   const phraseLinks = useMemo(() => {
     const links = {} as { [key: string]: Set<string> };

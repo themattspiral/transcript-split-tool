@@ -2,12 +2,18 @@ import { useState, CSSProperties, useMemo } from 'react';
 import { useContextMenu } from "react-contexify";
 import classnames from 'classnames';
 
-import { GridAction, Phrase, TranscriptGridColumnId, HEADER_ROW_ID } from '../data/data';
+import { GridAction, Phrase, HEADER_ROW_ID } from '../data/data';
 import { getPhraseText, getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../util/util';
 import { useViewState } from '../ViewStateContext';
 import { TRANSCRIPT_SELECTION_MENU_ID, TranscriptSelectionMenu } from '../context-menu/TranscriptSelectionMenu';
 import { ERROR_MULTIPLE_LINES_MENU_ID, ErrorMultipleLinesMenu } from '../context-menu/ErrorMultipleLinesMenu';
 import { HighlightableTextCell } from './HighlightableTextCell';
+
+export enum TranscriptGridColumnId {
+  Line = 'line',
+  Speaker = 'speaker',
+  Text = 'text'
+}
 
 interface TranscriptGridProps {
   style?: CSSProperties | undefined;
@@ -20,7 +26,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
   const { show: showContextMenu } = useContextMenu();
   const {
     transcriptLines, phraseRepetitions, pendingPhrase, pendingRepeatedPhrase,
-    setPendingPhrase, setPendingRepeatedPhrase
+    setPendingPhrase, setPendingRepeatedPhrase, setClickedPhraseKeys
   } = useViewState();
 
   const phrasesByTranscriptLineIdx: { [key: string]: Phrase[] } = useMemo(() => {
@@ -65,39 +71,52 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
   };
 
   const handleGridAction = (event: React.MouseEvent, handleAsPrimaryClick: boolean): void => {
-    if (handleAsPrimaryClick && (event.button != 0 || !pendingPhrase)) {
+    // using handler for onClick event, button was right click
+    if (handleAsPrimaryClick && event.button != 0) {
+      setClickedPhraseKeys(new Set());
+      return;
+    }
+
+    // using handler for onClick, nothing being set/edited
+    if (handleAsPrimaryClick && event.button === 0 && !pendingPhrase && !pendingRepeatedPhrase) {
+      setClickedPhraseKeys(new Set());
+      return;
+    }
+
+    const sel = document.getSelection();
+    const selText = sel?.toString();
+    const range = sel?.getRangeAt(0);
+
+    // using handler for onContextMenu, but no selection is present
+    if (!handleAsPrimaryClick && (!sel || !selText || !range)) {
+      setClickedPhraseKeys(new Set());
       return;
     }
 
     const gridAttrs: NamedNodeMap | undefined = getGridColumnAttributes(event);
-
     if (!gridAttrs) {
       console.error('Couldnt get attributes from target or immediate parents. Event:', event);
       return;
     }
 
-    const transcriptLineIdxString = gridAttrs.getNamedItem('data-transcript-line-idx')?.value;
     const columnIdString = gridAttrs.getNamedItem('data-column-id')?.value;
+    if (!columnIdString) {
+      console.error('Couldnt determine column. Event:', event);
+      return;
+    }
+
+    const transcriptLineIdxString = gridAttrs.getNamedItem('data-transcript-line-idx')?.value;
     const transcriptLineIdx = parseInt(transcriptLineIdxString || '');
-    
-    const sel = document.getSelection();
-    const selText = sel?.toString();
-    const range = sel?.getRangeAt(0);
     
     const beginPhraseLineStartIdxString = getSelectionRangeContainerAttribute(range?.startContainer, 'data-pls-idx');
     const endPhraseLineStartIdxString = getSelectionRangeContainerAttribute(range?.endContainer, 'data-pls-idx');
     const beginPhraseLineStartIdx = parseInt(beginPhraseLineStartIdxString || '0');
     const endPhraseLineStartIdx = parseInt(endPhraseLineStartIdxString || '0');
     
-    const isHeaderRow: boolean = transcriptLineIdxString === 'header';
-    const isTextColumn: boolean = columnIdString === 'text';
+    const isHeaderRow: boolean = transcriptLineIdxString === HEADER_ROW_ID;
+    const isTextColumn: boolean = columnIdString === TranscriptGridColumnId.Text;
     const hasSelection: boolean = !!selText;
     const hasMultiLineSelection: boolean = selText?.includes('\n') || false;
-
-    if (!columnIdString) {
-      console.error('Couldnt determine column. Event:', event);
-      return;
-    }
 
     if (hasMultiLineSelection) {
       if (event.preventDefault) event.preventDefault();
