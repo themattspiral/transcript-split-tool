@@ -52,7 +52,7 @@ const PendingPhraseBar: React.FC = () => {
         </div>
 
         <button
-          className="basis-[35px] shrink-0 w-[35px] h-[35px] rounded-lg bg-gray-500 hover:bg-gray-600 cursor-pointer shadow-md shadow-gray-400"
+          className="basis-[35px] shrink-0 w-[35px] h-[35px] rounded-lg bg-gray-500 hover:bg-gray-600 cursor-pointer shadow-md shadow-gray-400 ml-2"
           onClick={clearPendingPhrases}
         >
           <FontAwesomeIcon icon={faX} size="lg" className="cancel-button text-white" />
@@ -71,8 +71,10 @@ const PendingPhraseBar: React.FC = () => {
       </div>
 
       { hasOrderingError &&
-        <div className="flex items-center w-full text-red-500 font-medium justify-end mt-4">
-          Please choose a repeated phrase that ends before your defined phrase starts.
+        <div className="flex items-center justify-center mt-4">
+          <div className="text-red-500 font-bold text-sm bg-red-100 rounded-xl py-1 px-6 border-1 border-red-300">
+            Phrase must come after repeated phrase.
+          </div>
         </div>
       }
       

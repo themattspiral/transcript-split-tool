@@ -30,14 +30,14 @@ interface TextSpan {
 
 interface HighlightableTextCellProps {
   line: TranscriptLine;
-  phrases?: Phrase[];
+  linePhrases?: Phrase[];
   className?: string;
   style?: CSSProperties;
   attributes?: any;
 }
 
 const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
-  const { line, phrases, className, style, attributes } = props;
+  const { line, linePhrases, className, style, attributes } = props;
   const text = line.textWithoutSpeaker || line.text;
 
   const {
@@ -64,7 +64,7 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
   // flatten potential range overlaps
   const textSpans: TextSpan[] = useMemo(() => {
     const idxSpanSplitPoints = new Set<number>([0, line.text.length]);
-    phrases?.forEach(phrase => {
+    linePhrases?.forEach(phrase => {
       idxSpanSplitPoints.add(phrase.start);
       idxSpanSplitPoints.add(phrase.end);
     });
@@ -80,9 +80,9 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
       
       // find which original phrases cover this span
       const uniqueCoveredPhrases: { [key: string]: Phrase } = {};
-      if (phrases) {
-        for (let j = 0; j < phrases.length; j++) {
-          const phrase = phrases[j];
+      if (linePhrases) {
+        for (let j = 0; j < linePhrases.length; j++) {
+          const phrase = linePhrases[j];
           
           // A phrase covers this section if:
           // 1. the phrase's start is less than this section's end
@@ -160,7 +160,7 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
     }
 
     return spans;
-  }, [line, phrases, phraseLinks, pendingPhrase, pendingRepeatedPhrase, isSpanClickable, hoveredPhraseKeys, clickedPhraseKeys]);
+  }, [line, linePhrases, phraseLinks, pendingPhrase, pendingRepeatedPhrase, isSpanClickable, hoveredPhraseKeys, clickedPhraseKeys]);
 
   const handleSpanClick = useCallback((event: React.MouseEvent, span: TextSpan): void => {
     event.stopPropagation();

@@ -1,16 +1,30 @@
-import { TabId } from './data/data';
 import { ControlBar } from './control-bar/ControlBar';
 import { TranscriptGrid } from './transcript-grid/TranscriptGrid';
-import { ModalWindow } from './modal/ModalWindow';
-import { useViewState } from './ViewStateContext';
 import { PhraseGrid } from './phrase-grid/PhraseGrid';
+import { ModalWindow } from './modal/ModalWindow';
+import { TranscriptSelectionMenu } from './context-menu/TranscriptSelectionMenu';
+import { ErrorMultipleLinesMenu } from './context-menu/ErrorMultipleLinesMenu';
+import { useViewState } from './ViewStateContext';
+import { TabId } from './data/data';
+import { getPhraseText } from './util/util';
 
 const App: React.FC = () => {
-  const { activeTabId, transcriptLines, phraseRepetitions } = useViewState();
+  const {
+    activeTabId, transcriptLines, phraseRepetitions, contextPhrase,
+    setContextPhraseAsPendingPhrase, setContextPhraseAsPendingRepeatedPhrase
+  } = useViewState();
 
   return (
     <div className="flex flex-col h-dvh w-dvw p-2 overflow-hidden">
       <ModalWindow />
+
+      <TranscriptSelectionMenu
+        textSelectionString={getPhraseText(contextPhrase, transcriptLines)}
+        onSetPhrase={setContextPhraseAsPendingPhrase}
+        onSetRepeatedPhrase={setContextPhraseAsPendingRepeatedPhrase}
+      />
+
+      <ErrorMultipleLinesMenu />
 
       <ControlBar />
       

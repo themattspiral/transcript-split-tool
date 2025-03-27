@@ -18,9 +18,9 @@ const TranscriptSelectionMenu: React.FC<TranscriptSelectionMenuProps> = props =>
   const { pendingPhrase, pendingRepeatedPhrase } = useViewState();
 
   return (
-    <Menu id={TRANSCRIPT_SELECTION_MENU_ID} animation="slide" className="max-w-dvw font-sans">
+    <Menu id={TRANSCRIPT_SELECTION_MENU_ID} animation="slide" className="max-w-[400px] font-sans">
       <Item disabled style={{ opacity: 1 }}>
-        <div className="font-bold font-mono text-ellipsis overflow-hidden">
+        <div className="font-bold font-mono flex whitespace-normal">
           { textSelectionString }
         </div>
       </Item>

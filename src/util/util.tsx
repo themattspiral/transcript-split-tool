@@ -75,6 +75,10 @@ const getSelectionRangeContainerAttribute = (node: Node | undefined, attribute: 
   return value;
 };
 
+const clearDocumentTextSelection = () => {
+  document.getSelection()?.empty();
+};
+
 export {
   getPhraseKey,
   getPhraseRepetitionKey,
@@ -83,5 +87,6 @@ export {
   sortPhrases,
   sortPhraseRepetitions,
   getGridColumnAttributes,
-  getSelectionRangeContainerAttribute
+  getSelectionRangeContainerAttribute,
+  clearDocumentTextSelection
 };

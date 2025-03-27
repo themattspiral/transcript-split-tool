@@ -20,13 +20,6 @@ export interface TranscriptLine {
   textWithoutSpeaker?: string;
 }
 
-export interface GridAction {
-  columnId: string;
-  transcriptLineIdx: number;
-  selectedPhrase?: Phrase;
-  textSelection?: Selection;
-}
-
 export enum TabId {
   Transcript,
   PhraseBook,
