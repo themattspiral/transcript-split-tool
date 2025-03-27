@@ -34,7 +34,7 @@ const PendingPhraseBar: React.FC = () => {
         <div className="grow-1 shrink-1 basis-[50%] font-mono px-2">
           <div className={classnames(
             'inline-block rounded-xl px-2 py-1 whitespace-pre-wrap border-2 border-dashed border-orange-400 font-semibold',
-            pendingPhrase ? 'bg-orange-200' : 'bg-yellow-100'
+            pendingPhrase ? 'bg-orange-200' : 'bg-yellow-200'
           )}>
             { phraseText }
           </div>
@@ -45,14 +45,14 @@ const PendingPhraseBar: React.FC = () => {
         <div className="grow-1 shrink-1 basis-[50%] font-mono px-2">
           <div className={classnames(
             'inline-block rounded-xl px-2 py-1 whitespace-pre-wrap border-2 border-dashed border-blue-400 font-semibold',
-            pendingRepeatedPhrase ? 'bg-blue-200' : 'bg-yellow-100'
+            pendingRepeatedPhrase ? 'bg-blue-200' : 'bg-yellow-200'
           )}>
             { repetitionOfText }
           </div>
         </div>
 
         <button
-          className="basis-[35px] shrink-0 w-[35px] h-[35px] rounded-lg bg-red-500 hover:bg-red-600 cursor-pointer shadow-md shadow-gray-400"
+          className="basis-[35px] shrink-0 w-[35px] h-[35px] rounded-lg bg-gray-500 hover:bg-gray-600 cursor-pointer shadow-md shadow-gray-400"
           onClick={clearPendingPhrases}
         >
           <FontAwesomeIcon icon={faX} size="lg" className="cancel-button text-white" />

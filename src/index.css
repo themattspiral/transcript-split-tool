@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Make tailwind parse variables used in component styles */
+@source "./transcript-grid/HighlightableTextCell.scss";
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
 

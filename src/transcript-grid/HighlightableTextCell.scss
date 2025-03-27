@@ -11,8 +11,7 @@
 
     &.pending {
       background-color: var(--color-orange-200);
-      border: 2px dashed var(--color-orange-400);
-      font-weight: 600;
+      border-color: var(--color-orange-400);
     }
 
     &.highlighted {
@@ -30,8 +29,7 @@
 
     &.pending {
       background-color: var(--color-blue-200);
-      border: 2px dashed var(--color-blue-400);
-      font-weight: 600;
+      border-color: var(--color-blue-400);
     }
 
     &.highlighted {
@@ -44,13 +42,12 @@
     background-color: var(--color-fuchsia-300);
 
     &.deemphasized {
-      background-color: var(--color-orange-200);
+      background-color: var(--color-fuchsia-100);
     }
     
     &.pending {
       background-color: var(--color-fuchsia-300);
-      border: 2px dashed var(--color-fuchsia-400);
-      font-weight: 600;
+      border-color: var(--color-fuchsia-400);
     }
 
     &.highlighted {
@@ -60,13 +57,21 @@
 
   /* TextSpanType.Text */
   &.text {
-    /* ensure plaintext spans sit on top of slightly-overlapping phrase bubbles */
-    z-index: 1;
+    /* plaintext spans sit on top of slightly-overlapping phrase & pending bubbles */
+    z-index: 2;
+  }
+
+  &.pending {
+    border: 2px dashed;
+  }
+
+  &.pending, &.highlighted {
+    font-weight: 600;
   }
   
   &.pending {
-    /* pending bubble spans sit on top of phrase bubbles and plain text spans */
-    z-index: 2;
+    /* pending bubble spans sit on top of phrase bubbles, but not over plaintext */
+    z-index: 1;
   }
   
   .count-badge {

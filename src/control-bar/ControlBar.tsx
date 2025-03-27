@@ -11,7 +11,7 @@ import { PendingPhraseBar } from './PendingPhraseBar';
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
 const ControlBar: React.FC = () => {
-  const { activeTabId, setActiveTabId, transcriptLines, setNewTranscript } = useViewState();
+  const { activeTabId, setActiveTabId, transcriptLines, setNewTranscript, phraseRepetitions } = useViewState();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -138,7 +138,7 @@ const ControlBar: React.FC = () => {
             className={activeTabId === TabId.PhraseBook ? activeTabClasses : otherTabClasses}
             style={activeTabId === TabId.PhraseBook ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
           >
-            Phrase Repetitions
+            Phrase Repetitions ({ phraseRepetitions.length })
           </button>
           
           <button
