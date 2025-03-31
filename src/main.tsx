@@ -5,7 +5,10 @@ import './index.css';
 import "react-contexify/dist/ReactContexify.css";
 
 import { App } from './App';
-import { ViewStateProvider } from './ViewStateContext';
+import { ViewStateProvider } from './context/ViewStateContext';
+import { UserDataProvider } from './context/UserDataContext';
+import { EditStateProvider } from './context/EditStateContext';
+import { PhraseStateProvider } from './context/PhraseStateContext';
 
 // reference
 // import reactLogo from './assets/react.svg' // src
@@ -14,7 +17,13 @@ import { ViewStateProvider } from './ViewStateContext';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ViewStateProvider>
-      <App />
+      <UserDataProvider>
+        <EditStateProvider>
+          <PhraseStateProvider>
+            <App />
+          </PhraseStateProvider>
+        </EditStateProvider>
+      </UserDataProvider>
     </ViewStateProvider>
   </StrictMode>,
 );

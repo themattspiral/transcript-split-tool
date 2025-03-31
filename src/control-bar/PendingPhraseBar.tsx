@@ -1,22 +1,29 @@
 import classnames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faX } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faX, faArrowsRotate } from "@fortawesome/free-solid-svg-icons";
 
-import { useViewState } from "../ViewStateContext";
 import { getPhraseLineNumber, getPhraseText } from '../util/util';
+import { useUserData } from '../context/UserDataContext';
+import { useEditState } from '../context/EditStateContext';
+import { useCallback } from 'react';
 
 const PendingPhraseBar: React.FC = () => {
+  const { transcriptLines } = useUserData();
   const {
-    transcriptLines, pendingPhrase, pendingRepeatedPhrase,
-    clearPendingPhrases, addPendingPhrasesToRepetitions
-  } = useViewState();
+    pendingPhrase, pendingRepeatedPhrase, pendingPhraseRepetitionEditId,
+    clearPendingPhrases, addPendingPhrasesToRepetitions, replaceRepetitionWithPendingPhrases
+  } = useEditState();
 
-  if (!pendingPhrase && !pendingRepeatedPhrase) {
-    return null;
-  }
+  const handleConfirm = useCallback(() => {
+    if (pendingPhraseRepetitionEditId) {
+      replaceRepetitionWithPendingPhrases(pendingPhraseRepetitionEditId);
+    } else {
+      addPendingPhrasesToRepetitions();
+    }
+  }, [pendingPhraseRepetitionEditId, addPendingPhrasesToRepetitions, replaceRepetitionWithPendingPhrases]);
 
   const phraseText = getPhraseText(pendingPhrase, transcriptLines) || '<selection pending>';
-  const repetitionOfText = getPhraseText(pendingRepeatedPhrase, transcriptLines) || '<selection pending>';
+  const repeatedPhraseText = getPhraseText(pendingRepeatedPhrase, transcriptLines) || '<selection pending>';
   
   const isSameLine = pendingPhrase?.transcriptLineIdx === pendingRepeatedPhrase?.transcriptLineIdx;
   const hasOrderingError = pendingPhrase && pendingRepeatedPhrase && (
@@ -25,7 +32,7 @@ const PendingPhraseBar: React.FC = () => {
   );
   const submitEnabled = pendingPhrase && pendingRepeatedPhrase && !hasOrderingError;
   
-  return (
+  return !pendingPhrase && !pendingRepeatedPhrase ? null : (
     <div className="flex flex-col py-4 px-4 mt-4 mr-4 mb-3 ml-6 bg-blue-50 border-blue-300 border-2 rounded-lg overflow-hidden">
       
       <div className="flex items-center w-full">
@@ -47,7 +54,7 @@ const PendingPhraseBar: React.FC = () => {
             'inline-block rounded-xl px-2 py-1 whitespace-pre-wrap border-2 border-dashed border-blue-400 font-semibold',
             pendingRepeatedPhrase ? 'bg-blue-200' : 'bg-yellow-200'
           )}>
-            { repetitionOfText }
+            { repeatedPhraseText }
           </div>
         </div>
 
@@ -64,9 +71,9 @@ const PendingPhraseBar: React.FC = () => {
             'basis-[35px] shrink-0 w-[35px] h-[35px] rounded-lg ml-1',
             submitEnabled ? 'bg-green-500 hover:bg-green-600 cursor-pointer shadow-md shadow-gray-400' : 'bg-gray-300 cursor-not-allowed'
           )}
-          onClick={addPendingPhrasesToRepetitions}
+          onClick={handleConfirm}
         >
-          <FontAwesomeIcon icon={faCheck} size="xl" className="confirm-button text-white" />
+          <FontAwesomeIcon icon={pendingPhraseRepetitionEditId ? faArrowsRotate : faCheck} size="xl" className="confirm-button text-white" />
         </button>
       </div>
 

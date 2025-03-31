@@ -1,10 +1,15 @@
 import { CSSProperties, useCallback, useMemo } from "react";
 import classnames from "classnames";
+import { useContextMenu } from "react-contexify";
 
-import { Phrase, TranscriptLine } from "../data/data";
-import { getPhraseKey } from "../util/util";
-import { useViewState } from "../ViewStateContext";
 import './HighlightableTextCell.scss';
+import { Phrase, PhraseAssociation, TranscriptLine } from "../data/data";
+import { getPhraseKey } from "../util/util";
+import { PHRASE_EDIT_MENU_ID } from "../context-menu/PhraseEditMenu";
+import { TRANSCRIPT_SELECTION_MENU_ID } from "../context-menu/TranscriptSelectionMenu";
+import { useEditState } from "../context/EditStateContext";
+import { useUserData } from "../context/UserDataContext";
+import { usePhraseState } from "../context/PhraseStateContext";
 
 enum TextSpanType {
   Phrase = 'phrase',
@@ -16,11 +21,12 @@ enum TextSpanType {
 interface TextSpan {
   start: number;
   end: number;
-  coveredPhrases: Phrase[];
+  phraseAssociations: PhraseAssociation[];
   spanType: TextSpanType;
   isPending: boolean;
   isHoverable: boolean;
   isClickable: boolean;
+  isContextable: boolean;
   isHovered: boolean;
   isClicked: boolean;
   isDeemphasized: boolean;
@@ -30,20 +36,25 @@ interface TextSpan {
 
 interface HighlightableTextCellProps {
   line: TranscriptLine;
-  linePhrases?: Phrase[];
+  linePhraseAssociations: PhraseAssociation[];
   className?: string;
   style?: CSSProperties;
   attributes?: any;
 }
 
 const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
-  const { line, linePhrases, className, style, attributes } = props;
+  const { line, linePhraseAssociations, className, style, attributes } = props;
   const text = line.textWithoutSpeaker || line.text;
 
+  const { phraseLinks } = useUserData();
   const {
-    phraseLinks, pendingPhrase, pendingRepeatedPhrase, hoveredPhraseKeys, clickedPhraseKeys,
-    setPendingPhrase, setPendingRepeatedPhrase, setHoveredPhraseKeys, setClickedPhraseKeys
-  } = useViewState();
+    setContextPhrase, setContextPhraseRepetitionId,
+    pendingPhrase, pendingRepeatedPhrase, setPendingPhrase, setPendingRepeatedPhrase
+  } = useEditState();
+  const {
+    hoveredPhraseKeys, clickedPhraseKeys, setHoveredPhraseKeys, setClickedPhraseKeys
+  } = usePhraseState();
+  const { show: showContextMenu } = useContextMenu();
 
   const isSpanClickable = useCallback((spanType: TextSpanType, pending: Phrase | null, pendingRepeated: Phrase | null): boolean => {
     let clickable = true;
@@ -61,12 +72,16 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
     return clickable;
   }, []);
 
+  const isSpanContextable = useCallback((spanType: TextSpanType, refCount?: number): boolean => {
+    return (spanType === TextSpanType.Phrase || spanType === TextSpanType.RepeatedPhrase) && (!refCount || refCount <= 1);
+  }, []);
+
   // flatten potential range overlaps
   const textSpans: TextSpan[] = useMemo(() => {
     const idxSpanSplitPoints = new Set<number>([0, line.text.length]);
-    linePhrases?.forEach(phrase => {
-      idxSpanSplitPoints.add(phrase.start);
-      idxSpanSplitPoints.add(phrase.end);
+    linePhraseAssociations?.forEach(assn => {
+      idxSpanSplitPoints.add(assn.phrase.start);
+      idxSpanSplitPoints.add(assn.phrase.end);
     });
 
     const sortedPoints = Array.from(idxSpanSplitPoints).sort((a, b) => a - b);
@@ -78,48 +93,46 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
       const start = sortedPoints[i];
       const end = sortedPoints[i + 1];
       
-      // find which original phrases cover this span
-      const uniqueCoveredPhrases: { [key: string]: Phrase } = {};
-      if (linePhrases) {
-        for (let j = 0; j < linePhrases.length; j++) {
-          const phrase = linePhrases[j];
-          
-          // A phrase covers this section if:
-          // 1. the phrase's start is less than this section's end
-          // 2. the phrase's end is greater than this section's start
-          //
-          // i.e. fully contained, or overlapping on either side
-          if (phrase.start < end && phrase.end > start) {
-            uniqueCoveredPhrases[getPhraseKey(phrase)] = phrase;
-          }
+      // find which original phrase associations this span covers
+      const uniquePhraseAssociations: { [key: string]: PhraseAssociation } = {};
+      for (let j = 0; j < linePhraseAssociations.length; j++) {
+        const phrase = linePhraseAssociations[j].phrase;
+        
+        // A phrase covers this section if:
+        // 1. the phrase's start is less than this section's end
+        // 2. the phrase's end is greater than this section's start
+        //
+        // i.e. fully contained, or overlapping on either side
+        if (phrase.start < end && phrase.end > start) {
+          uniquePhraseAssociations[getPhraseKey(phrase)] = linePhraseAssociations[j];
         }
       }
-      const coveredPhrases = Object.values(uniqueCoveredPhrases);
+      const phraseAssociations = Object.values(uniquePhraseAssociations);
 
       let isPending = false;
       let spanType = TextSpanType.Text;
       let refCount = undefined;
       
-      if (coveredPhrases.length === 1) {
-        isPending = coveredPhrases[0].isPending; 
-        spanType = coveredPhrases[0].isRepetition ? TextSpanType.RepeatedPhrase : TextSpanType.Phrase;
+      if (phraseAssociations.length === 1) {
+        isPending = phraseAssociations[0].phrase.isPending; 
+        spanType = phraseAssociations[0].phrase.isRepeated ? TextSpanType.RepeatedPhrase : TextSpanType.Phrase;
         
         if (spanType === TextSpanType.RepeatedPhrase) {
-          refCount = phraseLinks[getPhraseKey(coveredPhrases[0])]?.size;
+          refCount = phraseLinks[getPhraseKey(phraseAssociations[0].phrase)]?.size;
         }
-      } else if (coveredPhrases.length > 1) {
-        isPending = coveredPhrases.some(phrase => phrase.isPending);
+      } else if (phraseAssociations.length > 1) {
+        isPending = phraseAssociations.some(assn => assn.phrase.isPending);
         spanType = TextSpanType.OverlappingPhrases;
       }
 
       const isShowingPendingBar = !!pendingPhrase || !!pendingRepeatedPhrase;
 
-      const isSingleHovered = (spanType === TextSpanType.Phrase || spanType === TextSpanType.RepeatedPhrase) && hoveredPhraseKeys.has(getPhraseKey(coveredPhrases[0]));
-      const isMultiHovered = (spanType === TextSpanType.OverlappingPhrases) && coveredPhrases.some(p => hoveredPhraseKeys.has(getPhraseKey(p)));
+      const isSingleHovered = (spanType === TextSpanType.Phrase || spanType === TextSpanType.RepeatedPhrase) && hoveredPhraseKeys.has(getPhraseKey(phraseAssociations[0].phrase));
+      const isMultiHovered = (spanType === TextSpanType.OverlappingPhrases) && phraseAssociations.some(assn => hoveredPhraseKeys.has(getPhraseKey(assn.phrase)));
       const isHovered = isSingleHovered || isMultiHovered;
       
-      const isSingleClicked = (spanType === TextSpanType.Phrase || spanType === TextSpanType.RepeatedPhrase) && clickedPhraseKeys.has(getPhraseKey(coveredPhrases[0]));
-      const isMultiClicked = (spanType === TextSpanType.OverlappingPhrases) && coveredPhrases.some(p => clickedPhraseKeys.has(getPhraseKey(p)));
+      const isSingleClicked = (spanType === TextSpanType.Phrase || spanType === TextSpanType.RepeatedPhrase) && clickedPhraseKeys.has(getPhraseKey(phraseAssociations[0].phrase));
+      const isMultiClicked = (spanType === TextSpanType.OverlappingPhrases) && phraseAssociations.some(assn => clickedPhraseKeys.has(getPhraseKey(assn.phrase)));
       const isClicked = isSingleClicked || isMultiClicked;
 
       const isDeemphasized = (!isHovered && hoveredPhraseKeys.size > 0) || (!isPending && isShowingPendingBar);
@@ -127,11 +140,12 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
       spans.push({
         start,
         end,
-        coveredPhrases,
+        phraseAssociations,
         spanType,
         isPending,
         isHoverable: spanType !== TextSpanType.Text,
         isClickable: isSpanClickable(spanType, pendingPhrase, pendingRepeatedPhrase),
+        isContextable: isSpanContextable(spanType, refCount),
         isHovered,
         isClicked,
         isDeemphasized,
@@ -160,33 +174,48 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
     }
 
     return spans;
-  }, [line, linePhrases, phraseLinks, pendingPhrase, pendingRepeatedPhrase, isSpanClickable, hoveredPhraseKeys, clickedPhraseKeys]);
+  }, [line, linePhraseAssociations, phraseLinks, pendingPhrase, pendingRepeatedPhrase, isSpanClickable, hoveredPhraseKeys, clickedPhraseKeys]);
 
   const handleSpanClick = useCallback((event: React.MouseEvent, span: TextSpan): void => {
     event.stopPropagation();
 
     if (pendingPhrase && !pendingRepeatedPhrase) { 
       // replace pending repeated phrase
-      setPendingRepeatedPhrase({ ...span.coveredPhrases[0], isPending: true });
+      setPendingRepeatedPhrase({ ...span.phraseAssociations[0].phrase, isPending: true });
     } else if (!pendingPhrase && pendingRepeatedPhrase) {
       // replace pending phrase
-      setPendingPhrase({ ...span.coveredPhrases[0], isPending: true });
+      setPendingPhrase({ ...span.phraseAssociations[0].phrase, isPending: true });
     } else if (span.isClicked) {
       setClickedPhraseKeys(new Set());
     } else {
       // select click
-      const keys = new Set(span.coveredPhrases.flatMap(p => {
-        const phraseKey = getPhraseKey(p);
+      const keys = new Set(span.phraseAssociations.flatMap(assn => {
+        const phraseKey = getPhraseKey(assn.phrase);
         return [phraseKey, ...Array.from(phraseLinks[phraseKey] || new Set())];
       }));
 
       setClickedPhraseKeys(keys);
     }
   }, [pendingPhrase, pendingRepeatedPhrase, setPendingPhrase, setPendingRepeatedPhrase, setClickedPhraseKeys]);
+  
+  const handleSpanContext = useCallback((event: React.MouseEvent, span: TextSpan): void => {
+    event.stopPropagation();
+    if (event.preventDefault) event.preventDefault();
+
+    setContextPhrase(span.phraseAssociations[0].phrase);
+
+    if (pendingPhrase || pendingRepeatedPhrase) {
+      showContextMenu({ event, id: TRANSCRIPT_SELECTION_MENU_ID });
+    }
+    else {
+      setContextPhraseRepetitionId(span.phraseAssociations[0].repetitionId);
+      showContextMenu({ event, id: PHRASE_EDIT_MENU_ID });
+    }
+  }, [pendingPhrase, pendingRepeatedPhrase, setContextPhrase, showContextMenu]);
 
   const handleSpanMouseOver = useCallback((span: TextSpan) => {
-    const keys = new Set(span.coveredPhrases.flatMap(p => {
-      const phraseKey = getPhraseKey(p);
+    const keys = new Set(span.phraseAssociations.flatMap(assn => {
+      const phraseKey = getPhraseKey(assn.phrase);
       return [phraseKey, ...Array.from(phraseLinks[phraseKey] || new Set())];
     }));
 
@@ -207,6 +236,7 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
           onMouseOver={span.isHoverable ? () => handleSpanMouseOver(span) : undefined}
           onMouseOut={span.isHoverable ? handleSpanMouseOut : undefined}
           onClick={span.isClickable ? event => handleSpanClick(event, span) : undefined}
+          onContextMenu={span.isContextable ? event => handleSpanContext(event, span) : undefined}
         >
           { text.substring(span.start, span.end) }
 

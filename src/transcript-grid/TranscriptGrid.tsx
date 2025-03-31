@@ -2,14 +2,16 @@ import { useState, CSSProperties, useMemo, useCallback } from 'react';
 import { useContextMenu } from "react-contexify";
 import classnames from 'classnames';
 
-import { Phrase, HEADER_ROW_ID } from '../data/data';
-import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../util/util';
-import { useViewState } from '../ViewStateContext';
+import { HEADER_ROW_ID, PhraseAssociation } from '../data/data';
+import { getGridColumnAttributes, getPhraseRepetitionKey, getSelectionRangeContainerAttribute } from '../util/util';
 import { TRANSCRIPT_SELECTION_MENU_ID } from '../context-menu/TranscriptSelectionMenu';
 import { ERROR_MULTIPLE_LINES_MENU_ID } from '../context-menu/ErrorMultipleLinesMenu';
 import { HighlightableTextCell } from './HighlightableTextCell';
+import { useEditState } from '../context/EditStateContext';
+import { useUserData } from '../context/UserDataContext';
+import { usePhraseState } from '../context/PhraseStateContext';
 
-export enum TranscriptGridColumnId {
+enum TranscriptGridColumnId {
   Line = 'line',
   Speaker = 'speaker',
   Text = 'text'
@@ -23,30 +25,31 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
   const [hoveredRowIdx, setHoveredRowIdx] = useState<number | null>(null);
   
   const { show: showContextMenu } = useContextMenu();
-  const {
-    transcriptLines, phraseRepetitions, pendingPhrase, pendingRepeatedPhrase,
-    setContextPhrase, setClickedPhraseKeys
-  } = useViewState();
+  const { transcriptLines, phraseRepetitions } = useUserData();
+  const { pendingPhrase, pendingRepeatedPhrase, setContextPhrase } = useEditState();
+  const { setClickedPhraseKeys } = usePhraseState();
 
-  const phrasesByTranscriptLineIdx: { [key: string]: Phrase[] } = useMemo(() => {
-    const reps: { [key: string]: Phrase[] } = {};
+  const phraseAssociationsByTranscriptLineIdx = useMemo(() => {
+    const reps: { [key: string]: PhraseAssociation[] } = {};
 
-    phraseRepetitions.forEach(rep => {
-      const linePhrases = reps[rep.phrase.transcriptLineIdx] || [];
-      reps[rep.phrase.transcriptLineIdx] = linePhrases.concat(rep.phrase);
+    Object.values(phraseRepetitions).forEach(rep => {
+      const repetitionId = getPhraseRepetitionKey(rep);
+
+      const linePhraseAssns = reps[rep.phrase.transcriptLineIdx] || [];
+      reps[rep.phrase.transcriptLineIdx] = linePhraseAssns.concat({ phrase: rep.phrase, repetitionId });
       
-      const repeatedLinePhrases = reps[rep.repetionOf.transcriptLineIdx] || [];
-      reps[rep.repetionOf.transcriptLineIdx] = repeatedLinePhrases.concat(rep.repetionOf);
+      const lineRepeatedPhraseAssns = reps[rep.repeatedPhrase.transcriptLineIdx] || [];
+      reps[rep.repeatedPhrase.transcriptLineIdx] = lineRepeatedPhraseAssns.concat({ phrase: rep.repeatedPhrase, repetitionId });
     });
 
     if (pendingPhrase) {
-      const linePhrases = reps[pendingPhrase.transcriptLineIdx] || [];
-      reps[pendingPhrase.transcriptLineIdx] = linePhrases.concat(pendingPhrase);
+      const linePhraseAssns = reps[pendingPhrase.transcriptLineIdx] || [];
+      reps[pendingPhrase.transcriptLineIdx] = linePhraseAssns.concat({ phrase: pendingPhrase, repetitionId: null });
     }
     
     if (pendingRepeatedPhrase) {
-      const linePhrases = reps[pendingRepeatedPhrase.transcriptLineIdx] || [];
-      reps[pendingRepeatedPhrase.transcriptLineIdx] = linePhrases.concat(pendingRepeatedPhrase);
+      const lineRepeatedPhraseAssns = reps[pendingRepeatedPhrase.transcriptLineIdx] || [];
+      reps[pendingRepeatedPhrase.transcriptLineIdx] = lineRepeatedPhraseAssns.concat({ phrase: pendingRepeatedPhrase, repetitionId: null });
     }
 
     return reps;
@@ -97,7 +100,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
     
     const isHeaderRow: boolean = transcriptLineIdxString === HEADER_ROW_ID;
     const isTextColumn: boolean = columnIdString === TranscriptGridColumnId.Text;
-    const hasSelection: boolean = !!selText;
+    const hasSelection: boolean = !!selText && !!range;
     const hasMultiLineSelection: boolean = selText?.includes('\n') || false;
 
     if (hasMultiLineSelection) {
@@ -109,12 +112,12 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
         transcriptLineIdx,
         start: (range.startOffset + beginPhraseLineStartIdx) || 0,
         end: (range.endOffset + endPhraseLineStartIdx) || 0,
-        isRepetition: !!pendingPhrase,
+        isRepeated: !!pendingPhrase,
         isPending: true
       });
       showContextMenu({ event, id: TRANSCRIPT_SELECTION_MENU_ID });
     }
-  }, [setClickedPhraseKeys, pendingPhrase, pendingRepeatedPhrase]);
+  }, [setClickedPhraseKeys, pendingPhrase, pendingRepeatedPhrase, showContextMenu]);
 
   const headerRow = useMemo(() => (
     <div
@@ -171,7 +174,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
 
           <HighlightableTextCell
             line={line}
-            linePhrases={phrasesByTranscriptLineIdx[idx]}
+            linePhraseAssociations={phraseAssociationsByTranscriptLineIdx[idx] || []}
             className="border-b-1 border-gray-400 grow-1"
             attributes={{
               ['data-column']: 'true',
@@ -183,7 +186,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
         </div>
       )) }
     </>
-  ), [transcriptLines, hoveredRowIdx, setHoveredRowIdx, phrasesByTranscriptLineIdx]);
+  ), [transcriptLines, hoveredRowIdx, setHoveredRowIdx, phraseAssociationsByTranscriptLineIdx]);
 
   return transcriptLines?.length ? (
     <div
@@ -198,7 +201,13 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       { dataRows }
 
     </div>
-  ) : null;
+  ) : (
+    <div className="flex flex-col grow-1 justify-center" style={style}>
+      <h1 className="flex justify-center text-2xl text-gray-600">
+        Please import a transcript to get started.
+      </h1>
+    </div>
+  );
 };
 
 export { TranscriptGrid };

@@ -1,4 +1,4 @@
-import { useViewState } from "../ViewStateContext";
+import { useViewState } from "../context/ViewStateContext";
 
 const CONFIRM_MODAL_ID = 'confirm';
 

@@ -1,11 +1,11 @@
 import { Phrase, PhraseRepetition, TranscriptLine } from "../data/data";
 
 const getPhraseKey = (phrase: Phrase): string => {
-  return `${phrase.transcriptLineIdx}_${phrase.start}:${phrase.end}:${phrase.isRepetition ? 'r' : ''}`;
+  return `${phrase.transcriptLineIdx}_${phrase.start}:${phrase.end}${phrase.isRepeated ? ':r' : ''}`;
 };
 
 const getPhraseRepetitionKey = (rep: PhraseRepetition): string => {
-  return `${getPhraseKey(rep.phrase)}_${getPhraseKey(rep.repetionOf)}`;
+  return `${getPhraseKey(rep.phrase)}--${getPhraseKey(rep.repeatedPhrase)}`;
 };
 
 const getPhraseLineNumber = (phrase?: Phrase | null, transcriptLines?: TranscriptLine[]): string | null => {
@@ -43,7 +43,7 @@ const sortPhrases = (a: Phrase, b: Phrase): number => {
 
 const sortPhraseRepetitions = (a: PhraseRepetition, b: PhraseRepetition): number => {
   const pSort = sortPhrases(a.phrase, b.phrase);
-  return pSort === 0 ? sortPhrases(a.repetionOf, b.repetionOf) : pSort;
+  return pSort === 0 ? sortPhrases(a.repeatedPhrase, b.repeatedPhrase) : pSort;
 };
 
 const getGridColumnAttributes = (event: React.MouseEvent): NamedNodeMap | undefined => {

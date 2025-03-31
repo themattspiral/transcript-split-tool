@@ -1,17 +1,20 @@
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { extractRawText } from 'mammoth';
 import classnames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from "@fortawesome/free-regular-svg-icons";
 
 import { TranscriptLine, TabId } from '../data/data';
-import { useViewState } from '../ViewStateContext';
+import { useViewState } from '../context/ViewStateContext';
+import { useUserData } from '../context/UserDataContext';
 import { PendingPhraseBar } from './PendingPhraseBar';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
 const ControlBar: React.FC = () => {
-  const { activeTabId, setActiveTabId, transcriptLines, setNewTranscript, phraseRepetitions } = useViewState();
+  const { activeTabId, setActiveTabId } = useViewState();
+  const { transcriptLines, setNewTranscript, phraseRepetitions } = useUserData();
+  const repsCount = useMemo(() => Object.keys(phraseRepetitions).length, [phraseRepetitions])
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -138,7 +141,7 @@ const ControlBar: React.FC = () => {
             className={activeTabId === TabId.PhraseBook ? activeTabClasses : otherTabClasses}
             style={activeTabId === TabId.PhraseBook ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
           >
-            Phrase Repetitions ({ phraseRepetitions.length })
+            Phrase Repetitions ({ repsCount })
           </button>
           
           <button

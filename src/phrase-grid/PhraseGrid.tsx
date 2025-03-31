@@ -1,20 +1,27 @@
-import { useState, useMemo, CSSProperties } from 'react';
+import { useMemo, CSSProperties } from 'react';
 import { useContextMenu } from "react-contexify";
 
-import { PhraseRepetition, TranscriptLine, HEADER_ROW_ID } from '../data/data';
-import { getPhraseRepetitionKey, getGridColumnAttributes, getPhraseText } from '../util/util';
-import { useViewState } from '../ViewStateContext';
+import { HEADER_ROW_ID } from '../data/data';
+import { getPhraseRepetitionKey, getGridColumnAttributes, getPhraseText, sortPhraseRepetitions } from '../util/util';
+import { useViewState } from '../context/ViewStateContext';
+import { useUserData } from '../context/UserDataContext';
 
 interface PhraseGridProps {
-  transcriptLines: TranscriptLine[];
-  phraseRepetitions: PhraseRepetition[];
   style?: CSSProperties | undefined;
 }
 
 const PhraseGrid: React.FC<PhraseGridProps> = props => {
-  const { transcriptLines, phraseRepetitions, style } = props;
+  const { style } = props;
+  
+  const { transcriptLines, phraseRepetitions } = useUserData();
   const { show: showContextMenu } = useContextMenu();
   const { showConfirmationModal } = useViewState();
+
+  const sortedPhraseRepetitions = useMemo(() => {
+    const reps = Object.values(phraseRepetitions);
+    reps.sort(sortPhraseRepetitions);
+    return reps;
+  }, [phraseRepetitions]);
 
   // TODO
   const handleGridContextMenu = (event: React.MouseEvent): void => {    
@@ -126,12 +133,12 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
   const dataRows = useMemo(() => {
     return (
       <>
-      {phraseRepetitions.map((rep, idx) => {
+      {sortedPhraseRepetitions.map((rep, idx) => {
         const tl = transcriptLines[rep.phrase.transcriptLineIdx];
         const phraseText = getPhraseText(rep.phrase, transcriptLines);
 
-        const repTl = transcriptLines[rep.repetionOf.transcriptLineIdx];
-        const repPhraseText = getPhraseText(rep.repetionOf, transcriptLines);
+        const repTl = transcriptLines[rep.repeatedPhrase.transcriptLineIdx];
+        const repPhraseText = getPhraseText(rep.repeatedPhrase, transcriptLines);
 
         return (
           <div className="flex" key={getPhraseRepetitionKey(rep)} data-phrase-rep-idx={idx}>
@@ -201,9 +208,9 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
       })}
       </>
     );
-  }, [transcriptLines, phraseRepetitions]);
+  }, [transcriptLines, sortedPhraseRepetitions]);
 
-  return phraseRepetitions?.length ? (
+  return sortedPhraseRepetitions?.length ? (
     <div
       className="flex flex-col overflow-auto box-border w-full"
       onContextMenu={handleGridContextMenu}
@@ -215,7 +222,16 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
       { dataRows }
 
     </div>
-  ) : null;
+  ) : (
+    <div className="flex flex-col grow-1 justify-center" style={style}>
+      <h1 className="flex justify-center text-2xl text-gray-600 mb-4">
+        No phrase repetitions defined yet.
+      </h1>
+      <h1 className="flex justify-center text-2xl text-gray-600">
+        Highlight text within a transcript to get started.
+      </h1>
+    </div>
+  );
 };
 
 export { PhraseGrid };

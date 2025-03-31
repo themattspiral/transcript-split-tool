@@ -1,6 +1,11 @@
+export interface PhraseAssociation {
+  phrase: Phrase;
+  repetitionId: string | null;
+}
+
 export interface PhraseRepetition {
   phrase: Phrase;
-  repetionOf: Phrase;
+  repeatedPhrase: Phrase;
   note?: string | null;
 }
 
@@ -8,7 +13,7 @@ export interface Phrase {
   transcriptLineIdx: number;
   start: number;
   end: number;
-  isRepetition: boolean;
+  isRepeated: boolean;
   isPending: boolean;
 }
   
