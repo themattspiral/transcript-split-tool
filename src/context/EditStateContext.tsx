@@ -1,14 +1,14 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
-import { Phrase } from '../data/data';
+import { Phrase, PhraseAssociation } from '../data/data';
 import { clearDocumentTextSelection } from '../util/util';
 import { useUserData } from './UserDataContext';
 
 interface EditStateContextProps {
   contextPhrase: Phrase | null;
   setContextPhrase: (phrase: Phrase | null) => void;
-  contextPhraseRepetitionId: string | null;
-  setContextPhraseRepetitionId: (id: string | null) => void;
+  contextPhraseAssociations: PhraseAssociation[];
+  setContextPhraseAssociations: (cpas: PhraseAssociation[]) => void;
   setContextPhraseAsPendingPhrase: () => void;
   setContextPhraseAsPendingRepeatedPhrase: () => void;
   pendingPhrase: Phrase | null;
@@ -16,7 +16,7 @@ interface EditStateContextProps {
   pendingRepeatedPhrase: Phrase | null;
   setPendingRepeatedPhrase: (phrase: Phrase | null) => void;
   clearPendingPhrases: () => void;
-  editContextPhraseRepetition: () => void;
+  editContextPhraseRepetition: (idx: number) => void;
   pendingPhraseRepetitionEditId: string | null;
   setPendingPhraseRepetitionEditId: (id: string | null) => void;
   addPendingPhrasesToRepetitions: () => void;
@@ -26,8 +26,8 @@ interface EditStateContextProps {
 const EditStateContext = createContext<EditStateContextProps>({
   contextPhrase: null,
   setContextPhrase: () => {},
-  contextPhraseRepetitionId: null,
-  setContextPhraseRepetitionId: () => {},
+  contextPhraseAssociations: [],
+  setContextPhraseAssociations: () => {},
   setContextPhraseAsPendingPhrase: () => {},
   setContextPhraseAsPendingRepeatedPhrase: () => {},
   pendingPhrase: null,
@@ -52,7 +52,7 @@ const useEditState = () => {
 
 const EditStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [contextPhrase, setContextPhrase] = useState<Phrase | null>(null);
-  const [contextPhraseRepetitionId, setContextPhraseRepetitionId] = useState<string | null>(null);
+  const [contextPhraseAssociations, setContextPhraseAssociations] = useState<PhraseAssociation[]>([]);
   const [pendingPhrase, setPendingPhrase] = useState<Phrase | null>(null);
   const [pendingRepeatedPhrase, setPendingRepeatedPhrase] = useState<Phrase | null>(null);
   const [pendingPhraseRepetitionEditId, setPendingPhraseRepetitionEditId] = useState<string | null>(null);
@@ -100,22 +100,22 @@ const EditStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     clearDocumentTextSelection();
   }, [contextPhrase, setPendingRepeatedPhrase]);
 
-  const editContextPhraseRepetition = useCallback(() => {
-    if (contextPhraseRepetitionId) {
-      setPendingPhraseRepetitionEditId(contextPhraseRepetitionId);
-      setPendingPhrase(phraseRepetitions[contextPhraseRepetitionId].phrase);
-      setPendingRepeatedPhrase(phraseRepetitions[contextPhraseRepetitionId].repeatedPhrase);
+  const editContextPhraseRepetition = useCallback((idx: number) => {
+    if (contextPhraseAssociations[idx]?.repetitionId) {
+      setPendingPhraseRepetitionEditId(contextPhraseAssociations[idx]?.repetitionId);
+      setPendingPhrase(phraseRepetitions[contextPhraseAssociations[idx]?.repetitionId].phrase);
+      setPendingRepeatedPhrase(phraseRepetitions[contextPhraseAssociations[idx]?.repetitionId].repeatedPhrase);
     }
-  }, [contextPhraseRepetitionId, phraseRepetitions, setPendingPhraseRepetitionEditId, setPendingPhrase, setPendingRepeatedPhrase]);
+  }, [contextPhraseAssociations, phraseRepetitions, setPendingPhraseRepetitionEditId, setPendingPhrase, setPendingRepeatedPhrase]);
 
   const value = useMemo(() => ({
-    contextPhrase, contextPhraseRepetitionId, pendingPhrase, pendingRepeatedPhrase, pendingPhraseRepetitionEditId,
-    setContextPhrase, setContextPhraseRepetitionId, setPendingPhrase, setPendingRepeatedPhrase, setPendingPhraseRepetitionEditId,
+    contextPhrase, contextPhraseAssociations, pendingPhrase, pendingRepeatedPhrase, pendingPhraseRepetitionEditId,
+    setContextPhrase, setContextPhraseAssociations, setPendingPhrase, setPendingRepeatedPhrase, setPendingPhraseRepetitionEditId,
     setContextPhraseAsPendingPhrase, setContextPhraseAsPendingRepeatedPhrase, clearPendingPhrases, editContextPhraseRepetition,
     addPendingPhrasesToRepetitions, replaceRepetitionWithPendingPhrases
   }), [
-    contextPhrase, contextPhraseRepetitionId, pendingPhrase, pendingRepeatedPhrase, pendingPhraseRepetitionEditId,
-    setContextPhrase, setContextPhraseRepetitionId, setPendingPhrase, setPendingRepeatedPhrase, setPendingPhraseRepetitionEditId,
+    contextPhrase, contextPhraseAssociations, pendingPhrase, pendingRepeatedPhrase, pendingPhraseRepetitionEditId,
+    setContextPhrase, setContextPhraseAssociations, setPendingPhrase, setPendingRepeatedPhrase, setPendingPhraseRepetitionEditId,
     setContextPhraseAsPendingPhrase, setContextPhraseAsPendingRepeatedPhrase, clearPendingPhrases, editContextPhraseRepetition,
     addPendingPhrasesToRepetitions, replaceRepetitionWithPendingPhrases
   ]);

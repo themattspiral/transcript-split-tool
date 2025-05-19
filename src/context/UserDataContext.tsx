@@ -67,12 +67,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     
     // TEMP: LOAD TEST DATA
     // TODO - replace with saved data load
-    const reps = {} as { [id: string]: PhraseRepetition };
-    repTestData.forEach(rep => {
-      reps[getPhraseRepetitionKey(rep)] = rep;
-    });
-
-    setPhraseRepetitions(reps);
+    setPhraseRepetitions(repTestData);
   }, [setTranscriptLines]);
 
   const addPhraseRepetition = useCallback((rep: PhraseRepetition) => {

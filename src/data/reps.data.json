@@ -1,5 +1,5 @@
-[
-    {
+{
+    "9_48:74--8_130:156:r": {
         "phrase": {
             "transcriptLineIdx": 9,
             "start": 48,
@@ -15,7 +15,7 @@
             "isPending": false
         }
     },
-    {
+    "10_0:2--8_130:156:r": {
         "phrase": {
             "transcriptLineIdx": 10,
             "start": 0,
@@ -31,7 +31,7 @@
             "isPending": false
         }
     },
-    {
+    "13_68:94--8_130:156:r": {
         "phrase": {
             "transcriptLineIdx": 13,
             "start": 68,
@@ -47,7 +47,7 @@
             "isPending": false
         }
     },
-    {
+    "14_23:49--8_130:156:r": {
         "phrase": {
             "transcriptLineIdx": 14,
             "start": 23,
@@ -63,7 +63,7 @@
             "isPending": false
         }
     },
-    {
+    "17_91:102--17_51:62:r": {
         "phrase": {
             "transcriptLineIdx": 17,
             "start": 91,
@@ -79,7 +79,7 @@
             "isPending": false
         }
     },
-    {
+    "6_86:93--6_59:66:r": {
         "phrase": {
             "transcriptLineIdx": 6,
             "start": 86,
@@ -95,7 +95,7 @@
             "isPending": false
         }
     },
-    {
+    "6_42:46--3_26:35:r": {
         "phrase": {
             "transcriptLineIdx": 6,
             "start": 42,
@@ -111,7 +111,7 @@
             "isPending": false
         }
     },
-    {
+    "6_30:46--6_17:22:r": {
         "phrase": {
             "transcriptLineIdx": 6,
             "start": 30,
@@ -127,7 +127,7 @@
             "isPending": false
         }
     },
-    {
+    "11_27:33--11_0:4:r": {
         "phrase": {
             "transcriptLineIdx": 11,
             "start": 27,
@@ -143,7 +143,7 @@
             "isPending": false
         }
     },
-    {
+    "11_18:41--5_87:97:r": {
         "phrase": {
             "transcriptLineIdx": 11,
             "start": 18,
@@ -159,4 +159,4 @@
             "isPending": false
         }
     }
-]
+}

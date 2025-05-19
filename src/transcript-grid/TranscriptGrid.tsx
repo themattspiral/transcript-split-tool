@@ -42,12 +42,12 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       reps[rep.repeatedPhrase.transcriptLineIdx] = lineRepeatedPhraseAssns.concat({ phrase: rep.repeatedPhrase, repetitionId });
     });
 
-    if (pendingPhrase) {
+    if (pendingPhrase && pendingPhrase.isPending) {
       const linePhraseAssns = reps[pendingPhrase.transcriptLineIdx] || [];
       reps[pendingPhrase.transcriptLineIdx] = linePhraseAssns.concat({ phrase: pendingPhrase, repetitionId: null });
     }
     
-    if (pendingRepeatedPhrase) {
+    if (pendingRepeatedPhrase && pendingRepeatedPhrase.isPending) {
       const lineRepeatedPhraseAssns = reps[pendingRepeatedPhrase.transcriptLineIdx] || [];
       reps[pendingRepeatedPhrase.transcriptLineIdx] = lineRepeatedPhraseAssns.concat({ phrase: pendingRepeatedPhrase, repetitionId: null });
     }

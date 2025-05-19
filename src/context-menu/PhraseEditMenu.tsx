@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Menu, Item, Separator } from "react-contexify";
+import { Menu, Item, Separator, Submenu } from "react-contexify";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 
@@ -12,9 +12,26 @@ const PHRASE_EDIT_MENU_ID = 'phrase-edit-menu-id';
 
 const PhraseEditMenu: React.FC = () => {
   const { transcriptLines } = useUserData();
-  const { contextPhrase, editContextPhraseRepetition } = useEditState();
+  const { contextPhrase, contextPhraseAssociations, editContextPhraseRepetition } = useEditState();
 
   const selectedText = useMemo(() => getPhraseText(contextPhrase, transcriptLines), [contextPhrase, transcriptLines]);
+
+  const editOptions = useMemo(() => {
+    return contextPhraseAssociations.map((pa, idx) => (
+      <Submenu key={`${pa.phrase.start}:${pa.phrase.end}-${pa.repetitionId}`} label={
+        <div className="flex items-center">
+          { getPhraseText(pa.phrase, transcriptLines) }
+        </div>
+      }>
+        <Item onClick={() => editContextPhraseRepetition(idx)}>
+          <div className="flex items-center">
+            <FontAwesomeIcon icon={faPenToSquare} className="mr-1" />
+            Edit
+          </div>
+        </Item>
+      </Submenu>
+    ));
+  }, [contextPhraseAssociations, transcriptLines]);
   
   return (
     <Menu id={PHRASE_EDIT_MENU_ID} animation="slide" className="max-w-[400px] font-sans">
@@ -26,12 +43,16 @@ const PhraseEditMenu: React.FC = () => {
       
       <Separator />
 
-      <Item onClick={editContextPhraseRepetition}>
-        <div className="flex items-center">
-          <FontAwesomeIcon icon={faPenToSquare} className="mr-1" />
-          Edit
-        </div>
-      </Item>
+      { editOptions.length === 1 &&
+        <Item onClick={() => editContextPhraseRepetition(0)}>
+          <div className="flex items-center">
+            <FontAwesomeIcon icon={faPenToSquare} className="mr-1" />
+            Edit
+          </div>
+        </Item>
+      }
+
+      { editOptions.length > 1 && editOptions }
     </Menu>
   );
 };
