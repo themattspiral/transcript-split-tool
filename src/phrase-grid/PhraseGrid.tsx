@@ -1,8 +1,8 @@
 import { useMemo, CSSProperties } from 'react';
 import { useContextMenu } from "react-contexify";
 
-import { HEADER_ROW_ID } from '../data/data';
-import { getPhraseRepetitionKey, getGridColumnAttributes, getPhraseText, sortPhraseRepetitions } from '../util/util';
+import { HEADER_ROW_ID, getPhraseText, sortPoeticStructures } from '../data/data';
+import { getGridColumnAttributes,  } from '../util/util';
 import { useViewState } from '../context/ViewStateContext';
 import { useUserData } from '../context/UserDataContext';
 
@@ -13,15 +13,15 @@ interface PhraseGridProps {
 const PhraseGrid: React.FC<PhraseGridProps> = props => {
   const { style } = props;
   
-  const { transcriptLines, phraseRepetitions } = useUserData();
-  const { show: showContextMenu } = useContextMenu();
-  const { showConfirmationModal } = useViewState();
+  const { transcriptLines, poeticStructures } = useUserData();
+  // const { show: showContextMenu } = useContextMenu();
+  // const { showConfirmationModal } = useViewState();
 
-  const sortedPhraseRepetitions = useMemo(() => {
-    const reps = Object.values(phraseRepetitions);
-    reps.sort(sortPhraseRepetitions);
-    return reps;
-  }, [phraseRepetitions]);
+  const sortedPoeticStructures = useMemo(() => {
+    const structures = Object.values(poeticStructures);
+    structures.sort(sortPoeticStructures);
+    return structures;
+  }, [poeticStructures]);
 
   // TODO
   const handleGridContextMenu = (event: React.MouseEvent): void => {    
@@ -83,7 +83,7 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
           className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[30%] grow-1`}
           data-phrase-rep-idx={HEADER_ROW_ID}
         >
-          Phrase
+          Repetition
         </div>
 
         {/* Repetition Of */}
@@ -103,7 +103,7 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
           className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[30%] grow-1`}
           data-phrase-rep-idx={HEADER_ROW_ID}
         >
-          Repeated Phrase (Repetition Of)
+          Source Phrase
         </div>
 
         {/* Other Info */}
@@ -133,54 +133,59 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
   const dataRows = useMemo(() => {
     return (
       <>
-      {sortedPhraseRepetitions.map((rep, idx) => {
-        const tl = transcriptLines[rep.phrase.transcriptLineIdx];
-        const phraseText = getPhraseText(rep.phrase, transcriptLines);
+      {sortedPoeticStructures.map((structure, idx) => {
+        // TODO - handle consolidations
+        if (structure.multipleSources) {
+          return null;
+        }
 
-        const repTl = transcriptLines[rep.repeatedPhrase.transcriptLineIdx];
-        const repPhraseText = getPhraseText(rep.repeatedPhrase, transcriptLines);
+        const repetitionLine = transcriptLines[structure.repetition.lineNumber];
+        const repetitionText = getPhraseText(structure.repetition, transcriptLines);
+
+        const sourceLine = transcriptLines[structure.source.lineNumber];
+        const sourceText = getPhraseText(structure.source, transcriptLines);
 
         return (
-          <div className="flex" key={getPhraseRepetitionKey(rep)} data-phrase-rep-idx={idx}>
+          <div className="flex" key={structure.id} data-phrase-rep-idx={idx}>
 
-            {/* Phrase */}
+            {/* Repetition */}
             <div
               className="px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
               data-phrase-rep-idx={idx}
             >
-              { tl.lineNumber }
+              { repetitionLine.lineNumber }
             </div>
             <div
               className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[100px] shrink-0`}
               data-phrase-rep-idx={idx}
             >
-              { tl.speaker }
+              { repetitionLine.speaker }
             </div>
             <div
               className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[30%] grow-1`}
               data-phrase-rep-idx={idx}
             >
-              { phraseText }
+              { repetitionText }
             </div>
 
-            {/* Repetition Of */}
+            {/* Source */}
             <div
               className="px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
               data-phrase-rep-idx={idx}
             >
-              { repTl.lineNumber }
+              { sourceLine.lineNumber }
             </div>
             <div
               className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[100px] shrink-0`}
               data-phrase-rep-idx={idx}
             >
-              { repTl.speaker }
+              { sourceLine.speaker }
             </div>
             <div
               className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[30%] grow-1`}
               data-phrase-rep-idx={idx}
             >
-              { repPhraseText }
+              { sourceText }
             </div>
 
             {/* Other Info */}
@@ -188,19 +193,19 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
               className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0`}
               data-phrase-rep-idx={idx}
             >
-              { phraseText === repPhraseText ? '==' : '!=' }
+              { repetitionText === sourceText ? '==' : '!=' }
             </div>
             <div
               className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[75px] shrink-0`}
               data-phrase-rep-idx={idx}
             >
-              { tl.lineNumber === repTl.lineNumber ? 'Internal' : 'Across' }
+              { repetitionLine.lineNumber === sourceLine.lineNumber ? 'Internal' : 'Across' }
             </div>
             <div
               className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[10%] grow-1`}
               data-phrase-rep-idx={idx}
             >
-              { rep.note }
+              { structure.notes }
             </div>
 
           </div>
@@ -208,9 +213,9 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
       })}
       </>
     );
-  }, [transcriptLines, sortedPhraseRepetitions]);
+  }, [transcriptLines, sortPoeticStructures]);
 
-  return sortedPhraseRepetitions?.length ? (
+  return sortPoeticStructures?.length ? (
     <div
       className="flex flex-col overflow-auto box-border w-full"
       onContextMenu={handleGridContextMenu}
@@ -225,7 +230,7 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
   ) : (
     <div className="flex flex-col grow-1 justify-center" style={style}>
       <h1 className="flex justify-center text-2xl text-gray-600 mb-4">
-        No phrase repetitions defined yet.
+        No poetic structures defined yet.
       </h1>
       <h1 className="flex justify-center text-2xl text-gray-600">
         Highlight text within a transcript to get started.

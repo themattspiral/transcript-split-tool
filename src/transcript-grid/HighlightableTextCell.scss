@@ -1,8 +1,8 @@
 .text-span {
   position: relative;
 
-  /* TextSpanType.Phrase */
-  &.phrase {
+  /* TextSpanType.Repetition */
+  &.repetition {
     background-color: var(--color-orange-200);
 
     &.deemphasized {
@@ -19,8 +19,8 @@
     }
   }
   
-  /* TextSpanType.RepeatedPhrase */
-  &.repeated-phrase {
+  /* TextSpanType.Source */
+  &.source {
     background-color: var(--color-blue-200);
     
     &.deemphasized {
@@ -37,8 +37,8 @@
     }
   }
 
-  /* TextSpanType.OverlappingPhrases */
-  &.overlapping-phrases {
+  /* TextSpanType.Overlapping */
+  &.overlapping {
     background-color: var(--color-fuchsia-300);
 
     &.deemphasized {

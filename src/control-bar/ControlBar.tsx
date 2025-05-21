@@ -13,8 +13,8 @@ const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
 const ControlBar: React.FC = () => {
   const { activeTabId, setActiveTabId } = useViewState();
-  const { transcriptLines, setNewTranscript, phraseRepetitions } = useUserData();
-  const repsCount = useMemo(() => Object.keys(phraseRepetitions).length, [phraseRepetitions])
+  const { transcriptLines, setNewTranscript, poeticStructures } = useUserData();
+  const psCount = useMemo(() => Object.keys(poeticStructures).length, [poeticStructures])
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -35,9 +35,9 @@ const ControlBar: React.FC = () => {
         .filter(line => line.trim() !== '')
         .map((line, idx) => {
           const tl: TranscriptLine = {
-            lineNumber: (idx + 1).toString(),
+            lineNumber: idx + 1,
             text: line,
-            speakerDetected: false
+            speaker: ''
           };
 
           // split out author
@@ -47,12 +47,14 @@ const ControlBar: React.FC = () => {
 
             // remove final ": " for speaker 
             tl.speaker = speaker.substring(0, speaker.length - 2);
-            tl.textWithoutSpeaker = line.substring(speaker.length);
-            tl.speakerDetected = true;
+            tl.text = line.substring(speaker.length);
           }
 
           return tl;
         });
+
+        // empty placeholder in index 0, to make all lineNumber values match index
+        lines.unshift({} as TranscriptLine);
 
         setNewTranscript(lines);
 
@@ -141,7 +143,7 @@ const ControlBar: React.FC = () => {
             className={activeTabId === TabId.PhraseBook ? activeTabClasses : otherTabClasses}
             style={activeTabId === TabId.PhraseBook ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
           >
-            Phrase Repetitions ({ repsCount })
+            Poetic Structures ({ psCount })
           </button>
           
           <button

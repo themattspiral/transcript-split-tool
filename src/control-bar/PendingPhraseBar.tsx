@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faX, faArrowsRotate } from "@fortawesome/free-solid-svg-icons";
 
-import { getPhraseLineNumber, getPhraseText } from '../util/util';
+import { getPhraseText } from '../data/data';
 import { useUserData } from '../context/UserDataContext';
 import { useEditState } from '../context/EditStateContext';
 import { useCallback } from 'react';
@@ -25,9 +25,9 @@ const PendingPhraseBar: React.FC = () => {
   const phraseText = getPhraseText(pendingPhrase, transcriptLines) || '<selection pending>';
   const repeatedPhraseText = getPhraseText(pendingRepeatedPhrase, transcriptLines) || '<selection pending>';
   
-  const isSameLine = pendingPhrase?.transcriptLineIdx === pendingRepeatedPhrase?.transcriptLineIdx;
+  const isSameLine = pendingPhrase?.lineNumber === pendingRepeatedPhrase?.lineNumber;
   const hasOrderingError = pendingPhrase && pendingRepeatedPhrase && (
-    pendingRepeatedPhrase.transcriptLineIdx > pendingPhrase.transcriptLineIdx
+    pendingRepeatedPhrase.lineNumber > pendingPhrase.lineNumber
     || (isSameLine && pendingPhrase.start < pendingRepeatedPhrase.end)
   );
   const submitEnabled = pendingPhrase && pendingRepeatedPhrase && !hasOrderingError;
@@ -37,7 +37,7 @@ const PendingPhraseBar: React.FC = () => {
       
       <div className="flex items-center w-full">
         <div className="text-nowrap font-medium text-lg mb-[1px]">Phrase:</div>
-        <div className="text-nowrap px-2">Line { getPhraseLineNumber(pendingPhrase, transcriptLines) }</div>
+        <div className="text-nowrap px-2">Line { pendingPhrase?.lineNumber.toString() || '--' }</div>
         <div className="grow-1 shrink-1 basis-[50%] font-mono px-2">
           <div className={classnames(
             'inline-block rounded-xl px-2 py-1 whitespace-pre-wrap border-2 border-dashed border-orange-400 font-semibold',
@@ -48,7 +48,7 @@ const PendingPhraseBar: React.FC = () => {
         </div>
         
         <div className="text-nowrap font-medium text-lg ml-2 mb-[1px]">Repeats:</div>
-        <div className="text-nowrap px-2">Line { getPhraseLineNumber(pendingRepeatedPhrase, transcriptLines) || '--' }</div>
+        <div className="text-nowrap px-2">Line { pendingRepeatedPhrase?.lineNumber.toString() || '--' }</div>
         <div className="grow-1 shrink-1 basis-[50%] font-mono px-2">
           <div className={classnames(
             'inline-block rounded-xl px-2 py-1 whitespace-pre-wrap border-2 border-dashed border-blue-400 font-semibold',
