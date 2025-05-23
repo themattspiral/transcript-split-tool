@@ -86,6 +86,7 @@ export interface PhraseLink {
 }
 
 export interface PhraseLinkInfo {
+  phrase: Phrase;
   overallRole: OverallPhraseRole;
   links: PhraseLink[];
   linkedPhraseIds: string[];
@@ -106,8 +107,7 @@ export enum PhraseAction {
 
 export enum TabId {
   Transcript,
-  PhraseBook,
-  Poems,
+  Structures
 }
 
 

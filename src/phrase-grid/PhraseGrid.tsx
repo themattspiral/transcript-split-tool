@@ -103,7 +103,7 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
           className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[30%] grow-1`}
           data-phrase-rep-idx={HEADER_ROW_ID}
         >
-          Source Phrase
+          Source
         </div>
 
         {/* Other Info */}
@@ -213,9 +213,9 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
       })}
       </>
     );
-  }, [transcriptLines, sortPoeticStructures]);
+  }, [transcriptLines, sortedPoeticStructures]);
 
-  return sortPoeticStructures?.length ? (
+  return sortedPoeticStructures?.length ? (
     <div
       className="flex flex-col overflow-auto box-border w-full"
       onContextMenu={handleGridContextMenu}

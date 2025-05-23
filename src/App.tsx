@@ -29,16 +29,8 @@ const App: React.FC = () => {
         />
 
         <PhraseGrid
-          style={activeTabId === TabId.PhraseBook ? {} : { display: 'none' }}
+          style={activeTabId === TabId.Structures ? {} : { display: 'none' }}
         />
-
-        {activeTabId === TabId.Poems &&
-          <div className="flex flex-col grow-1 justify-center">
-            <h1 className="flex justify-center text-2xl text-gray-600">
-              No poems defined yet.
-            </h1>
-          </div>
-        }
 
       </div>
 

@@ -7,9 +7,9 @@ import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '..
 import { TRANSCRIPT_SELECTION_MENU_ID } from '../context-menu/TranscriptSelectionMenu';
 import { ERROR_MULTIPLE_LINES_MENU_ID } from '../context-menu/ErrorMultipleLinesMenu';
 import { HighlightableTextCell } from './HighlightableTextCell';
-import { useEditState } from '../context/EditStateContext';
+import { EditState, useStructureEdit } from '../context/StructureEditContext';
 import { useUserData } from '../context/UserDataContext';
-import { usePhraseState } from '../context/PhraseStateContext';
+import { useTranscriptInteraction } from '../context/TranscriptInteractionContext';
 
 enum TranscriptGridColumnId {
   Line = 'line',
@@ -26,8 +26,8 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
   
   const { show: showContextMenu } = useContextMenu();
   const { transcriptLines } = useUserData();
-  const { pendingPhrase, pendingRepeatedPhrase, setContextPhrase } = useEditState();
-  const { clearClick } = usePhraseState();
+  const { editState } = useStructureEdit();
+  const { clearClick, setHighlightedPhrase } = useTranscriptInteraction();
 
   const handleGridAction = useCallback((event: React.MouseEvent, handleAsPrimaryClick: boolean): void => {
     // using handler for onClick event, button was right click
@@ -37,7 +37,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
     }
 
     // using handler for onClick, nothing being set/edited
-    if (handleAsPrimaryClick && event.button === 0 && !pendingPhrase && !pendingRepeatedPhrase) {
+    if (handleAsPrimaryClick && event.button === 0 && editState === EditState.Idle) {
       clearClick();
       return;
     }
@@ -82,14 +82,14 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       showContextMenu({ id: ERROR_MULTIPLE_LINES_MENU_ID, event });
     } else if (!isHeaderRow && isTextColumn && hasSelection && range) {
       if (event.preventDefault) event.preventDefault();
-      setContextPhrase(new Phrase(
+      setHighlightedPhrase(new Phrase(
         lineNumber,
         (range.startOffset + beginPhraseLineStartIdx) || 0,
         (range.endOffset + endPhraseLineStartIdx) || 0
       ));
       showContextMenu({ event, id: TRANSCRIPT_SELECTION_MENU_ID });
     }
-  }, [clearClick, pendingPhrase, pendingRepeatedPhrase, showContextMenu]);
+  }, [editState, clearClick, setHighlightedPhrase, showContextMenu]);
 
   const headerRow = useMemo(() => (
     <div

@@ -1,14 +1,11 @@
 import { CSSProperties, useCallback, useMemo } from "react";
 import classnames from "classnames";
-import { useContextMenu } from "react-contexify";
 
 import './HighlightableTextCell.scss';
 import { OverallPhraseRole, Phrase, PhraseAction, TranscriptLine } from "../data/data";
-import { PHRASE_EDIT_MENU_ID } from "../context-menu/PhraseEditMenu";
-import { TRANSCRIPT_SELECTION_MENU_ID } from "../context-menu/TranscriptSelectionMenu";
-import { useEditState } from "../context/EditStateContext";
+import { useStructureEdit } from "../context/StructureEditContext";
 import { useUserData } from "../context/UserDataContext";
-import { usePhraseState } from "../context/PhraseStateContext";
+import { useTranscriptInteraction } from "../context/TranscriptInteractionContext";
 
 enum TextSpanType {
   Repetition = 'repetition',
@@ -20,7 +17,7 @@ enum TextSpanType {
 interface TextSpan {
   start: number;
   end: number;
-  spanPhrases: Phrase[];
+  spanPhraseIds: string[];
   spanType: TextSpanType;
   isPending: boolean;
   isHoverable: boolean;
@@ -44,13 +41,8 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
   const { line, className, style, attributes } = props;
 
   const { phraseLinks, linePhrases } = useUserData();
-  const {
-    pendingPhraseRepetitionEditId,
-    setContextPhrase, setContextPhraseAssociations,
-    pendingPhrase, pendingRepeatedPhrase, setPendingPhrase, setPendingRepeatedPhrase
-  } = useEditState();
-  const { phraseViewStates, handlePhraseAction, clearHover } = usePhraseState();
-  const { show: showContextMenu } = useContextMenu();
+  const { pendingRepetition, pendingSource } = useStructureEdit();
+  const { phraseViewStates, handlePhraseAction, clearHover } = useTranscriptInteraction();
 
   const isSpanClickable = useCallback((spanType: TextSpanType, pending: Phrase | null, pendingRepeated: Phrase | null): boolean => {
     let clickable = true;
@@ -66,10 +58,6 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
     }
 
     return clickable;
-  }, []);
-
-  const isSpanContextable = useCallback((spanType: TextSpanType): boolean => {
-    return spanType !== TextSpanType.Text;
   }, []);
 
   // flatten potential range overlaps
@@ -120,8 +108,6 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
           spanType = TextSpanType.Source;
         }
 
-
-
         // TODO - decide if we want to keep the refcount badge
         // refCount = linkInfo.links.length;
 
@@ -133,10 +119,7 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
         // }
       } else if (spanPhrases.length > 1) {
         spanType = TextSpanType.Overlapping;
-        // pending = phraseAssociations.some(assn => assn.phrase.isPending);
       }
-
-      const isShowingPendingBar = !!pendingPhrase || !!pendingRepeatedPhrase;
 
       let isHovered = false;
       let isClicked = false;
@@ -148,18 +131,17 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
         isDeemphasized = spanPhrases.every(phrase => phraseViewStates[phrase.id]?.isDeemphasized);
       }
 
-      // const isPending = pending || phraseAssociations.some(assn => assn.repetitionId === pendingPhraseRepetitionEditId);
       const isPending = false;
       
       spans.push({
         start,
         end,
-        spanPhrases,
+        spanPhraseIds: spanPhrases.map(p => p.id),
         spanType,
         isPending,
         isHoverable: spanType !== TextSpanType.Text,
-        isClickable: isSpanClickable(spanType, pendingPhrase, pendingRepeatedPhrase),
-        isContextable: isSpanContextable(spanType),
+        isClickable: isSpanClickable(spanType, pendingRepetition, pendingSource),
+        isContextable: spanType !== TextSpanType.Text,
         isHovered,
         isClicked,
         isDeemphasized,
@@ -188,53 +170,7 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
     }
 
     return spans;
-  }, [line, linePhrases, pendingPhrase, pendingRepeatedPhrase, pendingPhraseRepetitionEditId, isSpanClickable, phraseViewStates, phraseLinks]);
-
-  // const handleSpanClick = useCallback((event: React.MouseEvent, span: TextSpan): void => {
-  //   event.stopPropagation();
-
-  //   if (pendingPhrase && !pendingRepeatedPhrase) { 
-  //     // replace pending repeated phrase
-  //     setPendingRepeatedPhrase({ ...span.phraseAssociations[0].phrase, isPending: true });
-  //   } else if (!pendingPhrase && pendingRepeatedPhrase) {
-  //     // replace pending phrase
-  //     setPendingPhrase({ ...span.phraseAssociations[0].phrase, isPending: true });
-  //   } else if (span.isClicked) {
-  //     setClickedPhraseKeys(new Set());
-  //   } else {
-  //     // select click
-  //     const keys = new Set(span.phraseAssociations.flatMap(assn => {
-  //       const phraseId = assn.phrase.id;
-  //       return [phraseId, ...Array.from(phraseLinks[phraseId] || new Set())];
-  //     }));
-
-  //     setClickedPhraseKeys(keys);
-  //   }
-  // }, [pendingPhrase, pendingRepeatedPhrase, setPendingPhrase, setPendingRepeatedPhrase]);
-  
-  // const handleSpanContext = useCallback((event: React.MouseEvent, span: TextSpan): void => {
-  //   event.stopPropagation();
-  //   if (event.preventDefault) event.preventDefault();
-
-  //   if (span.spanType === TextSpanType.Overlapping) {
-  //     setContextPhrase({
-  //       transcriptLineIdx: span.phraseAssociations[0].phrase.transcriptLineIdx,
-  //       start: span.start,
-  //       end: span.end,
-  //       isRepeated: false,
-  //       isPending: true
-  //     });
-  //   } else {
-  //     setContextPhrase(span.phraseAssociations[0].phrase);
-  //   }
-  //   setContextPhraseAssociations(span.phraseAssociations);
-
-  //   if (pendingPhrase || pendingRepeatedPhrase) {
-  //     showContextMenu({ event, id: TRANSCRIPT_SELECTION_MENU_ID });
-  //   } else {
-  //     showContextMenu({ event, id: PHRASE_EDIT_MENU_ID });
-  //   }
-  // }, [pendingPhrase, pendingRepeatedPhrase, setContextPhrase, setContextPhraseAssociations, showContextMenu]);
+  }, [line, linePhrases, pendingRepetition, pendingSource, isSpanClickable, phraseViewStates, phraseLinks]);
 
   return (
     <div className={classnames('px-2 py-2 relative whitespace-pre-wrap', className)} style={style} {...attributes}>
@@ -243,13 +179,21 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
           key={`${span.start}:${span.end}`}
           className={span.classes}
           data-pls-idx={span.start}
-          onMouseOver={span.spanType === TextSpanType.Text ? undefined : () => {
-            handlePhraseAction(span.spanPhrases.map(p => p.id), PhraseAction.Hover);
+          onMouseOver={span.spanType === TextSpanType.Text ? undefined : (event: React.MouseEvent) => {
+            handlePhraseAction(event, span.spanPhraseIds, PhraseAction.Hover);
           }}
           onMouseOut={span.spanType === TextSpanType.Text ? undefined : () => clearHover()}
           onClick={span.spanType === TextSpanType.Text ? undefined : (event: React.MouseEvent) => {
             event.stopPropagation();
-            handlePhraseAction(span.spanPhrases.map(p => p.id), PhraseAction.Click);
+            handlePhraseAction(event, span.spanPhraseIds, PhraseAction.Click);
+          }}
+          // note: only existing phrase-type spans get their context menu event handled here. the text-type span 
+          //   context menu event is allowed to propagate down, and is handled by TranscriptGrid because 
+          //   it can see across spans and lines to handle edge cases
+          onContextMenu={span.spanType === TextSpanType.Text ? undefined : (event: React.MouseEvent) => {
+            event.stopPropagation();
+            if (event.preventDefault) event.preventDefault();
+            handlePhraseAction(event, span.spanPhraseIds, PhraseAction.Context);
           }}
         >
           { line.text.substring(span.start, span.end) }

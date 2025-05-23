@@ -7,8 +7,8 @@ import "react-contexify/dist/ReactContexify.css";
 import { App } from './App';
 import { ViewStateProvider } from './context/ViewStateContext';
 import { UserDataProvider } from './context/UserDataContext';
-import { EditStateProvider } from './context/EditStateContext';
-import { PhraseStateProvider } from './context/PhraseStateContext';
+import { StructureEditProvider } from './context/StructureEditContext';
+import { TranscriptInteractionProvider } from './context/TranscriptInteractionContext';
 
 // reference
 // import reactLogo from './assets/react.svg' // src
@@ -18,11 +18,11 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ViewStateProvider>
       <UserDataProvider>
-        <EditStateProvider>
-          <PhraseStateProvider>
+        <StructureEditProvider>
+          <TranscriptInteractionProvider>
             <App />
-          </PhraseStateProvider>
-        </EditStateProvider>
+          </TranscriptInteractionProvider>
+        </StructureEditProvider>
       </UserDataProvider>
     </ViewStateProvider>
   </StrictMode>,

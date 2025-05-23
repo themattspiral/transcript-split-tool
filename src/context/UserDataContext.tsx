@@ -13,6 +13,8 @@ interface UserDataContextProps {
   addPoeticStructure: (structure: PoeticStructure) => void;
   removePoeticStructure: (psId: string) => void;
   phraseLinks: { [phraseId: string]: PhraseLinkInfo };
+  getAllLinkedPhraseIds: (phraseIds: string[]) => string[];
+  getAllPhraseLinks: (phraseIds: string[]) => PhraseLink[];
   linePhrases: { [lineNumber: string]: Phrase[] };
 }
 
@@ -23,6 +25,8 @@ const UserDataContext = createContext<UserDataContextProps>({
   addPoeticStructure: () => {},
   removePoeticStructure: () => {},
   phraseLinks: {},
+  getAllLinkedPhraseIds: () => [],
+  getAllPhraseLinks: () => [],
   linePhrases: {}
 });
 
@@ -46,7 +50,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   //   linePhrases: mapping from lineNumber (for all lines with defined phrases)
   //                to array of phrases specific to each line
   const { phraseLinks, linePhrases } = useMemo(() => {
-    // internal versions use object keys to track uniqueness while populating
+    const phraseMap = {} as { [phraseId: string]: Phrase};
     const uniqueLinks = {} as { [phraseId: string]: { [psId: string]: PhraseLink } };
     const uniqueLinePhrases = {} as { [lineNumber: string]: { [phraseId: string]: Phrase } };
 
@@ -58,6 +62,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       if (!uniqueLinePhrases[structure.repetition.lineNumber.toString()]) {
         uniqueLinePhrases[structure.repetition.lineNumber.toString()] = {};
       }
+      phraseMap[structure.repetition.id] = structure.repetition;
       uniqueLinks[structure.repetition.id][structure.id] = { structure, role: PhraseRole.Repetition };
       uniqueLinePhrases[structure.repetition.lineNumber.toString()][structure.repetition.id] = structure.repetition;
 
@@ -70,6 +75,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
           if (!uniqueLinePhrases[source.lineNumber.toString()]) {
             uniqueLinePhrases[source.lineNumber.toString()] = {};
           }
+          phraseMap[source.id] = source;
           uniqueLinks[source.id][structure.id] = { structure, role: PhraseRole.Source };
           uniqueLinePhrases[source.lineNumber.toString()][source.id] = source;
         });
@@ -80,6 +86,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (!uniqueLinePhrases[structure.source.lineNumber.toString()]) {
           uniqueLinePhrases[structure.source.lineNumber.toString()] = {};
         }
+        phraseMap[structure.source.id] = structure.source;
         uniqueLinks[structure.source.id][structure.id] = { structure, role: PhraseRole.Source };
         uniqueLinePhrases[structure.source.lineNumber.toString()][structure.source.id] = structure.source;
       }
@@ -115,6 +122,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
       // rollup phrase info
       links[phraseId] = {
+        phrase: phraseMap[phraseId],
         overallRole,
         links: pLinks,
         linkedPhraseIds: Array.from(linkedPhraseIdSet)
@@ -130,6 +138,18 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       linePhrases: lines
     };
   }, [poeticStructures]);
+
+  const getAllPhraseLinks = useCallback((phraseIds: string[]): PhraseLink[] => {
+    return Array.from(new Set(
+      phraseIds.flatMap((phraseId: string) => phraseLinks[phraseId].links)
+    ));
+  }, [phraseLinks]);
+
+  const getAllLinkedPhraseIds = useCallback((phraseIds: string[]): string[] => {
+    return Array.from(new Set(
+      phraseIds.flatMap((phraseId: string) => phraseLinks[phraseId].linkedPhraseIds)
+    ));
+  }, [phraseLinks]);
 
   const setNewTranscript = useCallback((lines: TranscriptLine[]) => {
     setTranscriptLines(lines);
@@ -179,11 +199,11 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   const value = useMemo(() => ({
     transcriptLines, setNewTranscript,
     poeticStructures, addPoeticStructure, removePoeticStructure,
-    phraseLinks, linePhrases
+    phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, linePhrases
   }), [
     transcriptLines, setNewTranscript,
     poeticStructures, addPoeticStructure, removePoeticStructure,
-    phraseLinks, linePhrases
+    phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, linePhrases
   ]);
 
   return (

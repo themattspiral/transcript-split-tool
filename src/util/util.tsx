@@ -1,4 +1,4 @@
-const getGridColumnAttributes = (event: React.MouseEvent): NamedNodeMap | undefined => {
+export const getGridColumnAttributes = (event: React.MouseEvent): NamedNodeMap | undefined => {
   let attrs: NamedNodeMap | undefined = (event.target as HTMLElement).attributes;
   if (!attrs?.length || !attrs.getNamedItem('data-column')) {
     attrs = (event.target as HTMLElement).parentElement?.attributes;
@@ -6,13 +6,13 @@ const getGridColumnAttributes = (event: React.MouseEvent): NamedNodeMap | undefi
   if (!attrs?.length || !attrs.getNamedItem('data-column')) {
     attrs = (event.target as HTMLElement).parentElement?.parentElement?.attributes;
   }
-
+  
   return attrs;
 };
 
 const TEXT_NODE_NAME = '#text';
 
-const getSelectionRangeContainerAttribute = (node: Node | undefined, attribute: string): string | undefined => {
+export const getSelectionRangeContainerAttribute = (node: Node | undefined, attribute: string): string | undefined => {
   if (!node || !attribute) {
     return undefined;
   }
@@ -27,12 +27,8 @@ const getSelectionRangeContainerAttribute = (node: Node | undefined, attribute: 
   return value;
 };
 
-const clearDocumentTextSelection = () => {
+export const clearDocumentTextSelection = () => {
   document.getSelection()?.empty();
 };
 
-export {
-  getGridColumnAttributes,
-  getSelectionRangeContainerAttribute,
-  clearDocumentTextSelection
-};
+export const deepCopyObject = (obj: any): any => JSON.parse(JSON.stringify(obj));

@@ -139,20 +139,13 @@ const ControlBar: React.FC = () => {
           </button>
           
           <button
-            onClick={() => setActiveTabId(TabId.PhraseBook)}
-            className={activeTabId === TabId.PhraseBook ? activeTabClasses : otherTabClasses}
-            style={activeTabId === TabId.PhraseBook ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
+            onClick={() => setActiveTabId(TabId.Structures)}
+            className={activeTabId === TabId.Structures ? activeTabClasses : otherTabClasses}
+            style={activeTabId === TabId.Structures ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
           >
             Poetic Structures ({ psCount })
           </button>
           
-          <button
-            onClick={() => setActiveTabId(TabId.Poems)}
-            className={activeTabId === TabId.Poems ? activeTabClasses : otherTabClasses}
-            style={activeTabId === TabId.Poems ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
-          >
-            Poems
-          </button>
         </div>
       </div>
 

@@ -4,23 +4,20 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faArrowsRotate } from "@fortawesome/free-solid-svg-icons";
 
 import './context-menu.css';
-import { getPhraseText } from "../data/data";
-import { useEditState } from "../context/EditStateContext";
+import { getPhraseText, PhraseRole } from "../data/data";
+import { useStructureEdit } from "../context/StructureEditContext";
 import { useUserData } from "../context/UserDataContext";
+import { useTranscriptInteraction } from "../context/TranscriptInteractionContext";
+import { clearDocumentTextSelection } from "../util/util";
 
 const TRANSCRIPT_SELECTION_MENU_ID = 'transcript-selection-menu-id';
 
 const TranscriptSelectionMenu: React.FC = () => {
   const { transcriptLines } = useUserData();
-  const {
-    contextPhrase,
-    pendingPhrase,
-    pendingRepeatedPhrase,
-    setContextPhraseAsPendingPhrase,
-    setContextPhraseAsPendingRepeatedPhrase
-  } = useEditState();
+  const { highlightedPhrase, makeHighlightedPhrasePending } = useTranscriptInteraction();
+  const { pendingRepetition, pendingSource } = useStructureEdit();
 
-  const selectedText = useMemo(() => getPhraseText(contextPhrase, transcriptLines), [contextPhrase, transcriptLines]);
+  const selectedText = useMemo(() => getPhraseText(highlightedPhrase, transcriptLines), [highlightedPhrase, transcriptLines]);
 
   return (
     <Menu id={TRANSCRIPT_SELECTION_MENU_ID} animation="slide" className="max-w-[400px] font-sans">
@@ -32,22 +29,28 @@ const TranscriptSelectionMenu: React.FC = () => {
       
       <Separator />
 
-      <Item onClick={setContextPhraseAsPendingPhrase}>
+      <Item onClick={() => {
+        makeHighlightedPhrasePending(PhraseRole.Repetition);
+        clearDocumentTextSelection();
+      }}>
         <div className="flex items-center">
-          <FontAwesomeIcon icon={pendingPhrase ? faArrowsRotate : faPlus} className="mr-1" />
-          { pendingPhrase ? 'Replace' : 'Set as' }
+          <FontAwesomeIcon icon={pendingRepetition ? faArrowsRotate : faPlus} className="mr-1" />
+          { pendingRepetition ? 'Replace' : 'Set as' }
           <span className="ml-1 rounded-xl px-[3px] mx-[-3px] bg-orange-200 border-orange-400 border-2 border-dashed font-mono text-always-menu-gray">
-            phrase
+            Repetition
           </span>
         </div>
       </Item>
 
-      <Item onClick={setContextPhraseAsPendingRepeatedPhrase}>
+      <Item onClick={() => {
+        makeHighlightedPhrasePending(PhraseRole.Source);
+        clearDocumentTextSelection();
+      }}>
         <div className="flex items-center">
-          <FontAwesomeIcon icon={pendingRepeatedPhrase ? faArrowsRotate : faPlus} className="mr-1" />
-          { pendingRepeatedPhrase ? 'Replace' : 'Set as' }
+          <FontAwesomeIcon icon={pendingSource ? faArrowsRotate : faPlus} className="mr-1" />
+          { pendingSource ? 'Replace' : 'Set as' }
           <span className="ml-1 rounded-xl px-[3px] mx-[-3px] bg-blue-200 border-blue-400 border-2 border-dashed font-mono text-always-menu-gray">
-            repeated
+            Source
           </span>
         </div>
       </Item>
