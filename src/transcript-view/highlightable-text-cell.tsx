@@ -1,7 +1,7 @@
 import { CSSProperties, useMemo } from "react";
 import classnames from "classnames";
 
-import './HighlightableTextCell.scss';
+import './highlightable-text-cell.scss';
 import { OverallPhraseRole, Phrase, PhraseAction, TranscriptLine } from "../data/data";
 import { useUserData } from "../context/user-data-context";
 import { useTranscriptInteraction } from "../context/transcript-interaction-context";

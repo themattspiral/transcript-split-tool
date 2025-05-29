@@ -1,16 +1,15 @@
 import { useMemo, CSSProperties } from 'react';
-import { useContextMenu } from "react-contexify";
 
 import { HEADER_ROW_ID, getPhraseText, sortPoeticStructures } from '../data/data';
 import { getGridColumnAttributes,  } from '../util/util';
 import { useViewState } from '../context/view-state-context';
 import { useUserData } from '../context/user-data-context';
 
-interface PhraseGridProps {
+interface StructuresGridProps {
   style?: CSSProperties | undefined;
 }
 
-const PhraseGrid: React.FC<PhraseGridProps> = props => {
+const StructuresGrid: React.FC<StructuresGridProps> = props => {
   const { style } = props;
   
   const { transcriptLines, poeticStructures } = useUserData();
@@ -239,4 +238,4 @@ const PhraseGrid: React.FC<PhraseGridProps> = props => {
   );
 };
 
-export { PhraseGrid };
+export { StructuresGrid as PhraseGrid };

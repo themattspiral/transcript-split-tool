@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { ViewStateContext } from './view-state-context';
 import { TabId } from '../data/data';
-import { CONFIRM_MODAL_ID } from '../modal/ConfirmModal';
+import { CONFIRM_MODAL_ID } from '../modal/confirm-modal';
 
 export const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTabId, setActiveTabId] = useState<TabId>(TabId.Transcript);

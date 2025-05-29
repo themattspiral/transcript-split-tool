@@ -1,10 +1,10 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import './index.css';
-import "react-contexify/dist/ReactContexify.css";
+import './global.css';
+import 'react-contexify/dist/ReactContexify.css';
 
-import { App } from './App';
+import { App } from './app';
 import { ViewStateProvider } from './context/view-state-provider';
 import { UserDataProvider } from './context/user-data-provider';
 import { StructureEditProvider } from './context/structure-edit-provider';

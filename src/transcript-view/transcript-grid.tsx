@@ -6,7 +6,7 @@ import { Phrase, HEADER_ROW_ID } from '../data/data';
 import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../util/util';
 import { HIGHLIGHT_MENU_ID, HighlightMenu } from './menus/highlight-menu';
 import { ERROR_MULTIPLE_LINES_MENU_ID, ErrorMultipleLinesMenu } from './menus/error-multiple-lines-menu';
-import { HighlightableTextCell } from './HighlightableTextCell';
+import { HighlightableTextCell } from './highlightable-text-cell';
 import { EditState, useStructureEdit } from '../context/structure-edit-context';
 import { useUserData } from '../context/user-data-context';
 import { useTranscriptInteraction } from '../context/transcript-interaction-context';

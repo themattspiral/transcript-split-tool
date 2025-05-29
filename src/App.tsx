@@ -1,11 +1,11 @@
-import { ModalWindow } from './modal/ModalWindow';
-import { ControlBar } from './control-bar/ControlBar';
-import { TranscriptGrid } from './transcript-grid/TranscriptGrid';
-import { PhraseGrid } from './phrase-grid/PhraseGrid';
+import { ModalWindow } from './modal/modal-window';
+import { ControlBar } from './control-bar/control-bar';
+import { TranscriptGrid } from './transcript-view/transcript-grid';
+import { PhraseGrid } from './structures-view/structures-grid';
 import { useViewState } from './context/view-state-context';
 import { TabId } from './data/data';
 
-const App: React.FC = () => {
+export const App: React.FC = () => {
   const { activeTabId } = useViewState();
 
   return (
@@ -30,5 +30,3 @@ const App: React.FC = () => {
     </div>
   );
 };
-
-export { App };

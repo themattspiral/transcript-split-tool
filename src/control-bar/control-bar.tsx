@@ -7,7 +7,7 @@ import { faFileWord, faFileExcel } from "@fortawesome/free-regular-svg-icons";
 import { TranscriptLine, TabId } from '../data/data';
 import { useViewState } from '../context/view-state-context';
 import { useUserData } from '../context/user-data-context';
-import { PendingPhraseBar } from './PendingPhraseBar';
+import { PendingPhraseBar } from './pending-phrase-bar';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 

@@ -5,7 +5,7 @@ import { TranscriptInteractionContext } from './transcript-interaction-context';
 import { Phrase, PhraseAction, PhraseRole, PhraseViewState } from '../data/data';
 import { useUserData } from './user-data-context';
 import { useStructureEdit } from './structure-edit-context';
-import { PHRASE_MENU_ID } from '../transcript-grid/menus/phrase-menu';
+import { PHRASE_MENU_ID } from '../transcript-view/menus/phrase-menu';
 
 export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [phraseViewStates, setPhraseViewStates] = useState<{ [phraseId: string]: PhraseViewState }>({});

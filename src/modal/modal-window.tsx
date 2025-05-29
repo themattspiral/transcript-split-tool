@@ -1,5 +1,5 @@
 import { useViewState } from '../context/view-state-context';
-import { ConfirmModal, CONFIRM_MODAL_ID } from './ConfirmModal';
+import { ConfirmModal, CONFIRM_MODAL_ID } from './confirm-modal';
 
 const ModalWindow: React.FC = () => {
   const { displayedModalId, isModalShowing, hideModals } = useViewState();
