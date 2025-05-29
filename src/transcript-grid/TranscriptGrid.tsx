@@ -4,12 +4,13 @@ import classnames from 'classnames';
 
 import { Phrase, HEADER_ROW_ID } from '../data/data';
 import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../util/util';
-import { TRANSCRIPT_SELECTION_MENU_ID } from '../context-menu/TranscriptSelectionMenu';
-import { ERROR_MULTIPLE_LINES_MENU_ID } from '../context-menu/ErrorMultipleLinesMenu';
+import { HIGHLIGHT_MENU_ID, HighlightMenu } from './menus/highlight-menu';
+import { ERROR_MULTIPLE_LINES_MENU_ID, ErrorMultipleLinesMenu } from './menus/error-multiple-lines-menu';
 import { HighlightableTextCell } from './HighlightableTextCell';
-import { EditState, useStructureEdit } from '../context/StructureEditContext';
-import { useUserData } from '../context/UserDataContext';
-import { useTranscriptInteraction } from '../context/TranscriptInteractionContext';
+import { EditState, useStructureEdit } from '../context/structure-edit-context';
+import { useUserData } from '../context/user-data-context';
+import { useTranscriptInteraction } from '../context/transcript-interaction-context';
+import { PhraseMenu } from './menus/phrase-menu';
 
 enum TranscriptGridColumnId {
   Line = 'line',
@@ -87,7 +88,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
         (range.startOffset + beginPhraseLineStartIdx) || 0,
         (range.endOffset + endPhraseLineStartIdx) || 0
       ));
-      showContextMenu({ event, id: TRANSCRIPT_SELECTION_MENU_ID });
+      showContextMenu({ event, id: HIGHLIGHT_MENU_ID });
     }
   }, [editState, clearClick, setHighlightedPhrase, showContextMenu]);
 
@@ -166,6 +167,9 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       onContextMenu={event => handleGridAction(event, false)}
       style={style}
     >
+      <PhraseMenu />
+      <HighlightMenu />
+      <ErrorMultipleLinesMenu />
       
       { headerRow }
 

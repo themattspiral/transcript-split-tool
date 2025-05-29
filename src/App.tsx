@@ -1,11 +1,8 @@
 import { ModalWindow } from './modal/ModalWindow';
-import { TranscriptSelectionMenu } from './context-menu/TranscriptSelectionMenu';
-import { PhraseEditMenu } from './context-menu/PhraseEditMenu';
-import { ErrorMultipleLinesMenu } from './context-menu/ErrorMultipleLinesMenu';
 import { ControlBar } from './control-bar/ControlBar';
 import { TranscriptGrid } from './transcript-grid/TranscriptGrid';
 import { PhraseGrid } from './phrase-grid/PhraseGrid';
-import { useViewState } from './context/ViewStateContext';
+import { useViewState } from './context/view-state-context';
 import { TabId } from './data/data';
 
 const App: React.FC = () => {
@@ -14,10 +11,6 @@ const App: React.FC = () => {
   return (
     <div className="flex flex-col h-dvh w-dvw p-2 overflow-hidden">
       <ModalWindow />
-
-      <TranscriptSelectionMenu />
-      <PhraseEditMenu />
-      <ErrorMultipleLinesMenu />
 
       <ControlBar />
       

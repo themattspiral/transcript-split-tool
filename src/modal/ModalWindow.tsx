@@ -1,4 +1,4 @@
-import { useViewState } from '../context/ViewStateContext';
+import { useViewState } from '../context/view-state-context';
 import { ConfirmModal, CONFIRM_MODAL_ID } from './ConfirmModal';
 
 const ModalWindow: React.FC = () => {

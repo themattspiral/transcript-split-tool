@@ -1,46 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useContextMenu } from 'react-contexify';
 
+import { TranscriptInteractionContext } from './transcript-interaction-context';
 import { Phrase, PhraseAction, PhraseRole, PhraseViewState } from '../data/data';
-import { useUserData } from './UserDataContext';
-import { useStructureEdit } from './StructureEditContext';
-import { PHRASE_EDIT_MENU_ID } from '../context-menu/PhraseEditMenu';
+import { useUserData } from './user-data-context';
+import { useStructureEdit } from './structure-edit-context';
+import { PHRASE_MENU_ID } from '../transcript-grid/menus/phrase-menu';
 
-interface TranscriptInteractionContextProps {
-  phraseViewStates: { [phraseId: string]: PhraseViewState };
-  handlePhraseAction: (event: React.MouseEvent, phraseIds: string[], action: PhraseAction) => void;
-  clearHover: () => void;
-  clearClick: () => void;
-
-  // right-clicked existing phrase ids
-  contextPhraseIds: string[];
-
-  // highlighted potentially-new Phrase
-  highlightedPhrase: Phrase | null;
-  setHighlightedPhrase: (phrase: Phrase | null) => void;
-  makeHighlightedPhrasePending: (role: PhraseRole) => void;
-}
-
-const TranscriptInteractionContext = createContext<TranscriptInteractionContextProps>({
-  phraseViewStates: {},
-  handlePhraseAction: () => {},
-  clearHover: () => {},
-  clearClick: () => {},
-  contextPhraseIds: [],
-  highlightedPhrase: null,
-  setHighlightedPhrase: () => {},
-  makeHighlightedPhrasePending: () => {}
-});
-
-const useTranscriptInteraction = () => {
-  const context = useContext(TranscriptInteractionContext);
-  if (!context) {
-    throw new Error(`useTranscriptInteraction must be used within a TranscriptInteractionProvider`);
-  }
-  return context;
-};
-
-const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [phraseViewStates, setPhraseViewStates] = useState<{ [phraseId: string]: PhraseViewState }>({});
   const [contextPhraseIds, setContextPhraseIds] = useState<string[]>([]);
   const [highlightedPhrase, setHighlightedPhrase] = useState<Phrase | null>(null);
@@ -73,7 +40,10 @@ const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode }> = (
     setPhraseViewStates(pvs => {
       const updated = { ...pvs };
       phraseIds.forEach(id => {
-        updated[id][fieldName] = value;
+        const p = updated[id];
+        if (p) {
+          p[fieldName] = value;
+        }
       });
       return updated;
     });
@@ -95,7 +65,7 @@ const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode }> = (
         break;
       case PhraseAction.Context:
         setContextPhraseIds(phraseIds);
-        showContextMenu({ event, id: PHRASE_EDIT_MENU_ID });
+        showContextMenu({ event, id: PHRASE_MENU_ID });
         break;
     }
   }, [getAllLinkedPhraseIds, phraseViewStates, setPhraseViewStates, setContextPhraseIds]);
@@ -136,5 +106,3 @@ const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode }> = (
     </TranscriptInteractionContext.Provider>
   );
 };
-
-export { TranscriptInteractionProvider, useTranscriptInteraction };

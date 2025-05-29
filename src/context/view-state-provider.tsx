@@ -1,39 +1,11 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
+import { useCallback, useMemo, useState } from 'react';
+
+import { ViewStateContext } from './view-state-context';
 import { TabId } from '../data/data';
 import { CONFIRM_MODAL_ID } from '../modal/ConfirmModal';
 
-interface ViewStateContextProps {
-  activeTabId: TabId;
-  setActiveTabId: (tab: TabId) => void;
-  displayedModalId: string | null;
-  isModalShowing: boolean;
-  showConfirmationModal: (message: string, onConfirm: () => void) => void;
-  hideModals: () => void;
-  modalMessage: string | null;
-  modalOnConfirm: (() => void) | null;
-}
-
-const ViewStateContext = createContext<ViewStateContextProps>({
-  activeTabId: TabId.Transcript,
-  setActiveTabId: () => {},
-  displayedModalId: null,
-  isModalShowing: false,
-  showConfirmationModal: () => {},
-  hideModals: () => {},
-  modalMessage: null,
-  modalOnConfirm: null
-});
-
-const useViewState = () => {
-  const context = useContext(ViewStateContext);
-  if (!context) {
-    throw new Error(`useViewState must be used within a ViewStateProvider`);
-  }
-  return context;
-};
-
-const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTabId, setActiveTabId] = useState<TabId>(TabId.Transcript);
   const [displayedModalId, setDisplayedModalId] = useState<string | null>(null);
   const isModalShowing = !!displayedModalId;
@@ -68,5 +40,3 @@ const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     </ViewStateContext.Provider>
   );
 };
-
-export { ViewStateProvider, useViewState };

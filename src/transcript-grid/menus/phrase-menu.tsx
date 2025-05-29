@@ -1,30 +1,48 @@
 import { Fragment } from 'react';
 import { Menu, Item, Separator, Submenu } from 'react-contexify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
+import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 import './context-menu.css';
-import { getPhraseText, PhraseRole } from "../data/data";
-import { useUserData } from "../context/UserDataContext";
-import { useStructureEdit } from "../context/StructureEditContext";
-import { useTranscriptInteraction } from "../context/TranscriptInteractionContext";
+import { getPhraseText, PhraseRole } from '../../data/data';
+import { useUserData } from '../../context/user-data-context';
+import { useStructureEdit } from '../../context/structure-edit-context';
+import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
 
-const PHRASE_EDIT_MENU_ID = 'phrase-edit-menu-id';
+export const PHRASE_MENU_ID = 'phrase-menu-id';
 
-const PhraseEditMenu: React.FC = () => {
+export const PhraseMenu: React.FC = () => {
   const { transcriptLines, phraseLinks } = useUserData();
   const { contextPhraseIds } = useTranscriptInteraction();
   const { beginEdit } = useStructureEdit();
 
+  // Each phrase associated with the context-selected span:
+  //   - overlapping sections of 2 or more overlapping phrases will result in each phrase 
+  //     being a separate context menu item (selectable combo, or non-selectable header, see below)
+  const text = contextPhraseIds.map(phraseId => {
+    const info = phraseLinks[phraseId];
+
+    // Single link - Single structure:
+    //   - Make a single selectable item to represent it
+
+    // Multiple Links - Multiple structures:
+    //   - When multiple links are present, it means the phrase is associated with multiple different 
+    //     poetic structures, e.g. they share the same phrase for a destination or source
+    //   - In this case, we create a non-selectable item (header) to represent the common phrase,
+    //     and a selectable item for each structure linked to it
+  });
+
   return (
-    <Menu id={PHRASE_EDIT_MENU_ID} animation="slide" className="max-w-[400px] font-sans">
+    <Menu id={PHRASE_MENU_ID} animation="slide" className="max-w-[400px] font-sans">
+      <div className="text-xs">Edit Poetic Strcture:</div>
+
       { contextPhraseIds.map((phraseId, idx) => {
         const info = phraseLinks[phraseId];
         const repetitionLinks = info?.links.filter(l => l.role === PhraseRole.Repetition) || [];
         const sourceLinks = info?.links.filter(l => l.role === PhraseRole.Source) || [];
 
         return (
-          <>
+          <Fragment key={phraseId}>
           { repetitionLinks.length > 0 &&
             <Fragment key={`${phraseId}-repetitions`}>
             <Item disabled style={{ opacity: 1 }}>
@@ -36,24 +54,9 @@ const PhraseEditMenu: React.FC = () => {
             <Separator />
 
             { repetitionLinks.map(link => (
-              // <Submenu 
-              //   key={`${phraseId}-repetitions-${link.structure.id}`}
-              //   label={
-              //     <div className="flex items-center">
-              //       (src) { !link.structure.multipleSources && getPhraseText(link.structure.source, transcriptLines) }
-              //     </div>
-              // }>
-              //   <Item onClick={() => {}}>
-              //     <div className="flex items-center">
-              //       <FontAwesomeIcon icon={faPenToSquare} className="mr-1" />
-              //       Edit
-              //     </div>
-              //   </Item>
-              // </Submenu>
               <Item
                 key={`${phraseId}-repetitions-${link.structure.id}`}
                 onClick={() => {
-                  console.log('editing', link.structure.id)
                   beginEdit(link.structure.id);
                 }}
               >
@@ -83,24 +86,9 @@ const PhraseEditMenu: React.FC = () => {
             <Separator />
 
             { sourceLinks.map(link => (
-              // <Submenu 
-              //   key={`${phraseId}-sources-${link.structure.id}`}
-              //   label={
-              //     <div className="flex items-center">
-              //       (rep) { getPhraseText(link.structure.repetition, transcriptLines) }
-              //     </div>
-              // }>
-              //   <Item onClick={() => {}}>
-              //     <div className="flex items-center">
-              //       <FontAwesomeIcon icon={faPenToSquare} className="mr-1" />
-              //       Edit
-              //     </div>
-              //   </Item>
-              // </Submenu>
               <Item
                 key={`${phraseId}-sources-${link.structure.id}`}
                 onClick={() => {
-                  console.log('editing', link.structure.id)
                   beginEdit(link.structure.id);
                 }}
               >
@@ -114,11 +102,9 @@ const PhraseEditMenu: React.FC = () => {
           }
 
           { idx < (contextPhraseIds.length - 1) && <Separator /> }
-          </>
+          </Fragment>
         );
       }) }
     </Menu>
   );
 };
-
-export { PHRASE_EDIT_MENU_ID, PhraseEditMenu };

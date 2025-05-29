@@ -5,10 +5,10 @@ import './index.css';
 import "react-contexify/dist/ReactContexify.css";
 
 import { App } from './App';
-import { ViewStateProvider } from './context/ViewStateContext';
-import { UserDataProvider } from './context/UserDataContext';
-import { StructureEditProvider } from './context/StructureEditContext';
-import { TranscriptInteractionProvider } from './context/TranscriptInteractionContext';
+import { ViewStateProvider } from './context/view-state-provider';
+import { UserDataProvider } from './context/user-data-provider';
+import { StructureEditProvider } from './context/structure-edit-provider';
+import { TranscriptInteractionProvider } from './context/transcript-interaction-provider';
 
 // reference
 // import reactLogo from './assets/react.svg' // src

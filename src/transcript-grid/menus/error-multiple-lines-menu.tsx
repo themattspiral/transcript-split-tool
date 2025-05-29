@@ -1,8 +1,8 @@
 import { Menu, Item } from "react-contexify";
 
-const ERROR_MULTIPLE_LINES_MENU_ID = 'multiple-lines-error-menu-id';
+export const ERROR_MULTIPLE_LINES_MENU_ID = 'multiple-lines-error-menu-id';
 
-const ErrorMultipleLinesMenu: React.FC = () => {
+export const ErrorMultipleLinesMenu: React.FC = () => {
   return (
     <Menu id={ERROR_MULTIPLE_LINES_MENU_ID} animation="slide">
       <Item disabled style={{ opacity: 1 }}>
@@ -11,5 +11,3 @@ const ErrorMultipleLinesMenu: React.FC = () => {
     </Menu>
   );
 };
-
-export { ERROR_MULTIPLE_LINES_MENU_ID, ErrorMultipleLinesMenu };

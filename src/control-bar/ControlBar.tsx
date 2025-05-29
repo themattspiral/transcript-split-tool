@@ -5,8 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from "@fortawesome/free-regular-svg-icons";
 
 import { TranscriptLine, TabId } from '../data/data';
-import { useViewState } from '../context/ViewStateContext';
-import { useUserData } from '../context/UserDataContext';
+import { useViewState } from '../context/view-state-context';
+import { useUserData } from '../context/user-data-context';
 import { PendingPhraseBar } from './PendingPhraseBar';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);

@@ -1,18 +1,18 @@
-import { useMemo } from "react";
-import { Menu, Item, Separator } from "react-contexify";
+import { useMemo } from 'react';
+import { Menu, Item, Separator } from 'react-contexify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faArrowsRotate } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
 
 import './context-menu.css';
-import { getPhraseText, PhraseRole } from "../data/data";
-import { useStructureEdit } from "../context/StructureEditContext";
-import { useUserData } from "../context/UserDataContext";
-import { useTranscriptInteraction } from "../context/TranscriptInteractionContext";
-import { clearDocumentTextSelection } from "../util/util";
+import { getPhraseText, PhraseRole } from '../../data/data';
+import { useStructureEdit } from '../../context/structure-edit-context';
+import { useUserData } from '../../context/user-data-context';
+import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
+import { clearDocumentTextSelection } from '../../util/util';
 
-const TRANSCRIPT_SELECTION_MENU_ID = 'transcript-selection-menu-id';
+export const HIGHLIGHT_MENU_ID = 'highlight-menu-id';
 
-const TranscriptSelectionMenu: React.FC = () => {
+export const HighlightMenu: React.FC = () => {
   const { transcriptLines } = useUserData();
   const { highlightedPhrase, makeHighlightedPhrasePending } = useTranscriptInteraction();
   const { pendingRepetition, pendingSource } = useStructureEdit();
@@ -20,7 +20,9 @@ const TranscriptSelectionMenu: React.FC = () => {
   const selectedText = useMemo(() => getPhraseText(highlightedPhrase, transcriptLines), [highlightedPhrase, transcriptLines]);
 
   return (
-    <Menu id={TRANSCRIPT_SELECTION_MENU_ID} animation="slide" className="max-w-[400px] font-sans">
+    <Menu id={HIGHLIGHT_MENU_ID} animation="slide" className="max-w-[400px] font-sans">
+      <div className="text-xs">New Poetic Strcture:</div>
+
       <Item disabled style={{ opacity: 1 }}>
         <div className="font-bold font-mono flex whitespace-normal">
           { selectedText }
@@ -57,5 +59,3 @@ const TranscriptSelectionMenu: React.FC = () => {
     </Menu>
   );
 };
-
-export { TRANSCRIPT_SELECTION_MENU_ID, TranscriptSelectionMenu };

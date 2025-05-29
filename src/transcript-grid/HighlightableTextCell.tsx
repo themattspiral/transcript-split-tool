@@ -1,11 +1,10 @@
-import { CSSProperties, useCallback, useMemo } from "react";
+import { CSSProperties, useMemo } from "react";
 import classnames from "classnames";
 
 import './HighlightableTextCell.scss';
 import { OverallPhraseRole, Phrase, PhraseAction, TranscriptLine } from "../data/data";
-import { useStructureEdit } from "../context/StructureEditContext";
-import { useUserData } from "../context/UserDataContext";
-import { useTranscriptInteraction } from "../context/TranscriptInteractionContext";
+import { useUserData } from "../context/user-data-context";
+import { useTranscriptInteraction } from "../context/transcript-interaction-context";
 
 enum TextSpanType {
   Repetition = 'repetition',
@@ -41,26 +40,9 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
   const { line, className, style, attributes } = props;
 
   const { phraseLinks, linePhrases } = useUserData();
-  const { pendingRepetition, pendingSource } = useStructureEdit();
   const { phraseViewStates, handlePhraseAction, clearHover } = useTranscriptInteraction();
 
-  const isSpanClickable = useCallback((spanType: TextSpanType, pending: Phrase | null, pendingRepeated: Phrase | null): boolean => {
-    let clickable = true;
-    
-    if (spanType === TextSpanType.Text) {
-      clickable = false;
-    } else if (pending && spanType !== TextSpanType.Source) {
-      clickable = false;
-    } else if (pendingRepeated && spanType !== TextSpanType.Repetition) {
-      clickable = false;
-    } else if ((pending || pendingRepeated) && spanType === TextSpanType.Overlapping) {
-      clickable = false;
-    }
-
-    return clickable;
-  }, []);
-
-  // flatten potential range overlaps
+  // flatten plain text and phrases into discreet TextSpans, handling potential range overlaps 
   const textSpans: TextSpan[] = useMemo(() => {
     const thisLinesPhrases = Object.values(linePhrases[line.lineNumber.toString()] || {});
     const idxSpanSplitPoints = new Set<number>([0, line.text.length]);
@@ -79,9 +61,8 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
       const start = sortedPoints[i];
       const end = sortedPoints[i + 1];
       
-      // find which phrases are associated with this span
+      // find which phrases in this line are associated with this particular span
       const spanPhrases: Phrase[] = [];
-
       thisLinesPhrases?.forEach(phrase => {
         // A phrase covers this span if:
         // 1. the phrase's start is less than this span's end
@@ -108,14 +89,13 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
           spanType = TextSpanType.Source;
         }
 
-        // TODO - decide if we want to keep the refcount badge
-        // refCount = linkInfo.links.length;
-
-        // spanType = phraseAssociations[0].phrase.isRepeated ? TextSpanType.RepeatedPhrase : TextSpanType.Phrase;
+        // TODO pending logic
         // pending = phraseAssociations[0].phrase.isPending;
         
+        // TODO - decide if we want to keep the refcount badge
+        refCount = linkInfo.links.length;
         // if (spanType === TextSpanType.RepeatedPhrase) {
-        //   refCount = phraseLinks[getPhraseKey(phraseAssociations[0].phrase)]?.size;
+        //   refCount = linkInfo.links.length;
         // }
       } else if (spanPhrases.length > 1) {
         spanType = TextSpanType.Overlapping;
@@ -123,15 +103,21 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
 
       let isHovered = false;
       let isClicked = false;
-      let isDeemphasized = false;
+      let isDeemphasized = true;
 
       if (spanType != TextSpanType.Text) {
-        isHovered = spanPhrases.some(phrase => phraseViewStates[phrase.id]?.isHovered);
-        isClicked = spanPhrases.some(phrase => phraseViewStates[phrase.id]?.isClicked);
-        isDeemphasized = spanPhrases.every(phrase => phraseViewStates[phrase.id]?.isDeemphasized);
+
+        spanPhrases.forEach(phrase => {
+          isHovered ||= phraseViewStates[phrase.id]?.isHovered;             // some
+          isClicked ||= phraseViewStates[phrase.id]?.isClicked;             // some
+          isDeemphasized &&= phraseViewStates[phrase.id]?.isDeemphasized;   // every
+        });
       }
 
+      // TODO pending logic
       const isPending = false;
+
+      const isNotText = spanType !== TextSpanType.Text;
       
       spans.push({
         start,
@@ -139,9 +125,9 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
         spanPhraseIds: spanPhrases.map(p => p.id),
         spanType,
         isPending,
-        isHoverable: spanType !== TextSpanType.Text,
-        isClickable: isSpanClickable(spanType, pendingRepetition, pendingSource),
-        isContextable: spanType !== TextSpanType.Text,
+        isHoverable: isNotText,
+        isClickable: isNotText,
+        isContextable: isNotText,
         isHovered,
         isClicked,
         isDeemphasized,
@@ -154,7 +140,9 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
       const spanType = spans[i].spanType;
       const isLeftmostPhrase = spanType != TextSpanType.Text && (i === 0 || spans[i - 1].spanType === TextSpanType.Text);
       const isRightmostPhrase = spanType != TextSpanType.Text && (i === (spans.length - 1) || spans[i + 1].spanType === TextSpanType.Text);
-      
+      const leftmostClicked = spans[i].isClicked && i > 0 && !spans[i - 1].isClicked;
+      const rightmostClicked = spans[i].isClicked && i < (spans.length - 1) && !spans[i + 1].isClicked;
+
       spans[i].classes = classnames(
         'text-span',
         spanType, // TextSpanType string enum values match class names
@@ -165,12 +153,14 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
         { clicked: spans[i].isClicked },
         { deemphasized: spans[i].isDeemphasized },
         { leftmost: isLeftmostPhrase },
-        { rightmost: isRightmostPhrase }
+        { rightmost: isRightmostPhrase },
+        { ['leftmost-clicked']: leftmostClicked },
+        { ['rightmost-clicked']: rightmostClicked }
       );
     }
 
     return spans;
-  }, [line, linePhrases, pendingRepetition, pendingSource, isSpanClickable, phraseViewStates, phraseLinks]);
+  }, [line, linePhrases, phraseViewStates, phraseLinks]);
 
   return (
     <div className={classnames('px-2 py-2 relative whitespace-pre-wrap', className)} style={style} {...attributes}>
@@ -200,14 +190,14 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
 
           {/* Count Badge - // TODO - decide if we want to keep the refcount badge // */}
           {/* { span.spanType === TextSpanType.Source && (span.displayRefCount || 0) > 1 && */}
-          { (span.displayRefCount || 0) > 1 &&
+          {/* { (span.displayRefCount || 0) > 1 &&
             <span
               data-pls-idx={span.end}
               className={classnames('count-badge', { pending: span.isPending })}
             >
               { span.displayRefCount }
             </span>
-          }
+          } */}
         </span>
       )) }
     </div>

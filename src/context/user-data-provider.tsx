@@ -1,44 +1,13 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import {
   OverallPhraseRole, PairedStructure, Phrase, PhraseLink, PhraseLinkInfo,
   PhraseRole, PoeticStructure, TranscriptLine
 } from '../data/data';
+import { UserDataContext } from './user-data-context';
 import testStructures from '../data/test-structures.data.json';
 
-interface UserDataContextProps {
-  transcriptLines: TranscriptLine[];
-  setNewTranscript: (lines: TranscriptLine[]) => void;
-  poeticStructures: { [psId: string]: PoeticStructure };
-  addPoeticStructure: (structure: PoeticStructure) => void;
-  removePoeticStructure: (psId: string) => void;
-  phraseLinks: { [phraseId: string]: PhraseLinkInfo };
-  getAllLinkedPhraseIds: (phraseIds: string[]) => string[];
-  getAllPhraseLinks: (phraseIds: string[]) => PhraseLink[];
-  linePhrases: { [lineNumber: string]: Phrase[] };
-}
-
-const UserDataContext = createContext<UserDataContextProps>({
-  transcriptLines: [],
-  setNewTranscript: () => {},
-  poeticStructures: {},
-  addPoeticStructure: () => {},
-  removePoeticStructure: () => {},
-  phraseLinks: {},
-  getAllLinkedPhraseIds: () => [],
-  getAllPhraseLinks: () => [],
-  linePhrases: {}
-});
-
-const useUserData = () => {
-  const context = useContext(UserDataContext);
-  if (!context) {
-    throw new Error(`useUserData must be used within a UserDataProvider`);
-  }
-  return context;
-};
-
-const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
   const [poeticStructures, setPoeticStructures] = useState<{ [psId: string]: PoeticStructure }>({});
 
@@ -212,5 +181,3 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     </UserDataContext.Provider>
   );
 };
-
-export { UserDataProvider, useUserData };

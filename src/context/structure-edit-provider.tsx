@@ -1,45 +1,10 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
+import { StructureEditContext, EditState } from './structure-edit-context';
 import { PairedStructure, Phrase, PhraseRole } from '../data/data';
-import { useUserData } from './UserDataContext';
+import { useUserData } from './user-data-context';
 
-enum EditState {
-  Idle,
-  CreatingNew,
-  EditingExisting
-}
-
-interface StructureEditContextProps {
-  editState: EditState,
-  pendingRepetition: Phrase | null;
-  pendingSource: Phrase | null;
-  setPendingPhrase: (phrase: Phrase | null, role: PhraseRole) => void;
-  beginEdit: (structureId: string) => void;
-  savePendingEdit: () => void;
-  createNewStructureFromPendingPhrases: () => void;
-  clearPending: () => void;
-}
-
-const StructureEditContext = createContext<StructureEditContextProps>({
-  editState: EditState.Idle,
-  pendingRepetition: null,
-  pendingSource: null,
-  setPendingPhrase: () => {},
-  beginEdit: () => {},
-  savePendingEdit: () => {},
-  createNewStructureFromPendingPhrases: () => {},
-  clearPending: () => {}
-});
-
-const useStructureEdit = () => {
-  const context = useContext(StructureEditContext);
-  if (!context) {
-    throw new Error(`useStructureEdit must be used within a StructureEditProvider`);
-  }
-  return context;
-};
-
-const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [editState, setEditState] = useState<EditState>(EditState.Idle);
   const [pendingRepetition, setPendingRepetition] = useState<Phrase | null>(null);
   const [pendingSource, setPendingSource] = useState<Phrase | null>(null);
@@ -118,5 +83,3 @@ const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     </StructureEditContext.Provider>
   );
 };
-
-export { EditState, StructureEditProvider, useStructureEdit };

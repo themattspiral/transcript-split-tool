@@ -3,8 +3,8 @@ import { useContextMenu } from "react-contexify";
 
 import { HEADER_ROW_ID, getPhraseText, sortPoeticStructures } from '../data/data';
 import { getGridColumnAttributes,  } from '../util/util';
-import { useViewState } from '../context/ViewStateContext';
-import { useUserData } from '../context/UserDataContext';
+import { useViewState } from '../context/view-state-context';
+import { useUserData } from '../context/user-data-context';
 
 interface PhraseGridProps {
   style?: CSSProperties | undefined;

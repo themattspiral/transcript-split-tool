@@ -3,8 +3,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faX, faArrowsRotate } from "@fortawesome/free-solid-svg-icons";
 
 import { getPhraseText } from '../data/data';
-import { useUserData } from '../context/UserDataContext';
-import { EditState, useStructureEdit } from '../context/StructureEditContext';
+import { useUserData } from '../context/user-data-context';
+import { EditState, useStructureEdit } from '../context/structure-edit-context';
 import { useCallback } from 'react';
 
 const PendingPhraseBar: React.FC = () => {
