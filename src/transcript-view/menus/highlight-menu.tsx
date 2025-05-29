@@ -4,13 +4,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
 
 import './context-menu.css';
+import { HIGHLIGHT_MENU_ID } from './context-menu';
 import { getPhraseText, PhraseRole } from '../../shared/data';
 import { useStructureEdit } from '../../context/structure-edit-context';
 import { useUserData } from '../../context/user-data-context';
 import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
 import { clearDocumentTextSelection } from '../../shared/util';
-
-export const HIGHLIGHT_MENU_ID = 'highlight-menu-id';
 
 export const HighlightMenu: React.FC = () => {
   const { transcriptLines } = useUserData();

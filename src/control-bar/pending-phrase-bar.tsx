@@ -1,11 +1,11 @@
+import { useCallback } from 'react';
 import classnames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faX, faArrowsRotate } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faX, faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
 
 import { getPhraseText } from '../shared/data';
 import { useUserData } from '../context/user-data-context';
 import { EditState, useStructureEdit } from '../context/structure-edit-context';
-import { useCallback } from 'react';
 
 const PendingPhraseBar: React.FC = () => {
   const { transcriptLines } = useUserData();

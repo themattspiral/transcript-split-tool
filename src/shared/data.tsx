@@ -70,8 +70,8 @@ export class MultipleSourcesStructure extends AbstractPoeticStructure {
 export type PoeticStructure = PairedStructure | MultipleSourcesStructure;
 
 export enum PhraseRole {
-  Repetition,
-  Source
+  Repetition = 'Repetition',
+  Source = 'Source'
 }
 
 export enum OverallPhraseRole {

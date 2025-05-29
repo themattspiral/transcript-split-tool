@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react';
 import { extractRawText } from 'mammoth';
 import classnames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileWord, faFileExcel } from "@fortawesome/free-regular-svg-icons";
+import { faFileWord, faFileExcel } from '@fortawesome/free-regular-svg-icons';
 
 import { TranscriptLine, TabId } from '../shared/data';
 import { useViewState } from '../context/view-state-context';
@@ -72,8 +72,8 @@ const ControlBar: React.FC = () => {
     }
   };
 
-  const activeTabClasses = "bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg text-nowrap";
-  const otherTabClasses = "bg-gray-200 hover:bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg cursor-pointer text-nowrap";
+  const activeTabClasses = 'bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg text-nowrap';
+  const otherTabClasses = 'bg-gray-200 hover:bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg cursor-pointer text-nowrap';
   
   return (
     <div className="flex gap-4 items-end">

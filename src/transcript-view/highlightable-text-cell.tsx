@@ -1,10 +1,10 @@
-import { CSSProperties, useMemo } from "react";
-import classnames from "classnames";
+import { CSSProperties, useMemo } from 'react';
+import classnames from 'classnames';
 
 import './highlightable-text-cell.scss';
-import { OverallPhraseRole, Phrase, PhraseAction, TranscriptLine } from "../shared/data";
-import { useUserData } from "../context/user-data-context";
-import { useTranscriptInteraction } from "../context/transcript-interaction-context";
+import { OverallPhraseRole, Phrase, PhraseAction, TranscriptLine } from '../shared/data';
+import { useUserData } from '../context/user-data-context';
+import { useTranscriptInteraction } from '../context/transcript-interaction-context';
 
 enum TextSpanType {
   Repetition = 'repetition',

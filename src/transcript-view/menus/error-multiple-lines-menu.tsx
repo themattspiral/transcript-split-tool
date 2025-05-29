@@ -1,6 +1,6 @@
-import { Menu, Item } from "react-contexify";
+import { Menu, Item } from 'react-contexify';
 
-export const ERROR_MULTIPLE_LINES_MENU_ID = 'multiple-lines-error-menu-id';
+import { ERROR_MULTIPLE_LINES_MENU_ID } from './context-menu';
 
 export const ErrorMultipleLinesMenu: React.FC = () => {
   return (
