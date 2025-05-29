@@ -3,9 +3,9 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   OverallPhraseRole, PairedStructure, Phrase, PhraseLink, PhraseLinkInfo,
   PhraseRole, PoeticStructure, TranscriptLine
-} from '../data/data';
+} from '../shared/data';
 import { UserDataContext } from './user-data-context';
-import testStructures from '../data/test-structures.data.json';
+import testStructures from '../shared/test-structures.data.json';
 
 export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);

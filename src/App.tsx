@@ -3,7 +3,7 @@ import { ControlBar } from './control-bar/control-bar';
 import { TranscriptGrid } from './transcript-view/transcript-grid';
 import { PhraseGrid } from './structures-view/structures-grid';
 import { useViewState } from './context/view-state-context';
-import { TabId } from './data/data';
+import { TabId } from './shared/data';
 
 export const App: React.FC = () => {
   const { activeTabId } = useViewState();

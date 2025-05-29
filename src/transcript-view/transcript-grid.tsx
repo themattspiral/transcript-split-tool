@@ -2,8 +2,8 @@ import { useState, CSSProperties, useMemo, useCallback } from 'react';
 import { useContextMenu } from "react-contexify";
 import classnames from 'classnames';
 
-import { Phrase, HEADER_ROW_ID } from '../data/data';
-import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../util/util';
+import { Phrase, HEADER_ROW_ID } from '../shared/data';
+import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../shared/util';
 import { HIGHLIGHT_MENU_ID, HighlightMenu } from './menus/highlight-menu';
 import { ERROR_MULTIPLE_LINES_MENU_ID, ErrorMultipleLinesMenu } from './menus/error-multiple-lines-menu';
 import { HighlightableTextCell } from './highlightable-text-cell';

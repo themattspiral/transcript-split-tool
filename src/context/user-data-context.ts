@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseLink, PhraseLinkInfo, PoeticStructure, TranscriptLine } from '../data/data';
+import { Phrase, PhraseLink, PhraseLinkInfo, PoeticStructure, TranscriptLine } from '../shared/data';
 
 interface UserDataContextProps {
   transcriptLines: TranscriptLine[];

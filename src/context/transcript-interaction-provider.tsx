@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useContextMenu } from 'react-contexify';
 
 import { TranscriptInteractionContext } from './transcript-interaction-context';
-import { Phrase, PhraseAction, PhraseRole, PhraseViewState } from '../data/data';
+import { Phrase, PhraseAction, PhraseRole, PhraseViewState } from '../shared/data';
 import { useUserData } from './user-data-context';
 import { useStructureEdit } from './structure-edit-context';
 import { PHRASE_MENU_ID } from '../transcript-view/menus/phrase-menu';

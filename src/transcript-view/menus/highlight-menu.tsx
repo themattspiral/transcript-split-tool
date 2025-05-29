@@ -4,11 +4,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
 
 import './context-menu.css';
-import { getPhraseText, PhraseRole } from '../../data/data';
+import { getPhraseText, PhraseRole } from '../../shared/data';
 import { useStructureEdit } from '../../context/structure-edit-context';
 import { useUserData } from '../../context/user-data-context';
 import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
-import { clearDocumentTextSelection } from '../../util/util';
+import { clearDocumentTextSelection } from '../../shared/util';
 
 export const HIGHLIGHT_MENU_ID = 'highlight-menu-id';
 

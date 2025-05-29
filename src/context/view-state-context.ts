@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { TabId } from '../data/data';
+import { TabId } from '../shared/data';
 
 interface ViewStateContextProps {
   activeTabId: TabId;

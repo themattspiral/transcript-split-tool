@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from "@fortawesome/free-regular-svg-icons";
 
-import { TranscriptLine, TabId } from '../data/data';
+import { TranscriptLine, TabId } from '../shared/data';
 import { useViewState } from '../context/view-state-context';
 import { useUserData } from '../context/user-data-context';
 import { PendingPhraseBar } from './pending-phrase-bar';

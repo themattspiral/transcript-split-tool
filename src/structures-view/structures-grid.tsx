@@ -1,7 +1,7 @@
 import { useMemo, CSSProperties } from 'react';
 
-import { HEADER_ROW_ID, getPhraseText, sortPoeticStructures } from '../data/data';
-import { getGridColumnAttributes,  } from '../util/util';
+import { HEADER_ROW_ID, getPhraseText, sortPoeticStructures } from '../shared/data';
+import { getGridColumnAttributes,  } from '../shared/util';
 import { useViewState } from '../context/view-state-context';
 import { useUserData } from '../context/user-data-context';
 

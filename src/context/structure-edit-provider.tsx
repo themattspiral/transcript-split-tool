@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { StructureEditContext, EditState } from './structure-edit-context';
-import { PairedStructure, Phrase, PhraseRole } from '../data/data';
+import { PairedStructure, Phrase, PhraseRole } from '../shared/data';
 import { useUserData } from './user-data-context';
 
 export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

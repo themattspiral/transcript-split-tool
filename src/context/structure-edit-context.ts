@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseRole } from '../data/data';
+import { Phrase, PhraseRole } from '../shared/data';
 
 export enum EditState {
   Idle,

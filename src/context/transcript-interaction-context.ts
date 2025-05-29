@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseAction, PhraseRole, PhraseViewState } from '../data/data';
+import { Phrase, PhraseAction, PhraseRole, PhraseViewState } from '../shared/data';
 
 interface TranscriptInteractionContextProps {
   phraseViewStates: { [phraseId: string]: PhraseViewState };

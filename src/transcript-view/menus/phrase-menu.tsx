@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 import './context-menu.css';
-import { getPhraseText, PhraseRole } from '../../data/data';
+import { getPhraseText, PhraseRole } from '../../shared/data';
 import { useUserData } from '../../context/user-data-context';
 import { useStructureEdit } from '../../context/structure-edit-context';
 import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
