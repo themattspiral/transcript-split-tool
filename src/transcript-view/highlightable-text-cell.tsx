@@ -105,7 +105,7 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
       let isClicked = false;
       let isDeemphasized = true;
 
-      if (spanType != TextSpanType.Text) {
+      if (spanType !== TextSpanType.Text) {
 
         spanPhrases.forEach(phrase => {
           isHovered ||= phraseViewStates[phrase.id]?.isHovered;             // some
@@ -138,8 +138,8 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
     // determine styling for each span
     for (let i = 0; i < spans.length; i++) {
       const spanType = spans[i].spanType;
-      const isLeftmostPhrase = spanType != TextSpanType.Text && (i === 0 || spans[i - 1].spanType === TextSpanType.Text);
-      const isRightmostPhrase = spanType != TextSpanType.Text && (i === (spans.length - 1) || spans[i + 1].spanType === TextSpanType.Text);
+      const isLeftmostPhrase = spanType !== TextSpanType.Text && (i === 0 || spans[i - 1].spanType === TextSpanType.Text);
+      const isRightmostPhrase = spanType !== TextSpanType.Text && (i === (spans.length - 1) || spans[i + 1].spanType === TextSpanType.Text);
       const leftmostClicked = spans[i].isClicked && i > 0 && !spans[i - 1].isClicked;
       const rightmostClicked = spans[i].isClicked && i < (spans.length - 1) && !spans[i + 1].isClicked;
 

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { StructureEditContext, EditState } from './structure-edit-context';
-import { PairedStructure, Phrase, PhraseRole } from '../shared/data';
+import { PoeticStructure, Phrase, PhraseRole } from '../shared/data';
 import { useUserData } from './user-data-context';
 
 export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -49,22 +49,22 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const s = poeticStructures[structureId];
     setPendingRepetition(s.repetition);
-    // TODO - handle multiple
-    setPendingSource(s.multipleSources ? s.sources[0] : s.source);
+    // TODO - handle multiple & unary
+    setPendingSource(s.sources[0]);
 
   }, [editState, poeticStructures, setEditingStructureId, setPendingRepetition, setPendingSource]);
   
   const savePendingEdit = useCallback(() => {
     if (editState === EditState.EditingExisting && editingStructureId && pendingRepetition && pendingSource) {
       removePoeticStructure(editingStructureId);
-      addPoeticStructure(new PairedStructure(pendingRepetition, pendingSource));
+      addPoeticStructure(new PoeticStructure(pendingRepetition, [pendingSource]));
       clearPending();
     }
   }, [editState, editingStructureId, pendingRepetition, pendingSource, addPoeticStructure, removePoeticStructure, clearPending]);
 
   const createNewStructureFromPendingPhrases = useCallback(() => {
     if (editState === EditState.CreatingNew && pendingRepetition && pendingSource) {
-      addPoeticStructure(new PairedStructure(pendingRepetition, pendingSource));
+      addPoeticStructure(new PoeticStructure(pendingRepetition, [pendingSource]));
       clearPending();
     }
   }, [editState, pendingRepetition, pendingSource, addPoeticStructure, clearPending]);

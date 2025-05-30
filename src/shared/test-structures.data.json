@@ -1,206 +1,230 @@
 [
     {
-        "type": "Generic",
-        "topsNotes": "",
-        "syntax": "",
-        "notes": "",
         "repetition": {
             "lineNumber": 7,
             "start": 30,
             "end": 46
         },
-        "source": {
-            "lineNumber": 7,
-            "start": 17,
-            "end": 22
-        },
-        "multipleSources": false
-    },
-    {
-        "type": "Generic",
+        "sources": [
+            {
+                "lineNumber": 7,
+                "start": 17,
+                "end": 22
+            }
+        ],
+        "relationshipType": "Paired",
+        "tops": "Generic",
         "topsNotes": "",
         "syntax": "",
-        "notes": "",
+        "notes": ""
+    },
+    {
         "repetition": {
             "lineNumber": 7,
             "start": 42,
             "end": 46
         },
-        "source": {
-            "lineNumber": 4,
-            "start": 26,
-            "end": 35
-        },
-        "multipleSources": false
-    },
-    {
-        "type": "Generic",
+        "sources": [
+            {
+                "lineNumber": 4,
+                "start": 26,
+                "end": 35
+            }
+        ],
+        "relationshipType": "Paired",
+        "tops": "Generic",
         "topsNotes": "",
         "syntax": "",
-        "notes": "",
+        "notes": ""
+    },
+    {
         "repetition": {
             "lineNumber": 7,
             "start": 86,
             "end": 93
         },
-        "source": {
-            "lineNumber": 7,
-            "start": 59,
-            "end": 66
-        },
-        "multipleSources": false
-    },
-    {
-        "type": "Generic",
+        "sources": [
+            {
+                "lineNumber": 7,
+                "start": 59,
+                "end": 66
+            }
+        ],
+        "relationshipType": "Paired",
+        "tops": "Generic",
         "topsNotes": "",
         "syntax": "",
-        "notes": "",
+        "notes": ""
+    },
+    {
         "repetition": {
             "lineNumber": 9,
             "start": 109,
             "end": 142
         },
-        "source": {
-            "lineNumber": 1,
-            "start": 7,
-            "end": 34
-        },
-        "multipleSources": false
-    },
-    {
-        "type": "Generic",
+        "sources": [
+            {
+                "lineNumber": 1,
+                "start": 7,
+                "end": 34
+            }
+        ],
+        "relationshipType": "Paired",
+        "tops": "Generic",
         "topsNotes": "",
         "syntax": "",
-        "notes": "",
+        "notes": ""
+    },
+    {
         "repetition": {
             "lineNumber": 9,
             "start": 130,
             "end": 156
         },
-        "source": {
-            "lineNumber": 7,
-            "start": 129,
-            "end": 143
-        },
-        "multipleSources": false
-    },
-    {
-        "type": "Generic",
+        "sources": [
+            {
+                "lineNumber": 7,
+                "start": 129,
+                "end": 143
+            }
+        ],
+        "relationshipType": "Paired",
+        "tops": "Generic",
         "topsNotes": "",
         "syntax": "",
-        "notes": "",
-        "repetition": {
-            "lineNumber": 10,
-            "start": 48,
-            "end": 74
-        },
-        "source": {
-            "lineNumber": 9,
-            "start": 130,
-            "end": 156
-        },
-        "multipleSources": false
+        "notes": ""
     },
     {
-        "type": "Generic",
-        "topsNotes": "",
-        "syntax": "",
-        "notes": "",
         "repetition": {
             "lineNumber": 11,
             "start": 0,
             "end": 2
         },
-        "source": {
-            "lineNumber": 9,
-            "start": 130,
-            "end": 156
-        },
-        "multipleSources": false
-    },
-    {
-        "type": "Generic",
+        "sources": [
+            {
+                "lineNumber": 9,
+                "start": 130,
+                "end": 156
+            }
+        ],
+        "relationshipType": "Paired",
+        "tops": "Generic",
         "topsNotes": "",
         "syntax": "",
-        "notes": "",
+        "notes": ""
+    },
+    {
         "repetition": {
             "lineNumber": 12,
             "start": 18,
             "end": 41
         },
-        "source": {
-            "lineNumber": 6,
-            "start": 87,
-            "end": 97
-        },
-        "multipleSources": false
-    },
-    {
-        "type": "Generic",
+        "sources": [
+            {
+                "lineNumber": 6,
+                "start": 87,
+                "end": 97
+            }
+        ],
+        "relationshipType": "Paired",
+        "tops": "Generic",
         "topsNotes": "",
         "syntax": "",
-        "notes": "",
+        "notes": ""
+    },
+    {
         "repetition": {
             "lineNumber": 12,
             "start": 27,
             "end": 33
         },
-        "source": {
-            "lineNumber": 12,
-            "start": 0,
-            "end": 4
-        },
-        "multipleSources": false
-    },
-    {
-        "type": "Generic",
+        "sources": [
+            {
+                "lineNumber": 12,
+                "start": 0,
+                "end": 4
+            }
+        ],
+        "relationshipType": "Paired",
+        "tops": "Generic",
         "topsNotes": "",
         "syntax": "",
-        "notes": "",
+        "notes": ""
+    },
+    {
         "repetition": {
             "lineNumber": 14,
             "start": 68,
             "end": 94
         },
-        "source": {
-            "lineNumber": 9,
-            "start": 130,
-            "end": 156
-        },
-        "multipleSources": false
-    },
-    {
-        "type": "Generic",
+        "sources": [
+            {
+                "lineNumber": 9,
+                "start": 130,
+                "end": 156
+            }
+        ],
+        "relationshipType": "Paired",
+        "tops": "Generic",
         "topsNotes": "",
         "syntax": "",
-        "notes": "",
+        "notes": ""
+    },
+    {
         "repetition": {
             "lineNumber": 15,
             "start": 23,
             "end": 49
         },
-        "source": {
-            "lineNumber": 9,
-            "start": 130,
-            "end": 156
-        },
-        "multipleSources": false
-    },
-    {
-        "type": "Generic",
+        "sources": [
+            {
+                "lineNumber": 9,
+                "start": 130,
+                "end": 156
+            }
+        ],
+        "relationshipType": "Paired",
+        "tops": "Generic",
         "topsNotes": "",
         "syntax": "",
-        "notes": "",
+        "notes": ""
+    },
+    {
         "repetition": {
             "lineNumber": 18,
             "start": 91,
             "end": 102
         },
-        "source": {
-            "lineNumber": 18,
-            "start": 51,
-            "end": 62
+        "sources": [
+            {
+                "lineNumber": 18,
+                "start": 51,
+                "end": 62
+            }
+        ],
+        "relationshipType": "Paired",
+        "tops": "Generic",
+        "topsNotes": "",
+        "syntax": "",
+        "notes": ""
+    },
+    {
+        "repetition": {
+            "lineNumber": 10,
+            "start": 48,
+            "end": 74
         },
-        "multipleSources": false
+        "sources": [
+            {
+                "lineNumber": 9,
+                "start": 130,
+                "end": 156
+            }
+        ],
+        "relationshipType": "Paired",
+        "tops": "Generic",
+        "topsNotes": "",
+        "syntax": "",
+        "notes": ""
     }
 ]

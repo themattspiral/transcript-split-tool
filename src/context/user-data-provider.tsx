@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import {
-  OverallPhraseRole, PairedStructure, Phrase, PhraseLink, PhraseLinkInfo,
-  PhraseRole, PoeticStructure, TranscriptLine
+  OverallPhraseRole, Phrase, PhraseLink, PhraseLinkInfo,
+  PhraseRole, PoeticStructure, PoeticStructureRelationshipType, TranscriptLine
 } from '../shared/data';
 import { UserDataContext } from './user-data-context';
 import testStructures from '../shared/test-structures.data.json';
@@ -36,7 +36,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       uniqueLinePhrases[structure.repetition.lineNumber.toString()][structure.repetition.id] = structure.repetition;
 
       // map the source(s)
-      if (structure.multipleSources) {
+      if (structure.relationshipType !== PoeticStructureRelationshipType.Unary) {
         structure.sources.forEach(source => {
           if (!uniqueLinks[source.id]) {
             uniqueLinks[source.id] = {};
@@ -48,16 +48,6 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           uniqueLinks[source.id][structure.id] = { structure, role: PhraseRole.Source };
           uniqueLinePhrases[source.lineNumber.toString()][source.id] = source;
         });
-      } else {
-        if (!uniqueLinks[structure.source.id]) {
-          uniqueLinks[structure.source.id] = {};
-        }
-        if (!uniqueLinePhrases[structure.source.lineNumber.toString()]) {
-          uniqueLinePhrases[structure.source.lineNumber.toString()] = {};
-        }
-        phraseMap[structure.source.id] = structure.source;
-        uniqueLinks[structure.source.id][structure.id] = { structure, role: PhraseRole.Source };
-        uniqueLinePhrases[structure.source.lineNumber.toString()][structure.source.id] = structure.source;
       }
     });
 
@@ -80,12 +70,11 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const linkedPhraseIdSet: Set<string> = new Set();
       pLinks.forEach(link => {
         linkedPhraseIdSet.add(link.structure.repetition.id);
-        if (link.structure.multipleSources) {
+
+        if (link.structure.relationshipType !== PoeticStructureRelationshipType.Unary) {
           link.structure.sources.forEach(phrase => {
             linkedPhraseIdSet.add(phrase.id);
           });
-        } else {
-          linkedPhraseIdSet.add(link.structure.source.id);
         }
       });
 
@@ -132,14 +121,16 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         ps.repetition.start,
         ps.repetition.end
       );
-      const source = new Phrase(
-        ps.source.lineNumber,
-        ps.source.start,
-        ps.source.end
-      );
+      const sources = ps.sources.map(source => {
+        return new Phrase(
+          source.lineNumber,
+          source.start,
+          source.end
+        );
+      });
       
-      const structure: PairedStructure = new PairedStructure(
-        repetition, source, ps.type, ps.topsNotes, ps.syntax, ps.notes
+      const structure = new PoeticStructure(
+        repetition, sources, ps.relationshipType as PoeticStructureRelationshipType, ps.tops, ps.topsNotes, ps.syntax, ps.notes
       );
       
       delete (testStructures as { [id: string]: any })[psId];

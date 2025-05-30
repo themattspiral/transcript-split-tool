@@ -1,6 +1,6 @@
 import { useMemo, CSSProperties } from 'react';
 
-import { HEADER_ROW_ID, getPhraseText, sortPoeticStructures } from '../shared/data';
+import { HEADER_ROW_ID, PoeticStructureRelationshipType, getPhraseText, sortPoeticStructures } from '../shared/data';
 import { getGridColumnAttributes,  } from '../shared/util';
 import { useViewState } from '../context/view-state-context';
 import { useUserData } from '../context/user-data-context';
@@ -133,16 +133,16 @@ const StructuresGrid: React.FC<StructuresGridProps> = props => {
     return (
       <>
       {sortedPoeticStructures.map((structure, idx) => {
-        // TODO - handle consolidations
-        if (structure.multipleSources) {
+        // TODO - handle multiple & unary
+        if (structure.relationshipType !== PoeticStructureRelationshipType.Paired) {
           return null;
         }
 
         const repetitionLine = transcriptLines[structure.repetition.lineNumber];
         const repetitionText = getPhraseText(structure.repetition, transcriptLines);
 
-        const sourceLine = transcriptLines[structure.source.lineNumber];
-        const sourceText = getPhraseText(structure.source, transcriptLines);
+        const sourceLine = transcriptLines[structure.sources[0].lineNumber];
+        const sourceText = getPhraseText(structure.sources[0], transcriptLines);
 
         return (
           <div className="flex" key={structure.id} data-phrase-rep-idx={idx}>

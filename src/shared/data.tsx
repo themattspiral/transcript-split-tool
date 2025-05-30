@@ -1,10 +1,3 @@
-export interface TypeOfPoeticStructure {
-  name: string;
-  fullHierarchyName: string;
-  selectable: boolean;
-  subtypes: TypeOfPoeticStructure[];
-}
-
 export interface TranscriptLine {
   lineNumber: number;
   speaker: string;
@@ -24,50 +17,34 @@ export class Phrase {
   }
 }
 
-export abstract class AbstractPoeticStructure {
+export enum PoeticStructureRelationshipType {
+  Unary = 'Unary',
+  Paired = 'Paired',
+  MultipleSource = 'MultipleSource'
+}
+
+export class PoeticStructure {
   constructor(
-    public type: string,
+    public repetition: Phrase,
+    public sources: Phrase[],
+    public relationshipType: PoeticStructureRelationshipType = PoeticStructureRelationshipType.Paired,
+    public tops: string = GenericTOPS.fullHierarchyName,
     public topsNotes: string = '',
     public syntax: string = '',
     public notes: string = ''
   ) {}
 
-  abstract get id(): string;
-}
-
-export class PairedStructure extends AbstractPoeticStructure {
-  public readonly multipleSources = false;
-
-  constructor(
-    public repetition: Phrase, public source: Phrase, type: string = GenericTOPS.fullHierarchyName,
-    topsNotes: string = '', syntax: string = '', notes: string = ''
-  ) {
-    super(type, topsNotes, syntax, notes);
-  }
-
   get id(): string {
-    return `${this.repetition.id}--${this.source.id}`;
+    switch (this.relationshipType) {
+      case PoeticStructureRelationshipType.Paired:
+        return `${this.repetition.id}--${this.sources[0].id}`;
+      case PoeticStructureRelationshipType.MultipleSource:
+        return `${this.repetition.id}--${this.sources.map(s => s.id).join('$')}`;
+      case PoeticStructureRelationshipType.Unary:
+        return `${this.repetition.id}--unary`;
+    }
   }
 }
-
-export class MultipleSourcesStructure extends AbstractPoeticStructure {
-  public readonly multipleSources = true;
-
-  constructor(
-    public repetition: Phrase, public sources: Phrase[], type: string = ConsolidationTOPS.fullHierarchyName,
-    topsNotes: string = '', syntax: string = '', notes: string = ''
-  ) {
-    super(type, topsNotes, syntax, notes);
-    this.sources.sort(sortPhrases);
-  }
-
-  get id(): string {
-    
-    return `${this.repetition.id}--${this.sources.map(s => s.id).join('$')}`;
-  }
-}
-
-export type PoeticStructure = PairedStructure | MultipleSourcesStructure;
 
 export enum PhraseRole {
   Repetition = 'Repetition',
@@ -110,6 +87,14 @@ export enum TabId {
   Structures
 }
 
+export interface TypeOfPoeticStructure {
+  name: string;
+  fullHierarchyName: string;
+  selectable: boolean;
+  subtypes: TypeOfPoeticStructure[];
+  relationshipType: PoeticStructureRelationshipType;
+}
+
 
 /******* CONSTANTS *******/
 /* These are defined here to avoid circular dependency issues */
@@ -120,14 +105,16 @@ export const GenericTOPS: TypeOfPoeticStructure = {
   name: 'Generic',
   fullHierarchyName: 'Generic',
   selectable: true,
-  subtypes: []
+  subtypes: [],
+  relationshipType: PoeticStructureRelationshipType.Paired
 };
 
 export const ConsolidationTOPS: TypeOfPoeticStructure = {
   name: 'Consolidation',
   fullHierarchyName: 'Consolidation',
   selectable: true,
-  subtypes: []
+  subtypes: [],
+  relationshipType: PoeticStructureRelationshipType.MultipleSource
 };
 
 export const DefaultTOPSValues: TypeOfPoeticStructure[] = [
@@ -142,15 +129,18 @@ export const DefaultTOPSValues: TypeOfPoeticStructure[] = [
         name: 'Single',
         fullHierarchyName: 'List > Single',
         selectable: true,
-        subtypes: []
+        subtypes: [],
+        relationshipType: PoeticStructureRelationshipType.Unary
       },
       {
         name: 'Interposed',
         fullHierarchyName: 'List > Interposed',
         selectable: true,
-        subtypes: []
+        subtypes: [],
+        relationshipType: PoeticStructureRelationshipType.Paired
       }
-    ]
+    ],
+    relationshipType: PoeticStructureRelationshipType.Paired
   },
   {
     name: 'Echo',
@@ -161,15 +151,18 @@ export const DefaultTOPSValues: TypeOfPoeticStructure[] = [
         name: 'Self-echo',
         fullHierarchyName: 'Echo > Self-echo',
         selectable: true,
-        subtypes: []
+        subtypes: [],
+        relationshipType: PoeticStructureRelationshipType.Paired
       },
       {
         name: 'Echo-of-another',
         fullHierarchyName: 'Echo > Echo-of-another',
         selectable: true,
-        subtypes: []
+        subtypes: [],
+        relationshipType: PoeticStructureRelationshipType.Paired
       }
-    ]
+    ],
+    relationshipType: PoeticStructureRelationshipType.Paired
   },
   {
     name: 'Comparison',
@@ -180,15 +173,18 @@ export const DefaultTOPSValues: TypeOfPoeticStructure[] = [
         name: 'Sameness',
         fullHierarchyName: 'Comparison > Sameness',
         selectable: true,
-        subtypes: []
+        subtypes: [],
+        relationshipType: PoeticStructureRelationshipType.Paired
       },
       {
         name: 'Difference',
         fullHierarchyName: 'Comparison > Difference',
         selectable: true,
-        subtypes: []
+        subtypes: [],
+        relationshipType: PoeticStructureRelationshipType.Paired
       }
-    ]
+    ],
+    relationshipType: PoeticStructureRelationshipType.Paired
   },
   {
     name: 'Elaboration',
@@ -199,21 +195,25 @@ export const DefaultTOPSValues: TypeOfPoeticStructure[] = [
         name: 'Elaborating',
         fullHierarchyName: 'Elaboration > Elaborating',
         selectable: true,
-        subtypes: []
+        subtypes: [],
+        relationshipType: PoeticStructureRelationshipType.Paired
       },
       {
         name: 'Expanding',
         fullHierarchyName: 'Elaboration > Expanding',
         selectable: true,
-        subtypes: []
+        subtypes: [],
+        relationshipType: PoeticStructureRelationshipType.Paired
       }
-    ]
+    ],
+    relationshipType: PoeticStructureRelationshipType.Paired
   },
   {
     name: 'Reversal',
     fullHierarchyName: 'Reversal',
     selectable: true,
-    subtypes: []
+    subtypes: [],
+    relationshipType: PoeticStructureRelationshipType.Paired
   }
 ];
 
@@ -242,27 +242,47 @@ export const sortPhrases = (a: Phrase, b: Phrase): number => {
   else return 0;
 };
 
+const sortPhrasesByLineNumber = (a: Phrase, b: Phrase): number => {
+  if (a.lineNumber < b.lineNumber) return -1;
+  else if (a.lineNumber > b.lineNumber) return 1;
+  else return 0;
+};
+
 export const sortPoeticStructures = (a: PoeticStructure, b: PoeticStructure): number => {
-  const pSort = sortPhrases(a.repetition, b.repetition);
+  const repetitionLineSort = sortPhrasesByLineNumber(a.repetition, b.repetition);
 
-  if (pSort === 0) {
-    let sourceA = {} as Phrase;
-    let sourceB = {} as Phrase;
-
-    if (a.multipleSources) {
-      sourceA = a.sources[0];
+  if (repetitionLineSort === 0) {
+    if (
+      a.relationshipType === PoeticStructureRelationshipType.Unary
+      && b.relationshipType !== PoeticStructureRelationshipType.Unary
+    ) {
+        return -1;
+    } else if (
+      a.relationshipType !== PoeticStructureRelationshipType.Unary
+      && b.relationshipType === PoeticStructureRelationshipType.Unary
+    ) {
+      return 1;
+    } else if (
+      a.relationshipType === PoeticStructureRelationshipType.Unary
+      && b.relationshipType === PoeticStructureRelationshipType.Unary
+    ) {
+      return 0;
     } else {
-      sourceA = a.source;
-    }
+      const sourceLineSort = sortPhrasesByLineNumber(a.sources[0], b.sources[0]);
+      
+      if (sourceLineSort === 0) {
+        const repFullSort = sortPhrases(a.repetition, b.repetition);
 
-    if (b.multipleSources) {
-      sourceB = b.sources[0];
-    } else {
-      sourceB = b.source;
+        if (repFullSort === 0) {
+          return sortPhrases(a.sources[0], b.sources[0])
+        } else {
+          return repFullSort;
+        }
+      } else {
+        return sourceLineSort;
+      }
     }
-
-    return sortPhrases(sourceA, sourceB);
   } else {
-    return pSort;
+    return repetitionLineSort;
   }
 };

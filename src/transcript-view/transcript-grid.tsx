@@ -33,7 +33,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
 
   const handleGridAction = useCallback((event: React.MouseEvent, handleAsPrimaryClick: boolean): void => {
     // using handler for onClick event, button was right click
-    if (handleAsPrimaryClick && event.button != 0) {
+    if (handleAsPrimaryClick && event.button !== 0) {
       clearClick();
       return;
     }

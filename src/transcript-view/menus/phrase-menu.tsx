@@ -5,7 +5,7 @@ import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 import './context-menu.css';
 import { PHRASE_MENU_ID } from './context-menu';
-import { getPhraseText, PhraseRole } from '../../shared/data';
+import { getPhraseText, PhraseRole, PoeticStructureRelationshipType } from '../../shared/data';
 import { useUserData } from '../../context/user-data-context';
 import { useStructureEdit } from '../../context/structure-edit-context';
 import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
@@ -36,12 +36,18 @@ export const PhraseMenu: React.FC = () => {
           { link.role === PhraseRole.Repetition && 
             <div>
               <div>rep: { getPhraseText(link.structure.repetition, transcriptLines) }</div>
-              <div>src: { !link.structure.multipleSources && getPhraseText(link.structure.source, transcriptLines) }</div>
+
+              { link.structure.relationshipType !== PoeticStructureRelationshipType.Unary &&
+                <div>src: {  getPhraseText(link.structure.sources[0], transcriptLines) }</div>
+              }
             </div>
           }
           { link.role === PhraseRole.Source && 
             <div>
-              <div>src: { !link.structure.multipleSources && getPhraseText(link.structure.source, transcriptLines) }</div>
+              { link.structure.relationshipType !== PoeticStructureRelationshipType.Unary &&
+                <div>src: {  getPhraseText(link.structure.sources[0], transcriptLines) }</div>
+              }
+
               <div>rep: { getPhraseText(link.structure.repetition, transcriptLines) }</div>
             </div>
           }
@@ -54,8 +60,13 @@ export const PhraseMenu: React.FC = () => {
       //     poetic structures, e.g. they share the same phrase for either a destination or source.
       //   - In this case, we create a non-selectable item (header) to represent the common phrase,
       //     and a selectable item for each structure linked to it.
-      const repetitionLinks = info?.links.filter(l => l.role === PhraseRole.Repetition) || [];
-      const sourceLinks = info?.links.filter(l => l.role === PhraseRole.Source) || [];
+      const repetitionLinks = info?.links.filter(l => {
+        return l.role === PhraseRole.Repetition && l.structure.relationshipType !== PoeticStructureRelationshipType.Unary
+      }) || [];
+      const sourceLinks = info?.links.filter(l => {
+        return l.role === PhraseRole.Source && l.structure.relationshipType !== PoeticStructureRelationshipType.Unary
+      }) || [];
+      const unaryLinks = info?.links.filter(l => l.structure.relationshipType === PoeticStructureRelationshipType.Unary) || [];
 
       const items: ReactElement[] = [];
 
@@ -74,7 +85,7 @@ export const PhraseMenu: React.FC = () => {
                 beginEdit(link.structure.id);
               }}
             >
-              src: { !link.structure.multipleSources && getPhraseText(link.structure.source, transcriptLines) }
+              src: { getPhraseText(link.structure.sources[0], transcriptLines) }
             </Item>
           );
         });
