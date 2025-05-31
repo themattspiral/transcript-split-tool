@@ -111,8 +111,6 @@ const SplitTextCell: React.FC<SplitTextCellProps> = props => {
         });
       }
 
-      
-      
       definitions.push({
         start,
         end,

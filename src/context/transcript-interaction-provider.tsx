@@ -26,7 +26,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
   }, [transcriptMenuVisibility]);
 
   const { phraseLinks, getAllLinkedPhraseIds, getAllStructurePhraseIds } = useUserData();
-  const { setPendingPhrase, beginStructureEdit: beginEdit } = useStructureEdit();
+  const { setPendingPhrase, beginStructureEdit } = useStructureEdit();
   const { show: showContextMenu } = useContextMenu();
 
   // internal helper
@@ -110,7 +110,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     switch (action) {
       case MenuAction.Click:
         clearHover();
-        beginEdit(structureOrPhraseId);
+        beginStructureEdit(structureOrPhraseId);
         break;
       case MenuAction.HoverStructure:
         clearAllThenUpdatePhrases(getAllStructurePhraseIds(structureOrPhraseId), 'isHovered', true);
@@ -119,10 +119,12 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
         clearAllThenUpdatePhrases([structureOrPhraseId], 'isHovered', true);
         break;
       case MenuAction.Unhover:
-        clearAllThenUpdatePhrases(getAllLinkedPhraseIds(contextPhraseIds), 'isHovered', true);
+        if (!allTranscriptMenusClosed) {
+          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(contextPhraseIds), 'isHovered', true);
+        }
         break;
     }
-  }, [clearHover, beginEdit, clearAllThenUpdatePhrases, contextPhraseIds]);
+  }, [clearHover, beginStructureEdit, clearAllThenUpdatePhrases, contextPhraseIds, allTranscriptMenusClosed]);
 
   const updateMenuVisibility = useCallback((menuId: TranscriptMenuId, isVisible: boolean) => {
     setTranscriptMenuVisibility(vis => ({

@@ -3,10 +3,10 @@
 
   /* SpanType.Repetition */
   &.repetition {
-    background-color: var(--color-orange-200);
+    background-color: var(--color-repetition);
 
     &.deemphasized {
-      background-color: var(--color-orange-100);
+      background-color: var(--color-repetition-lite);
     }
 
     &.pending {
@@ -15,16 +15,16 @@
     }
 
     &.hovered, &.clicked {
-      background-color: var(--color-orange-300);
+      background-color: var(--color-repetition-heavy);
     }
   }
   
   /* SpanType.Source */
   &.source {
-    background-color: var(--color-blue-200);
+    background-color: var(--color-source);
     
     &.deemphasized {
-      background-color: var(--color-blue-100);
+      background-color: var(--color-source-lite);
     }
 
     &.pending {
@@ -33,16 +33,16 @@
     }
 
     &.hovered, &.clicked {
-      background-color: var(--color-blue-300);
+      background-color: var(--color-source-heavy);
     }
   }
 
   /* SpanType.Overlapping */
   &.overlapping {
-    background-color: var(--color-fuchsia-300);
+    background-color: var(--color-overlapping);
 
     &.deemphasized {
-      background-color: var(--color-fuchsia-100);
+      background-color: var(--color-overlapping-lite);
     }
     
     &.pending {
@@ -51,7 +51,7 @@
     }
 
     &.hovered, &.clicked {
-      background-color: var(--color-fuchsia-400);
+      background-color: var(--color-overlapping-heavy);
     }
   }
 
@@ -95,7 +95,7 @@
 
     &:not(.leftmost):not(.clicked):not(.previous-clicked),
     &:not(.leftmost-clicked).clicked {
-      border-left: 1px dashed var(--color-gray-600);
+      border-left: 1px dashed var(--color-span-border);
       padding-left: 1px;
     }
 
@@ -106,17 +106,17 @@
     &.clicked {
       border-top: 2px solid;
       border-bottom: 2px solid;
-      border-color: var(--color-gray-600);
+      border-color: var(--color-span-border);
     }
   
     &.clicked.leftmost, &.leftmost-clicked {
       border-left: 2px solid;
-      border-color: var(--color-gray-600);
+      border-color: var(--color-span-border);
     }
     
     &.clicked.rightmost, &.rightmost-clicked {
       border-right: 2px solid;
-      border-color: var(--color-gray-600);
+      border-color: var(--color-span-border);
     }
   }
 }

@@ -1,8 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-
-import './global.css';
 import 'react-contexify/dist/ReactContexify.css';
+
+import './main.css';
+import './shared/styles.scss';
 
 import { App } from './app';
 import { ViewStateProvider } from './context/view-state-provider';

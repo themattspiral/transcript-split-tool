@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Ensure tailwind parses variables used in component styles */
+/* https://tailwindcss.com/docs/detecting-classes-in-source-files#explicitly-registering-sources */
+@source "./shared/styles.scss";
+@source "./transcript-view/split-text-cell/split-text-cell.scss";

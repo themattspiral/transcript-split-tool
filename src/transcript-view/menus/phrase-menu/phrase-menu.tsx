@@ -1,189 +1,141 @@
-import { Fragment, ReactElement, useMemo } from 'react';
+import { ReactElement, useMemo } from 'react';
 import { Menu, Item, Separator } from 'react-contexify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 import '../transcript-menus.css';
 import { TranscriptMenuId } from '../transcript-menus';
-import { getPhraseText, MenuAction, PhraseRole, PoeticStructureRelationshipType } from '../../../shared/data';
+import { PhraseRole, PoeticStructureRelationshipType } from '../../../shared/data';
 import { useUserData } from '../../../context/user-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
+import { EditItem } from './edit-item';
+import { SingleLinkItem } from './single-link-item';
+import { UnaryItem } from './unary-item';
+import { MultiLinkHeaderItem } from './multi-link-header-item';
+import { MultiLinkItem } from './multi-link-item';
 
+// the phrase menu allows users to choose which poetic structure to edit,
+// from those associated with the context-clicked span bubble
 export const PhraseMenu: React.FC = () => {
-  const { transcriptLines, phraseLinks } = useUserData();
-  const { contextPhraseIds, handlePhraseMenuAction, updateMenuVisibility } = useTranscriptInteraction();
+  const { phraseLinks } = useUserData();
+  const { contextPhraseIds, updateMenuVisibility } = useTranscriptInteraction();
 
-  // Each phrase associated with the context-selected span:
-  //   - overlapping sections of 2 or more overlapping phrases will result in each phrase being a separate
-  //     context menu item (selectable combo item, or non-selectable header item and structure link items)
   const menuItems = useMemo(() => {
+    const items: ReactElement[] = [];
 
-    // single-phrase, single-link: just show edit menu item
     if (contextPhraseIds.length === 1 && phraseLinks[contextPhraseIds[0]]?.links?.length === 1) {
-      return (
-        <Item
-          onMouseOver={() => handlePhraseMenuAction(phraseLinks[contextPhraseIds[0]].links[0].structure.id, MenuAction.HoverStructure)}
-          onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
-          onClick={() => handlePhraseMenuAction(phraseLinks[contextPhraseIds[0]].links[0].structure.id, MenuAction.Click)}
-        >
-          <FontAwesomeIcon icon={faPenToSquare} className="mr-1" /> Edit
-        </Item>
+      // single-phrase, single-link: just show edit menu item
+      items.push(
+        <EditItem key="lone-edit-item" link={phraseLinks[contextPhraseIds[0]]?.links[0]} />
       );
     } else {
-      return (
-        <Fragment>
-          <Item disabled style={{ opacity: 1 }} className="text-sm font-semibold">
-            <FontAwesomeIcon icon={faPenToSquare} className="mr-1" /> Choose the Poetic Strcture to Edit:
-          </Item>
+      // multiple phrases, or multiple links - user must make a choice
+      items.push(
+        <Item key="menu-header" disabled style={{ opacity: 1 }} className="text-sm font-semibold">
+          <FontAwesomeIcon icon={faPenToSquare} className="mr-1" /> Choose the Poetic Strcture to Edit:
+        </Item>
+      );
+      items.push(<Separator key="menu-header-separator" />);
 
-          <Separator />
+      // generate menu items based on the context phrases specified, and their links
+      contextPhraseIds.forEach((contextPhraseId, contextPhraseIdx) => {
+        const info = phraseLinks[contextPhraseId];
 
-          { contextPhraseIds.flatMap((phraseId, phraseIdx) => {
-            const info = phraseLinks[phraseId];
+        if (info.links.length === 1) {
+          // single link: make a single selectable item to represent the structure
+          const link = info.links[0];
+          items.push(
+            <SingleLinkItem key={`${contextPhraseId}-${link.role}-${link.structure.id}`} link={link} />
+          );
 
-            if (info.links.length === 1) {
-              // Single link - Single structure:
-              //   - Make a single selectable item to represent it
-              const link = info.links[0];
+          // add a separator after the item if we're not on the last phrase
+          if (contextPhraseIdx < (contextPhraseIds.length - 1)) {
+            items.push(<Separator key={`${contextPhraseIdx}-separator`} />);
+          }
+        } else if (info.links.length > 1) {
+          // multiple links: the context phrase is associated with multiple different poetic structures,
+          //                 which share this same phrase for either a destination or source
 
-              return [
-                <Item
-                  key={`${phraseId}-${link.role}-${link.structure.id}`}
-                  onMouseOver={() => handlePhraseMenuAction(link.structure.id, MenuAction.HoverStructure)}
-                  onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
-                  onClick={() => handlePhraseMenuAction(link.structure.id, MenuAction.Click)}
-                >
-                  { link.role === PhraseRole.Repetition && 
-                    <div>
-                      <div>rep: { getPhraseText(link.structure.repetition, transcriptLines) }</div>
+          // group links by the role the context phrase plays in the structure
+          const unaryLinks = info?.links.filter(l => l.structure.relationshipType === PoeticStructureRelationshipType.Unary) || [];
+          const repetitionLinks = info?.links.filter(l => {
+            return l.role === PhraseRole.Repetition && l.structure.relationshipType !== PoeticStructureRelationshipType.Unary
+          }) || [];
+          const sourceLinks = info?.links.filter(l => {
+            return l.role === PhraseRole.Source && l.structure.relationshipType !== PoeticStructureRelationshipType.Unary
+          }) || [];
 
-                      { link.structure.relationshipType !== PoeticStructureRelationshipType.Unary &&
-                        <div>src: {  getPhraseText(link.structure.sources[0], transcriptLines) }</div>
-                      }
-                    </div>
-                  }
-                  { link.role === PhraseRole.Source && 
-                    <div>
-                      { link.structure.relationshipType !== PoeticStructureRelationshipType.Unary &&
-                        <div>src: {  getPhraseText(link.structure.sources[0], transcriptLines) }</div>
-                      }
+          // unary links
+          if (unaryLinks.length > 0) {
+            unaryLinks.forEach((link, linkIdx) => {
+              items.push(
+                <UnaryItem key={`${contextPhraseId}-${link.role}-${link.structure.id}`} link={link} />
+              );
 
-                      <div>rep: { getPhraseText(link.structure.repetition, transcriptLines) }</div>
-                    </div>
-                  }
-                </Item>,
-
-                // add a separator after the item if we're not on the last phrase
-                phraseIdx < (contextPhraseIds.length - 1) ? <Separator key={phraseIdx} /> : undefined
-              ];
-            } else if (info.links.length > 1) {
-              // Multiple Links - Multiple structures:
-              //   - When multiple links are present, it means the phrase is associated with multiple different 
-              //     poetic structures, e.g. they share the same phrase for either a destination or source.
-              //   - In this case, we create a non-selectable item (header) to represent the common phrase,
-              //     and a selectable item for each structure linked to it.
-
-              const unaryLinks = info?.links.filter(l => l.structure.relationshipType === PoeticStructureRelationshipType.Unary) || [];
-              const repetitionLinks = info?.links.filter(l => {
-                return l.role === PhraseRole.Repetition && l.structure.relationshipType !== PoeticStructureRelationshipType.Unary
-              }) || [];
-              const sourceLinks = info?.links.filter(l => {
-                return l.role === PhraseRole.Source && l.structure.relationshipType !== PoeticStructureRelationshipType.Unary
-              }) || [];
-
-              const items: ReactElement[] = [];
-
-              if (unaryLinks.length > 0) {
-                unaryLinks.forEach((link, linkIdx) => {
-                  items.push(
-                    <Item
-                      key={`${phraseId}-${link.role}-${link.structure.id}`}
-                      onMouseOver={() => handlePhraseMenuAction(link.structure.id, MenuAction.HoverStructure)}
-                      onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
-                      onClick={() => handlePhraseMenuAction(link.structure.id, MenuAction.Click)}
-                    >
-                      rep (u): { getPhraseText(link.structure.repetition, transcriptLines) }
-                    </Item>
-                  );
-
-                  if (repetitionLinks.length > 0 || sourceLinks.length > 0 || linkIdx < (unaryLinks.length - 1) || phraseIdx < (contextPhraseIds.length - 1)) {
-                    items.push(<Separator key={`${phraseIdx}-rep-separator`} />);
-                  }
-                });
+              if (
+                repetitionLinks.length > 0 || sourceLinks.length > 0
+                || linkIdx < (unaryLinks.length - 1) || contextPhraseIdx < (contextPhraseIds.length - 1)
+              ) {
+                items.push(<Separator key={`${contextPhraseIdx}-unary-separator`} />);
               }
+            });
+          }
 
-              if (repetitionLinks.length > 0) {
-                items.push(
-                  <Item
-                    key={`${phraseId}-rep-header`}
-                    disabled
-                    style={{ opacity: 1 }}
-                    className="header"
-                    onMouseOver={() => handlePhraseMenuAction(phraseId, MenuAction.HoverPhrase)}
-                    onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
-                  >
-                    rep: { getPhraseText(info.phrase, transcriptLines) }
-                  </Item>
-                );
+          if (repetitionLinks.length === 1) {
+            const link = repetitionLinks[0];
+            items.push(
+              <SingleLinkItem key={`${contextPhraseId}-${link.role}-${link.structure.id}`} link={link} />
+            );
+          } else if (repetitionLinks.length > 1) {
+            // create a non-selectable item (header) to represent the common repetition
+            items.push(
+              <MultiLinkHeaderItem key={`${contextPhraseId}-rep-header`} contextPhrase={info.phrase} role={PhraseRole.Repetition} />
+            );
+            
+            // create a selectable item for each structure linked, displayed as the differing sources
+            repetitionLinks.forEach(link => {
+              items.push(
+                <MultiLinkItem key={`${contextPhraseId}-src-${link.structure.id}`} link={link} role={PhraseRole.Source} />
+              );
+            });
+          }
 
-                repetitionLinks.forEach(link => {
-                  items.push(
-                    <Item
-                      key={`${phraseId}-${link.role}-${link.structure.id}`}
-                      onMouseOver={() => handlePhraseMenuAction(link.structure.id, MenuAction.HoverStructure)}
-                      onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
-                      onClick={() => handlePhraseMenuAction(link.structure.id, MenuAction.Click)}
-                    >
-                      src: { getPhraseText(link.structure.sources[0], transcriptLines) }
-                    </Item>
-                  );
-                });
+          if (
+            repetitionLinks.length > 0 &&
+            (sourceLinks.length > 0 || contextPhraseIdx < (contextPhraseIds.length - 1))
+          ) {
+              items.push(<Separator key={`${contextPhraseIdx}-rep-separator`} />);
+          }
 
-                if (sourceLinks.length > 0 || phraseIdx < (contextPhraseIds.length - 1)) {
-                  items.push(<Separator key={`${phraseIdx}-rep-separator`} />);
-                }
-              }
+          if (sourceLinks.length === 1) {
+            const link = repetitionLinks[0];
+            items.push(
+              <SingleLinkItem key={`${contextPhraseId}-${link.role}-${link.structure.id}`} link={link} />
+            );
+          } else if (sourceLinks.length > 1) {
+            // create a non-selectable item (header) to represent the common source
+            items.push(
+              <MultiLinkHeaderItem key={`${contextPhraseId}-src-header`} contextPhrase={info.phrase} role={PhraseRole.Source} />
+            );
 
-              if (sourceLinks.length > 0) {
-                items.push(
-                  <Item
-                    key={`${phraseId}-src-header`}
-                    disabled
-                    style={{ opacity: 1 }}
-                    className="header"
-                    onMouseOver={() => handlePhraseMenuAction(phraseId, MenuAction.HoverPhrase)}
-                    onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
-                  >
-                    src: { getPhraseText(info.phrase, transcriptLines) }
-                  </Item>
-                );
+            // create a selectable item for each structure linked, displayed as the differing repetitions
+            sourceLinks.forEach(link => {
+              items.push(
+                <MultiLinkItem key={`${contextPhraseId}-rep-${link.structure.id}`} link={link} role={PhraseRole.Repetition} />
+              );
+            });
 
-                sourceLinks.forEach(link => {
-                  items.push(
-                    <Item
-                      key={`${phraseId}-${link.role}-${link.structure.id}`}
-                      onMouseOver={() => handlePhraseMenuAction(link.structure.id, MenuAction.HoverStructure)}
-                      onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
-                      onClick={() => handlePhraseMenuAction(link.structure.id, MenuAction.Click)}
-                    >
-                      rep: { getPhraseText(link.structure.repetition, transcriptLines) }
-                    </Item>
-                  );
-                });
-
-                if (phraseIdx < contextPhraseIds.length - 1) {
-                  items.push(<Separator key={`${phraseIdx}-src-separator`} />);
-                }
-              }
-
-              return items;
+            if (sourceLinks.length > 0 && contextPhraseIdx < contextPhraseIds.length - 1) {
+              items.push(<Separator key={`${contextPhraseIdx}-src-separator`} />);
             }
           }
-        )}
-        </Fragment>
-      );
+        }
+      });
     }
-  }, [contextPhraseIds, handlePhraseMenuAction, transcriptLines, phraseLinks]);
+
+    console.log(items);
+    return items;
+  }, [contextPhraseIds, phraseLinks]);
 
   return (
     <Menu

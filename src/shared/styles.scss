@@ -1,0 +1,32 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  min-width: 320px;
+  min-height: 100vh;
+  line-height: 1.3;
+}
+
+// colors
+:root {
+  --color-repetition: var(--color-orange-200);
+  --color-repetition-lite: var(--color-orange-100);
+  --color-repetition-heavy: var(--color-orange-300);
+
+  --color-source: var(--color-blue-200);
+  --color-source-lite: var(--color-blue-100);
+  --color-source-heavy: var(--color-blue-300);
+
+  --color-overlapping: var(--color-fuchsia-300);
+  --color-overlapping-lite: var(--color-fuchsia-100);
+  --color-overlapping-heavy: var(--color-fuchsia-400);
+
+  --color-span-border: var(--color-gray-600)
+}
