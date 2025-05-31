@@ -13,10 +13,10 @@ interface StructureEditContextProps {
   pendingRepetition: Phrase | null;
   pendingSource: Phrase | null;
   setPendingPhrase: (phrase: Phrase | null, role: PhraseRole) => void;
-  beginEdit: (structureId: string) => void;
-  savePendingEdit: () => void;
+  beginStructureEdit: (structureId: string) => void;
+  savePendingStructureEdit: () => void;
   createNewStructureFromPendingPhrases: () => void;
-  clearPending: () => void;
+  clearAllPending: () => void;
 }
 
 export const StructureEditContext = createContext<StructureEditContextProps>({
@@ -24,10 +24,10 @@ export const StructureEditContext = createContext<StructureEditContextProps>({
   pendingRepetition: null,
   pendingSource: null,
   setPendingPhrase: () => {},
-  beginEdit: () => {},
-  savePendingEdit: () => {},
+  beginStructureEdit: () => {},
+  savePendingStructureEdit: () => {},
   createNewStructureFromPendingPhrases: () => {},
-  clearPending: () => {}
+  clearAllPending: () => {}
 });
 
 export const useStructureEdit = () => {

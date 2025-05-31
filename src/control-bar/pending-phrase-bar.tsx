@@ -10,17 +10,17 @@ import { EditState, useStructureEdit } from '../context/structure-edit-context';
 const PendingPhraseBar: React.FC = () => {
   const { transcriptLines } = useUserData();
   const {
-    editState, pendingRepetition, pendingSource, clearPending,
-    createNewStructureFromPendingPhrases, savePendingEdit
+    editState, pendingRepetition, pendingSource, clearAllPending,
+    createNewStructureFromPendingPhrases, savePendingStructureEdit
   } = useStructureEdit();
 
   const handleConfirm = useCallback(() => {
     if (editState === EditState.EditingExisting) {
-      savePendingEdit();
+      savePendingStructureEdit();
     } else {
       createNewStructureFromPendingPhrases();
     }
-  }, [editState, createNewStructureFromPendingPhrases, savePendingEdit]);
+  }, [editState, createNewStructureFromPendingPhrases, savePendingStructureEdit]);
 
   const phraseText = getPhraseText(pendingRepetition, transcriptLines) || '<selection pending>';
   const repeatedPhraseText = getPhraseText(pendingSource, transcriptLines) || '<selection pending>';
@@ -60,7 +60,7 @@ const PendingPhraseBar: React.FC = () => {
 
         <button
           className="basis-[35px] shrink-0 w-[35px] h-[35px] rounded-lg bg-gray-500 hover:bg-gray-600 cursor-pointer shadow-md shadow-gray-400 ml-2"
-          onClick={clearPending}
+          onClick={clearAllPending}
         >
           <FontAwesomeIcon icon={faX} size="lg" className="cancel-button text-white" />
         </button>

@@ -11,6 +11,7 @@ interface UserDataContextProps {
   phraseLinks: { [phraseId: string]: PhraseLinkInfo };
   getAllLinkedPhraseIds: (phraseIds: string[]) => string[];
   getAllPhraseLinks: (phraseIds: string[]) => PhraseLink[];
+  getAllStructurePhraseIds: (structureId: string) => string[];
   linePhrases: { [lineNumber: string]: Phrase[] };
 }
 
@@ -23,6 +24,7 @@ export const UserDataContext = createContext<UserDataContextProps>({
   phraseLinks: {},
   getAllLinkedPhraseIds: () => [],
   getAllPhraseLinks: () => [],
+  getAllStructurePhraseIds: () => [],
   linePhrases: {}
 });
 

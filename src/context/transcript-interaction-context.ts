@@ -1,17 +1,14 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseAction, PhraseRole, PhraseViewState } from '../shared/data';
+import { MenuAction, Phrase, PhraseAction, PhraseRole, PhraseViewState } from '../shared/data';
 
 interface TranscriptInteractionContextProps {
   phraseViewStates: { [phraseId: string]: PhraseViewState };
   handlePhraseAction: (event: React.MouseEvent, phraseIds: string[], action: PhraseAction) => void;
+  handleMenuAction: (structureId: string, action: MenuAction) => void;
   clearHover: () => void;
   clearClick: () => void;
-
-  // right-clicked existing phrase ids
   contextPhraseIds: string[];
-
-  // highlighted potentially-new Phrase
   highlightedPhrase: Phrase | null;
   setHighlightedPhrase: (phrase: Phrase | null) => void;
   makeHighlightedPhrasePending: (role: PhraseRole) => void;
@@ -20,6 +17,7 @@ interface TranscriptInteractionContextProps {
 export const TranscriptInteractionContext = createContext<TranscriptInteractionContextProps>({
   phraseViewStates: {},
   handlePhraseAction: () => {},
+  handleMenuAction: () => {},
   clearHover: () => {},
   clearClick: () => {},
   contextPhraseIds: [],

@@ -2,21 +2,24 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useContextMenu } from 'react-contexify';
 
 import { TranscriptInteractionContext } from './transcript-interaction-context';
-import { Phrase, PhraseAction, PhraseRole, PhraseViewState } from '../shared/data';
+import { MenuAction, Phrase, PhraseAction, PhraseRole, PhraseViewState } from '../shared/data';
 import { useUserData } from './user-data-context';
 import { useStructureEdit } from './structure-edit-context';
 import { PHRASE_MENU_ID } from '../transcript-view/menus/context-menu';
 
 export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // a controllable view state for every phrase (all phrases defined in phraseLinks)
   const [phraseViewStates, setPhraseViewStates] = useState<{ [phraseId: string]: PhraseViewState }>({});
+  // phrase ids associated with right-clicked span (all phrases associated via current poetic structures)
   const [contextPhraseIds, setContextPhraseIds] = useState<string[]>([]);
+  // highlighted phrase when it is right-clicked
   const [highlightedPhrase, setHighlightedPhrase] = useState<Phrase | null>(null);
   
-  const { phraseLinks, getAllLinkedPhraseIds } = useUserData();
-  const { setPendingPhrase } = useStructureEdit();
+  const { phraseLinks, getAllLinkedPhraseIds, getAllStructurePhraseIds } = useUserData();
+  const { setPendingPhrase, beginStructureEdit: beginEdit } = useStructureEdit();
   const { show: showContextMenu } = useContextMenu();
 
-  // reset all phrase view states whenever phraseLinkes change
+  // reset all phrase view states whenever phraseLinks changes
   useEffect(() => {
     const pvs: { [phraseId: string]: PhraseViewState } = {};
     Object.keys(phraseLinks).forEach((phraseId: string) => {
@@ -26,6 +29,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     setPhraseViewStates(pvs);
   }, [setPhraseViewStates, phraseLinks]);
 
+  // internal helper
   const updateAllPhrases = useCallback((fieldName: keyof PhraseViewState, value: boolean) => {
     setPhraseViewStates(pvs => {
       const updated = { ...pvs };
@@ -36,9 +40,17 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     });
   }, [setPhraseViewStates]);
 
-  const updatePhraseSet = useCallback((phraseIds: string[], fieldName: keyof PhraseViewState, value: boolean) => {
+  // internal helper
+  const clearAllThenUpdatePhrases = useCallback((phraseIds: string[], fieldName: keyof PhraseViewState, value: boolean) => {
     setPhraseViewStates(pvs => {
       const updated = { ...pvs };
+      
+      // clear all
+      Object.keys(updated).forEach(id => {
+        updated[id][fieldName] = false;
+      });
+      
+      // update specified
       phraseIds.forEach(id => {
         const p = updated[id];
         if (p) {
@@ -54,14 +66,15 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     
     switch (action) {
       case PhraseAction.Hover:
+        clearAllThenUpdatePhrases(allLinkedPhraseIds, 'isHovered', true);
+        break;
+      case PhraseAction.Unhover:
         clearHover();
-        updatePhraseSet(allLinkedPhraseIds, 'isHovered', true);
         break;
       case PhraseAction.Click:
         // toggle click state
         const currentState = phraseViewStates[phraseIds[0]].isClicked;
-        clearClick();
-        updatePhraseSet(allLinkedPhraseIds, 'isClicked', !currentState);
+        clearAllThenUpdatePhrases(allLinkedPhraseIds, 'isClicked', !currentState);
         break;
       case PhraseAction.Context:
         setContextPhraseIds(phraseIds);
@@ -69,6 +82,23 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
         break;
     }
   }, [getAllLinkedPhraseIds, phraseViewStates, setPhraseViewStates, setContextPhraseIds]);
+
+  const handleMenuAction = useCallback((structureId: string, action: MenuAction) => {
+    const allStructureIds = getAllStructurePhraseIds(structureId);
+    
+    switch (action) {
+      case MenuAction.Click:
+        clearHover();
+        beginEdit(structureId);
+        break;
+      case MenuAction.Hover:
+        clearAllThenUpdatePhrases(allStructureIds, 'isHovered', true);
+        break;
+      case MenuAction.Unhover:
+        clearHover();
+        break;
+    }
+  }, [beginEdit]);
 
   const clearHover = useCallback(() => {
     updateAllPhrases('isHovered', false);
@@ -83,20 +113,11 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     setHighlightedPhrase(null);
   }, [highlightedPhrase, setPendingPhrase, setHighlightedPhrase]);
 
-  // const { pendingPhrase, pendingRepeatedPhrase } = useEditState();
-
-  // unset any clicked phrases while defining/editing a repetition
-  // useEffect(() => {
-  //   if (pendingPhrase || pendingRepeatedPhrase) {
-  //     setClickedPhraseKeys(new Set());
-  //   }
-  // }, [pendingPhrase, pendingRepeatedPhrase]);
-
   const value = useMemo(() => ({
-    phraseViewStates, handlePhraseAction, clearHover, clearClick,
+    phraseViewStates, handlePhraseAction, handleMenuAction, clearHover, clearClick,
     contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending
   }), [
-    phraseViewStates, handlePhraseAction, clearHover, clearClick,
+    phraseViewStates, handlePhraseAction, handleMenuAction, clearHover, clearClick,
     contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending
   ]);
 

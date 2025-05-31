@@ -1,7 +1,7 @@
 .text-span {
   position: relative;
 
-  /* TextSpanType.Repetition */
+  /* SpanType.Repetition */
   &.repetition {
     background-color: var(--color-orange-200);
 
@@ -19,7 +19,7 @@
     }
   }
   
-  /* TextSpanType.Source */
+  /* SpanType.Source */
   &.source {
     background-color: var(--color-blue-200);
     
@@ -37,7 +37,7 @@
     }
   }
 
-  /* TextSpanType.Overlapping */
+  /* SpanType.Overlapping */
   &.overlapping {
     background-color: var(--color-fuchsia-300);
 
@@ -55,7 +55,7 @@
     }
   }
 
-  /* TextSpanType.Text */
+  /* SpanType.Text */
   &.text {
     /* plaintext spans sit on top of slightly-overlapping phrase & pending bubbles */
     z-index: 2;
@@ -72,34 +72,6 @@
   &.pending {
     /* pending bubble spans sit on top of phrase bubbles, but not over plaintext */
     z-index: 1;
-  }
-  
-  .count-badge {
-    /* badge should be on top of all possible bubbles */
-    z-index: 3;
-    
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 15px;
-    height: 15px;
-    border-radius: 15px;
-    overflow: hidden;
-    position: absolute;
-    top: -8px;
-    right: -6px;
-
-    border: 1px solid var(--color-gray-700);
-    background-color: var(--color-gray-100);
-    font-family: var(--font-sans);
-    font-size: 10px;
-    line-height: 10px;
-    user-select: none;
-
-    &.pending {
-      border-style: dashed;
-    }
   }
 
   &.clickable {

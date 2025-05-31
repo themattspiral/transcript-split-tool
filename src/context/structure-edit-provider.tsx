@@ -33,14 +33,14 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
     // }
   }, [editState, pendingRepetition, pendingSource, setPendingRepetition, setPendingSource]);
   
-  const clearPending = useCallback(() => {
+  const clearAllPending = useCallback(() => {
     setPendingRepetition(null);
     setPendingSource(null);
     setEditingStructureId(null);
     setEditState(EditState.Idle);
   }, [setPendingRepetition, setPendingSource, setEditState, setEditingStructureId]);
 
-  const beginEdit = useCallback((structureId: string) => {
+  const beginStructureEdit = useCallback((structureId: string) => {
     if (editState === EditState.Idle) {
       setEditState(EditState.EditingExisting);
     }
@@ -54,27 +54,27 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
 
   }, [editState, poeticStructures, setEditingStructureId, setPendingRepetition, setPendingSource]);
   
-  const savePendingEdit = useCallback(() => {
+  const savePendingStructureEdit = useCallback(() => {
     if (editState === EditState.EditingExisting && editingStructureId && pendingRepetition && pendingSource) {
       removePoeticStructure(editingStructureId);
       addPoeticStructure(new PoeticStructure(pendingRepetition, [pendingSource]));
-      clearPending();
+      clearAllPending();
     }
-  }, [editState, editingStructureId, pendingRepetition, pendingSource, addPoeticStructure, removePoeticStructure, clearPending]);
+  }, [editState, editingStructureId, pendingRepetition, pendingSource, addPoeticStructure, removePoeticStructure, clearAllPending]);
 
   const createNewStructureFromPendingPhrases = useCallback(() => {
     if (editState === EditState.CreatingNew && pendingRepetition && pendingSource) {
       addPoeticStructure(new PoeticStructure(pendingRepetition, [pendingSource]));
-      clearPending();
+      clearAllPending();
     }
-  }, [editState, pendingRepetition, pendingSource, addPoeticStructure, clearPending]);
+  }, [editState, pendingRepetition, pendingSource, addPoeticStructure, clearAllPending]);
 
   const value = useMemo(() => ({
     editState, pendingRepetition, pendingSource, editingStructureId,
-    setPendingPhrase, clearPending, beginEdit, savePendingEdit, createNewStructureFromPendingPhrases
+    setPendingPhrase, clearAllPending, beginStructureEdit, savePendingStructureEdit, createNewStructureFromPendingPhrases
   }), [
     editState, pendingRepetition, pendingSource, editingStructureId,
-    setPendingPhrase, clearPending, beginEdit, savePendingEdit, createNewStructureFromPendingPhrases
+    setPendingPhrase, clearAllPending, beginStructureEdit, savePendingStructureEdit, createNewStructureFromPendingPhrases
   ]);
 
   return (

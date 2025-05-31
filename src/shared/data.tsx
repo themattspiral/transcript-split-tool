@@ -78,8 +78,15 @@ export interface PhraseViewState {
 
 export enum PhraseAction {
   Hover,
+  Unhover,
   Click,
   Context
+}
+
+export enum MenuAction {
+  Hover,
+  Unhover,
+  Click
 }
 
 export enum TabId {

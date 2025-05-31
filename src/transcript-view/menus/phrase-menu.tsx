@@ -5,33 +5,32 @@ import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 import './context-menu.css';
 import { PHRASE_MENU_ID } from './context-menu';
-import { getPhraseText, PhraseRole, PoeticStructureRelationshipType } from '../../shared/data';
+import { getPhraseText, MenuAction, PhraseRole, PoeticStructureRelationshipType } from '../../shared/data';
 import { useUserData } from '../../context/user-data-context';
-import { useStructureEdit } from '../../context/structure-edit-context';
 import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
 
 export const PhraseMenu: React.FC = () => {
   const { transcriptLines, phraseLinks } = useUserData();
-  const { contextPhraseIds } = useTranscriptInteraction();
-  const { beginEdit } = useStructureEdit();
+  const { contextPhraseIds, handleMenuAction } = useTranscriptInteraction();
 
   // Each phrase associated with the context-selected span:
   //   - overlapping sections of 2 or more overlapping phrases will result in each phrase being a separate
   //     context menu item (selectable combo item, or non-selectable header item and structure link items)
-  const menuItems = useMemo(() => contextPhraseIds.flatMap((phraseId, idx) => {
+  const menuItems = useMemo(() => contextPhraseIds.flatMap((phraseId, phraseIdx) => {
     const info = phraseLinks[phraseId];
 
     if (info.links.length === 1) {
       // Single link - Single structure:
       //   - Make a single selectable item to represent it
+
       const link = info.links[0];
 
       return [
         <Item
           key={`${phraseId}-${link.role}-${link.structure.id}`}
-          onClick={() => {
-            beginEdit(link.structure.id);
-          }}
+          onMouseOver={() => handleMenuAction(link.structure.id, MenuAction.Hover)}
+          onMouseOut={() => handleMenuAction(link.structure.id, MenuAction.Unhover)}
+          onClick={() => handleMenuAction(link.structure.id, MenuAction.Click)}
         >
           { link.role === PhraseRole.Repetition && 
             <div>
@@ -52,7 +51,9 @@ export const PhraseMenu: React.FC = () => {
             </div>
           }
         </Item>,
-        idx < (contextPhraseIds.length - 1) ? <Separator key={idx} /> : undefined
+
+        // add a separator after the item if we're not on the last phrase
+        phraseIdx < (contextPhraseIds.length - 1) ? <Separator key={phraseIdx} /> : undefined
       ];
     } else if (info.links.length > 1) {
       // Multiple Links - Multiple structures:
@@ -60,15 +61,35 @@ export const PhraseMenu: React.FC = () => {
       //     poetic structures, e.g. they share the same phrase for either a destination or source.
       //   - In this case, we create a non-selectable item (header) to represent the common phrase,
       //     and a selectable item for each structure linked to it.
+
+      const unaryLinks = info?.links.filter(l => l.structure.relationshipType === PoeticStructureRelationshipType.Unary) || [];
       const repetitionLinks = info?.links.filter(l => {
         return l.role === PhraseRole.Repetition && l.structure.relationshipType !== PoeticStructureRelationshipType.Unary
       }) || [];
       const sourceLinks = info?.links.filter(l => {
         return l.role === PhraseRole.Source && l.structure.relationshipType !== PoeticStructureRelationshipType.Unary
       }) || [];
-      const unaryLinks = info?.links.filter(l => l.structure.relationshipType === PoeticStructureRelationshipType.Unary) || [];
 
       const items: ReactElement[] = [];
+
+      if (unaryLinks.length > 0) {
+        unaryLinks.forEach((link, linkIdx) => {
+          items.push(
+            <Item
+              key={`${phraseId}-${link.role}-${link.structure.id}`}
+              onMouseOver={() => handleMenuAction(link.structure.id, MenuAction.Hover)}
+              onMouseOut={() => handleMenuAction(link.structure.id, MenuAction.Unhover)}
+              onClick={() => handleMenuAction(link.structure.id, MenuAction.Click)}
+            >
+              rep (u): { getPhraseText(link.structure.repetition, transcriptLines) }
+            </Item>
+          );
+
+          if (repetitionLinks.length > 0 || sourceLinks.length > 0 || linkIdx < (unaryLinks.length - 1) || phraseIdx < (contextPhraseIds.length - 1)) {
+            items.push(<Separator key={`${phraseIdx}-rep-separator`} />);
+          }
+        });
+      }
 
       if (repetitionLinks.length > 0) {
         items.push(
@@ -81,17 +102,17 @@ export const PhraseMenu: React.FC = () => {
           items.push(
             <Item
               key={`${phraseId}-${link.role}-${link.structure.id}`}
-              onClick={() => {
-                beginEdit(link.structure.id);
-              }}
+              onMouseOver={() => handleMenuAction(link.structure.id, MenuAction.Hover)}
+              onMouseOut={() => handleMenuAction(link.structure.id, MenuAction.Unhover)}
+              onClick={() => handleMenuAction(link.structure.id, MenuAction.Click)}
             >
               src: { getPhraseText(link.structure.sources[0], transcriptLines) }
             </Item>
           );
         });
 
-        if (sourceLinks.length > 0 || idx < (contextPhraseIds.length - 1)) {
-          items.push(<Separator key={idx} />);
+        if (sourceLinks.length > 0 || phraseIdx < (contextPhraseIds.length - 1)) {
+          items.push(<Separator key={`${phraseIdx}-rep-separator`} />);
         }
       }
 
@@ -106,28 +127,28 @@ export const PhraseMenu: React.FC = () => {
           items.push(
             <Item
               key={`${phraseId}-${link.role}-${link.structure.id}`}
-              onClick={() => {
-                beginEdit(link.structure.id);
-              }}
+              onMouseOver={() => handleMenuAction(link.structure.id, MenuAction.Hover)}
+              onMouseOut={() => handleMenuAction(link.structure.id, MenuAction.Unhover)}
+              onClick={() => handleMenuAction(link.structure.id, MenuAction.Click)}
             >
               rep: { getPhraseText(link.structure.repetition, transcriptLines) }
             </Item>
           );
         });
 
-        if (idx < contextPhraseIds.length - 1) {
-          items.push(<Separator key={idx} />);
+        if (phraseIdx < contextPhraseIds.length - 1) {
+          items.push(<Separator key={`${phraseIdx}-src-separator`} />);
         }
       }
 
       return items;
     }
-  }), [contextPhraseIds, beginEdit, transcriptLines, phraseLinks]);
+  }), [contextPhraseIds, handleMenuAction, transcriptLines, phraseLinks]);
 
   return (
     <Menu id={PHRASE_MENU_ID} animation="slide" className="max-w-[400px] font-sans">
-      <Item disabled style={{ opacity: 1 }} className="text-xs">
-        <FontAwesomeIcon icon={faPenToSquare} className="mr-1" /> Edit Poetic Strcture
+      <Item disabled style={{ opacity: 1 }} className="text-sm font-semibold">
+        <FontAwesomeIcon icon={faPenToSquare} className="mr-1" /> Choose the Poetic Strcture to Edit:
       </Item>
 
       <Separator />

@@ -109,6 +109,17 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     ));
   }, [phraseLinks]);
 
+  const getAllStructurePhraseIds = useCallback((structureId: string): string[] => {
+    const structure = poeticStructures[structureId];
+
+    if (structure) {
+      const phrases = [structure.repetition, structure.sources].flat();
+      return phrases.map(phrase => phrase.id);
+    } else {
+      return [];
+    }
+  }, [poeticStructures]);
+
   const setNewTranscript = useCallback((lines: TranscriptLine[]) => {
     setTranscriptLines(lines);
     
@@ -159,11 +170,13 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const value = useMemo(() => ({
     transcriptLines, setNewTranscript,
     poeticStructures, addPoeticStructure, removePoeticStructure,
-    phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, linePhrases
+    phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
+    linePhrases
   }), [
     transcriptLines, setNewTranscript,
     poeticStructures, addPoeticStructure, removePoeticStructure,
-    phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, linePhrases
+    phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
+    linePhrases
   ]);
 
   return (
