@@ -1,7 +1,7 @@
 import { CSSProperties, useMemo } from 'react';
 import classnames from 'classnames';
 
-import './highlightable-text-cell.scss';
+import './split-text-cell.scss';
 import { OverallPhraseRole, Phrase, PhraseAction, TranscriptLine } from '../shared/data';
 import { useUserData } from '../context/user-data-context';
 import { useTranscriptInteraction } from '../context/transcript-interaction-context';
@@ -28,14 +28,14 @@ interface SpanDefinition {
   classes?: string;
 }
 
-interface HighlightableTextCellProps {
+interface SplitTextCellProps {
   line: TranscriptLine;
   className?: string;
   style?: CSSProperties;
   attributes?: any;
 }
 
-const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
+const SplitTextCell: React.FC<SplitTextCellProps> = props => {
   const { line, className, style, attributes } = props;
 
   const { phraseLinks, linePhrases } = useUserData();
@@ -135,7 +135,7 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
       const rightmostClicked = definitions[i].isClicked && i < (definitions.length - 1) && !definitions[i + 1].isClicked;
 
       definitions[i].classes = classnames(
-        'text-span',
+        'split-text-span',
         spanType, // SpanType string enum values match class names
         { hoverable: definitions[i].isHoverable },
         { clickable: definitions[i].isClickable },
@@ -188,4 +188,4 @@ const HighlightableTextCell: React.FC<HighlightableTextCellProps> = props => {
   );
 };
 
-export { HighlightableTextCell };
+export { SplitTextCell };

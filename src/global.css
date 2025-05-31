@@ -2,7 +2,7 @@
 
 /* Ensure tailwind parses variables used in component styles */
 /* https://tailwindcss.com/docs/detecting-classes-in-source-files#explicitly-registering-sources */
-@source "./transcript-view/highlightable-text-cell.scss";
+@source "./transcript-view/split-text-cell.scss";
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;

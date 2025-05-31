@@ -3,11 +3,11 @@ import { Menu, Item, Separator } from 'react-contexify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
-import './context-menu.css';
-import { PHRASE_MENU_ID } from './context-menu';
-import { getPhraseText, MenuAction, PhraseRole, PoeticStructureRelationshipType } from '../../shared/data';
-import { useUserData } from '../../context/user-data-context';
-import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
+import '../context-menu.css';
+import { PHRASE_MENU_ID } from '../context-menu';
+import { getPhraseText, MenuAction, PhraseRole, PoeticStructureRelationshipType } from '../../../shared/data';
+import { useUserData } from '../../../context/user-data-context';
+import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
 
 export const PhraseMenu: React.FC = () => {
   const { transcriptLines, phraseLinks } = useUserData();

@@ -7,11 +7,11 @@ import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '..
 import { HIGHLIGHT_MENU_ID, ERROR_MULTIPLE_LINES_MENU_ID } from './menus/context-menu';
 import { HighlightMenu } from './menus/highlight-menu';
 import { ErrorMultipleLinesMenu } from './menus/error-multiple-lines-menu';
-import { HighlightableTextCell } from './highlightable-text-cell';
+import { SplitTextCell } from './split-text-cell';
 import { EditState, useStructureEdit } from '../context/structure-edit-context';
 import { useUserData } from '../context/user-data-context';
 import { useTranscriptInteraction } from '../context/transcript-interaction-context';
-import { PhraseMenu } from './menus/phrase-menu';
+import { PhraseMenu } from './menus/phrase-menu/phrase-menu';
 
 enum TranscriptGridColumnId {
   Line = 'line',
@@ -146,7 +146,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
             { line.speaker }
           </div>
 
-          <HighlightableTextCell
+          <SplitTextCell
             line={line}
             className="border-b-1 border-gray-400 grow-1"
             attributes={{
