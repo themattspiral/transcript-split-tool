@@ -5,7 +5,7 @@ import { TranscriptInteractionContext } from './transcript-interaction-context';
 import { MenuAction, Phrase, PhraseAction, PhraseRole, PhraseViewState } from '../shared/data';
 import { useUserData } from './user-data-context';
 import { useStructureEdit } from './structure-edit-context';
-import { PHRASE_MENU_ID } from '../transcript-view/menus/context-menu';
+import { TranscriptMenuId } from '../transcript-view/menus/transcript-menus';
 
 export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // a controllable view state for every phrase (all phrases defined in phraseLinks)
@@ -15,19 +15,19 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
   // highlighted phrase when it is right-clicked
   const [highlightedPhrase, setHighlightedPhrase] = useState<Phrase | null>(null);
   
+  const [transcriptMenuVisibility, setTranscriptMenuVisibility] = useState<{ [key in TranscriptMenuId]: boolean }>({
+    [TranscriptMenuId.PhraseMenu]: false,
+    [TranscriptMenuId.HighlightMenu]: false,
+    [TranscriptMenuId.ErrorMultipleLinesMenu]: false
+  });
+
+  const allTranscriptMenusClosed: boolean = useMemo(() => {
+    return Object.values(transcriptMenuVisibility).every(m => m === false);
+  }, [transcriptMenuVisibility]);
+
   const { phraseLinks, getAllLinkedPhraseIds, getAllStructurePhraseIds } = useUserData();
   const { setPendingPhrase, beginStructureEdit: beginEdit } = useStructureEdit();
   const { show: showContextMenu } = useContextMenu();
-
-  // reset all phrase view states whenever phraseLinks changes
-  useEffect(() => {
-    const pvs: { [phraseId: string]: PhraseViewState } = {};
-    Object.keys(phraseLinks).forEach((phraseId: string) => {
-      pvs[phraseId] = { isClicked: false, isDeemphasized: false, isHovered: false, isPending: false };
-    });
-
-    setPhraseViewStates(pvs);
-  }, [setPhraseViewStates, phraseLinks]);
 
   // internal helper
   const updateAllPhrases = useCallback((fieldName: keyof PhraseViewState, value: boolean) => {
@@ -61,45 +61,6 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     });
   }, [setPhraseViewStates]);
 
-  const handlePhraseAction = useCallback((event: React.MouseEvent, phraseIds: string[], action: PhraseAction) => {
-    const allLinkedPhraseIds: string[] = getAllLinkedPhraseIds(phraseIds);
-    
-    switch (action) {
-      case PhraseAction.Hover:
-        clearAllThenUpdatePhrases(allLinkedPhraseIds, 'isHovered', true);
-        break;
-      case PhraseAction.Unhover:
-        clearHover();
-        break;
-      case PhraseAction.Click:
-        // toggle click state
-        const currentState = phraseViewStates[phraseIds[0]].isClicked;
-        clearAllThenUpdatePhrases(allLinkedPhraseIds, 'isClicked', !currentState);
-        break;
-      case PhraseAction.Context:
-        setContextPhraseIds(phraseIds);
-        showContextMenu({ event, id: PHRASE_MENU_ID });
-        break;
-    }
-  }, [getAllLinkedPhraseIds, phraseViewStates, setPhraseViewStates, setContextPhraseIds]);
-
-  const handleMenuAction = useCallback((structureId: string, action: MenuAction) => {
-    const allStructureIds = getAllStructurePhraseIds(structureId);
-    
-    switch (action) {
-      case MenuAction.Click:
-        clearHover();
-        beginEdit(structureId);
-        break;
-      case MenuAction.Hover:
-        clearAllThenUpdatePhrases(allStructureIds, 'isHovered', true);
-        break;
-      case MenuAction.Unhover:
-        clearHover();
-        break;
-    }
-  }, [beginEdit]);
-
   const clearHover = useCallback(() => {
     updateAllPhrases('isHovered', false);
   }, [updateAllPhrases]);
@@ -108,16 +69,95 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     updateAllPhrases('isClicked', false);
   }, [setPhraseViewStates]);
 
+  const handlePhraseAction = useCallback((event: React.MouseEvent, phraseIds: string[], action: PhraseAction) => {
+    switch (action) {
+      case PhraseAction.Hover:
+        // only update hover if no menus are currently showing
+        if (allTranscriptMenusClosed) {
+          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(phraseIds), 'isHovered', true);
+        }
+        break;
+      case PhraseAction.Unhover:
+        // only clear hover if no menus are currently showing
+        if (allTranscriptMenusClosed) {
+          clearHover();
+        }
+        break;
+      case PhraseAction.Click:
+        // only process click if no menus are currently showing
+        if (allTranscriptMenusClosed) {
+          // toggle click state
+          const currentState = phraseViewStates[phraseIds[0]].isClicked;
+          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(phraseIds), 'isClicked', !currentState);
+        }
+        break;
+      case PhraseAction.Context:
+        setContextPhraseIds(phraseIds);
+
+        if (!allTranscriptMenusClosed) {
+          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(phraseIds), 'isHovered', true);
+        }
+
+        showContextMenu({ event, id: TranscriptMenuId.PhraseMenu });
+        break;
+    }
+  }, [
+    phraseViewStates, allTranscriptMenusClosed, clearAllThenUpdatePhrases, clearHover,
+    getAllLinkedPhraseIds, setPhraseViewStates, setContextPhraseIds, showContextMenu
+  ]);
+
+  const handlePhraseMenuAction = useCallback((structureOrPhraseId: string, action: MenuAction) => {
+    switch (action) {
+      case MenuAction.Click:
+        clearHover();
+        beginEdit(structureOrPhraseId);
+        break;
+      case MenuAction.HoverStructure:
+        clearAllThenUpdatePhrases(getAllStructurePhraseIds(structureOrPhraseId), 'isHovered', true);
+        break;
+      case MenuAction.HoverPhrase:
+        clearAllThenUpdatePhrases([structureOrPhraseId], 'isHovered', true);
+        break;
+      case MenuAction.Unhover:
+        clearAllThenUpdatePhrases(getAllLinkedPhraseIds(contextPhraseIds), 'isHovered', true);
+        break;
+    }
+  }, [clearHover, beginEdit, clearAllThenUpdatePhrases, contextPhraseIds]);
+
+  const updateMenuVisibility = useCallback((menuId: TranscriptMenuId, isVisible: boolean) => {
+    setTranscriptMenuVisibility(vis => ({
+      ...vis,
+      [menuId]: isVisible
+    }));
+  }, [setTranscriptMenuVisibility]);
+
   const makeHighlightedPhrasePending = useCallback((role: PhraseRole) => {
     setPendingPhrase(highlightedPhrase, role);
     setHighlightedPhrase(null);
   }, [highlightedPhrase, setPendingPhrase, setHighlightedPhrase]);
 
+  // reset all phrase view states whenever phraseLinks changes
+  useEffect(() => {
+    const pvs: { [phraseId: string]: PhraseViewState } = {};
+    Object.keys(phraseLinks).forEach((phraseId: string) => {
+      pvs[phraseId] = { isClicked: false, isDeemphasized: false, isHovered: false, isPending: false };
+    });
+
+    setPhraseViewStates(pvs);
+  }, [setPhraseViewStates, phraseLinks]);
+
+  // clear hover whenever a menu is closed
+  useEffect(() => {
+    if (allTranscriptMenusClosed) {
+      clearHover();
+    }
+  }, [allTranscriptMenusClosed, clearHover]);
+
   const value = useMemo(() => ({
-    phraseViewStates, handlePhraseAction, handleMenuAction, clearHover, clearClick,
+    phraseViewStates, handlePhraseAction, handlePhraseMenuAction, updateMenuVisibility, clearHover, clearClick,
     contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending
   }), [
-    phraseViewStates, handlePhraseAction, handleMenuAction, clearHover, clearClick,
+    phraseViewStates, handlePhraseAction, handlePhraseMenuAction, updateMenuVisibility, clearHover, clearClick,
     contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending
   ]);
 

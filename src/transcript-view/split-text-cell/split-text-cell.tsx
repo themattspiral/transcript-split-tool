@@ -2,9 +2,9 @@ import { CSSProperties, useMemo } from 'react';
 import classnames from 'classnames';
 
 import './split-text-cell.scss';
-import { OverallPhraseRole, Phrase, PhraseAction, TranscriptLine } from '../shared/data';
-import { useUserData } from '../context/user-data-context';
-import { useTranscriptInteraction } from '../context/transcript-interaction-context';
+import { OverallPhraseRole, Phrase, PhraseAction, PhraseLinkInfo, TranscriptLine } from '../../shared/data';
+import { useUserData } from '../../context/user-data-context';
+import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
 
 enum SpanType {
   Repetition = 'repetition',
@@ -82,7 +82,7 @@ const SplitTextCell: React.FC<SplitTextCellProps> = props => {
       let spanType = SpanType.Text;
 
       if (spanPhrases.length === 1) {
-        const linkInfo = phraseLinks[spanPhrases[0].id];
+        const linkInfo: PhraseLinkInfo = phraseLinks[spanPhrases[0].id];
 
         if (linkInfo.overallRole === OverallPhraseRole.Mixed) {
           spanType = SpanType.Overlapping;
@@ -95,13 +95,15 @@ const SplitTextCell: React.FC<SplitTextCellProps> = props => {
         spanType = SpanType.Overlapping;
       }
 
+      const isNotTextType = spanType !== SpanType.Text;
+
       // determine this span's view state based on the collective 
       // view states of the phrases that it's a part of
       let isHovered = false;
       let isClicked = false;
       let isDeemphasized = true;
 
-      if (spanType !== SpanType.Text) {
+      if (isNotTextType) {
         spanPhrases.forEach(phrase => {
           isHovered ||= phraseViewStates[phrase.id]?.isHovered;             // some
           isClicked ||= phraseViewStates[phrase.id]?.isClicked;             // some
@@ -109,7 +111,7 @@ const SplitTextCell: React.FC<SplitTextCellProps> = props => {
         });
       }
 
-      const isNotText = spanType !== SpanType.Text;
+      
       
       definitions.push({
         start,
@@ -117,36 +119,37 @@ const SplitTextCell: React.FC<SplitTextCellProps> = props => {
         spanPhraseIds: spanPhrases.map(p => p.id),
         spanType,
         isPending,
-        isHoverable: isNotText,
-        isClickable: isNotText,
-        isContextable: isNotText,
+        isHoverable: isNotTextType,
+        isClickable: isNotTextType,
+        isContextable: isNotTextType,
         isHovered,
         isClicked,
         isDeemphasized
       });
     }
 
-    // determine styling for each span
+    // determine styling for each span (some of these look at neighbors, and so require all spans to be defined first)
     for (let i = 0; i < definitions.length; i++) {
       const spanType = definitions[i].spanType;
-      const isLeftmostPhrase = spanType !== SpanType.Text && (i === 0 || definitions[i - 1].spanType === SpanType.Text);
-      const isRightmostPhrase = spanType !== SpanType.Text && (i === (definitions.length - 1) || definitions[i + 1].spanType === SpanType.Text);
-      const leftmostClicked = definitions[i].isClicked && i > 0 && !definitions[i - 1].isClicked;
-      const rightmostClicked = definitions[i].isClicked && i < (definitions.length - 1) && !definitions[i + 1].isClicked;
+      const isLeftmostSpan = spanType !== SpanType.Text && (i === 0 || definitions[i - 1].spanType === SpanType.Text);
+      const isRightmostSpan = spanType !== SpanType.Text && (i === (definitions.length - 1) || definitions[i + 1].spanType === SpanType.Text);
+      const isLeftmostClicked = definitions[i].isClicked && i > 0 && !definitions[i - 1].isClicked;
+      const isRightmostClicked = definitions[i].isClicked && i < (definitions.length - 1) && !definitions[i + 1].isClicked;
+      const isPreviousClicked = !definitions[i].isClicked && i > 0 && definitions[i - 1].isClicked;
 
       definitions[i].classes = classnames(
         'split-text-span',
-        spanType, // SpanType string enum values match class names
-        { hoverable: definitions[i].isHoverable },
+        spanType, // SpanType string enum values match class names in scss file
         { clickable: definitions[i].isClickable },
         { pending: definitions[i].isPending },
-        { hovered: definitions[i].isHovered },
-        { clicked: definitions[i].isClicked },
+        { hovered: definitions[i].isHovered },          // TODO change to emphasized
+        { clicked: definitions[i].isClicked },          // TODO change to selected
         { deemphasized: definitions[i].isDeemphasized },
-        { leftmost: isLeftmostPhrase },
-        { rightmost: isRightmostPhrase },
-        { ['leftmost-clicked']: leftmostClicked },
-        { ['rightmost-clicked']: rightmostClicked }
+        { leftmost: isLeftmostSpan },
+        { rightmost: isRightmostSpan },
+        { ['leftmost-clicked']: isLeftmostClicked },
+        { ['rightmost-clicked']: isRightmostClicked },
+        { ['previous-clicked']: isPreviousClicked }
       );
     }
     return definitions;

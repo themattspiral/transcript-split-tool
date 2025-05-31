@@ -84,7 +84,8 @@ export enum PhraseAction {
 }
 
 export enum MenuAction {
-  Hover,
+  HoverStructure,
+  HoverPhrase,
   Unhover,
   Click
 }

@@ -1,11 +1,13 @@
 import { createContext, useContext } from 'react';
 
 import { MenuAction, Phrase, PhraseAction, PhraseRole, PhraseViewState } from '../shared/data';
+import { TranscriptMenuId } from '../transcript-view/menus/transcript-menus';
 
 interface TranscriptInteractionContextProps {
   phraseViewStates: { [phraseId: string]: PhraseViewState };
   handlePhraseAction: (event: React.MouseEvent, phraseIds: string[], action: PhraseAction) => void;
-  handleMenuAction: (structureId: string, action: MenuAction) => void;
+  handlePhraseMenuAction: (structureOrPhraseId: string, action: MenuAction) => void;
+  updateMenuVisibility: (menuId: TranscriptMenuId, isVisible: boolean) => void;
   clearHover: () => void;
   clearClick: () => void;
   contextPhraseIds: string[];
@@ -17,7 +19,8 @@ interface TranscriptInteractionContextProps {
 export const TranscriptInteractionContext = createContext<TranscriptInteractionContextProps>({
   phraseViewStates: {},
   handlePhraseAction: () => {},
-  handleMenuAction: () => {},
+  handlePhraseMenuAction: () => {},
+  updateMenuVisibility: () => {},
   clearHover: () => {},
   clearClick: () => {},
   contextPhraseIds: [],

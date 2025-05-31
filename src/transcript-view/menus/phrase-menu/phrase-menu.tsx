@@ -3,15 +3,15 @@ import { Menu, Item, Separator } from 'react-contexify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
-import '../context-menu.css';
-import { PHRASE_MENU_ID } from '../context-menu';
+import '../transcript-menus.css';
+import { TranscriptMenuId } from '../transcript-menus';
 import { getPhraseText, MenuAction, PhraseRole, PoeticStructureRelationshipType } from '../../../shared/data';
 import { useUserData } from '../../../context/user-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
 
 export const PhraseMenu: React.FC = () => {
   const { transcriptLines, phraseLinks } = useUserData();
-  const { contextPhraseIds, handleMenuAction } = useTranscriptInteraction();
+  const { contextPhraseIds, handlePhraseMenuAction, updateMenuVisibility } = useTranscriptInteraction();
 
   // Each phrase associated with the context-selected span:
   //   - overlapping sections of 2 or more overlapping phrases will result in each phrase being a separate
@@ -28,9 +28,9 @@ export const PhraseMenu: React.FC = () => {
       return [
         <Item
           key={`${phraseId}-${link.role}-${link.structure.id}`}
-          onMouseOver={() => handleMenuAction(link.structure.id, MenuAction.Hover)}
-          onMouseOut={() => handleMenuAction(link.structure.id, MenuAction.Unhover)}
-          onClick={() => handleMenuAction(link.structure.id, MenuAction.Click)}
+          onMouseOver={() => handlePhraseMenuAction(link.structure.id, MenuAction.HoverStructure)}
+          onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
+          onClick={() => handlePhraseMenuAction(link.structure.id, MenuAction.Click)}
         >
           { link.role === PhraseRole.Repetition && 
             <div>
@@ -77,9 +77,9 @@ export const PhraseMenu: React.FC = () => {
           items.push(
             <Item
               key={`${phraseId}-${link.role}-${link.structure.id}`}
-              onMouseOver={() => handleMenuAction(link.structure.id, MenuAction.Hover)}
-              onMouseOut={() => handleMenuAction(link.structure.id, MenuAction.Unhover)}
-              onClick={() => handleMenuAction(link.structure.id, MenuAction.Click)}
+              onMouseOver={() => handlePhraseMenuAction(link.structure.id, MenuAction.HoverStructure)}
+              onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
+              onClick={() => handlePhraseMenuAction(link.structure.id, MenuAction.Click)}
             >
               rep (u): { getPhraseText(link.structure.repetition, transcriptLines) }
             </Item>
@@ -93,7 +93,14 @@ export const PhraseMenu: React.FC = () => {
 
       if (repetitionLinks.length > 0) {
         items.push(
-          <Item disabled style={{ opacity: 1 }} className="header" key={`${phraseId}-rep-header`}>
+          <Item
+            key={`${phraseId}-rep-header`}
+            disabled
+            style={{ opacity: 1 }}
+            className="header"
+            onMouseOver={() => handlePhraseMenuAction(phraseId, MenuAction.HoverPhrase)}
+            onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
+          >
             rep: { getPhraseText(info.phrase, transcriptLines) }
           </Item>
         );
@@ -102,9 +109,9 @@ export const PhraseMenu: React.FC = () => {
           items.push(
             <Item
               key={`${phraseId}-${link.role}-${link.structure.id}`}
-              onMouseOver={() => handleMenuAction(link.structure.id, MenuAction.Hover)}
-              onMouseOut={() => handleMenuAction(link.structure.id, MenuAction.Unhover)}
-              onClick={() => handleMenuAction(link.structure.id, MenuAction.Click)}
+              onMouseOver={() => handlePhraseMenuAction(link.structure.id, MenuAction.HoverStructure)}
+              onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
+              onClick={() => handlePhraseMenuAction(link.structure.id, MenuAction.Click)}
             >
               src: { getPhraseText(link.structure.sources[0], transcriptLines) }
             </Item>
@@ -118,7 +125,14 @@ export const PhraseMenu: React.FC = () => {
 
       if (sourceLinks.length > 0) {
         items.push(
-          <Item disabled style={{ opacity: 1 }} className="header" key={`${phraseId}-src-header`}>
+          <Item
+            key={`${phraseId}-src-header`}
+            disabled
+            style={{ opacity: 1 }}
+            className="header"
+            onMouseOver={() => handlePhraseMenuAction(phraseId, MenuAction.HoverPhrase)}
+            onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
+          >
             src: { getPhraseText(info.phrase, transcriptLines) }
           </Item>
         );
@@ -127,9 +141,9 @@ export const PhraseMenu: React.FC = () => {
           items.push(
             <Item
               key={`${phraseId}-${link.role}-${link.structure.id}`}
-              onMouseOver={() => handleMenuAction(link.structure.id, MenuAction.Hover)}
-              onMouseOut={() => handleMenuAction(link.structure.id, MenuAction.Unhover)}
-              onClick={() => handleMenuAction(link.structure.id, MenuAction.Click)}
+              onMouseOver={() => handlePhraseMenuAction(link.structure.id, MenuAction.HoverStructure)}
+              onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
+              onClick={() => handlePhraseMenuAction(link.structure.id, MenuAction.Click)}
             >
               rep: { getPhraseText(link.structure.repetition, transcriptLines) }
             </Item>
@@ -143,10 +157,15 @@ export const PhraseMenu: React.FC = () => {
 
       return items;
     }
-  }), [contextPhraseIds, handleMenuAction, transcriptLines, phraseLinks]);
+  }), [contextPhraseIds, handlePhraseMenuAction, transcriptLines, phraseLinks]);
 
   return (
-    <Menu id={PHRASE_MENU_ID} animation="slide" className="max-w-[400px] font-sans">
+    <Menu
+      id={TranscriptMenuId.PhraseMenu}
+      animation="slide"
+      className="max-w-[400px] font-sans"
+      onVisibilityChange={isVisible => updateMenuVisibility(TranscriptMenuId.PhraseMenu, isVisible)}
+    >
       <Item disabled style={{ opacity: 1 }} className="text-sm font-semibold">
         <FontAwesomeIcon icon={faPenToSquare} className="mr-1" /> Choose the Poetic Strcture to Edit:
       </Item>

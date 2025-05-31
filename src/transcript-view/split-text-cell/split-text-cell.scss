@@ -93,7 +93,8 @@
       margin-right: -4px;
     }
 
-    &:not(.leftmost) {
+    &:not(.leftmost):not(.clicked):not(.previous-clicked),
+    &:not(.leftmost-clicked).clicked {
       border-left: 1px dashed var(--color-gray-600);
       padding-left: 1px;
     }

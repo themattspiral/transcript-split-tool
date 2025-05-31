@@ -3,8 +3,8 @@ import { Menu, Item, Separator } from 'react-contexify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
 
-import './context-menu.css';
-import { HIGHLIGHT_MENU_ID } from './context-menu';
+import './transcript-menus.css';
+import { TranscriptMenuId } from './transcript-menus';
 import { getPhraseText, PhraseRole } from '../../shared/data';
 import { useStructureEdit } from '../../context/structure-edit-context';
 import { useUserData } from '../../context/user-data-context';
@@ -13,13 +13,18 @@ import { clearDocumentTextSelection } from '../../shared/util';
 
 export const HighlightMenu: React.FC = () => {
   const { transcriptLines } = useUserData();
-  const { highlightedPhrase, makeHighlightedPhrasePending } = useTranscriptInteraction();
+  const { highlightedPhrase, makeHighlightedPhrasePending, updateMenuVisibility } = useTranscriptInteraction();
   const { pendingRepetition, pendingSource } = useStructureEdit();
 
   const selectedText = useMemo(() => getPhraseText(highlightedPhrase, transcriptLines), [highlightedPhrase, transcriptLines]);
 
   return (
-    <Menu id={HIGHLIGHT_MENU_ID} animation="slide" className="max-w-[400px] font-sans">
+    <Menu
+      id={TranscriptMenuId.HighlightMenu}
+      animation="slide"
+      className="max-w-[400px] font-sans"
+      onVisibilityChange={isVisible => updateMenuVisibility(TranscriptMenuId.HighlightMenu, isVisible)}
+    >
       <div className="text-xs">New Poetic Strcture:</div>
 
       <Item disabled style={{ opacity: 1 }}>

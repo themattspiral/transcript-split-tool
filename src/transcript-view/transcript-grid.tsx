@@ -1,13 +1,13 @@
-import { useState, CSSProperties, useMemo, useCallback } from 'react';
+import { CSSProperties, useMemo, useCallback } from 'react';
 import { useContextMenu } from 'react-contexify';
 import classnames from 'classnames';
 
 import { Phrase, HEADER_ROW_ID } from '../shared/data';
 import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../shared/util';
-import { HIGHLIGHT_MENU_ID, ERROR_MULTIPLE_LINES_MENU_ID } from './menus/context-menu';
+import { TranscriptMenuId } from './menus/transcript-menus';
 import { HighlightMenu } from './menus/highlight-menu';
 import { ErrorMultipleLinesMenu } from './menus/error-multiple-lines-menu';
-import { SplitTextCell } from './split-text-cell';
+import { SplitTextCell } from './split-text-cell/split-text-cell';
 import { EditState, useStructureEdit } from '../context/structure-edit-context';
 import { useUserData } from '../context/user-data-context';
 import { useTranscriptInteraction } from '../context/transcript-interaction-context';
@@ -24,8 +24,6 @@ interface TranscriptGridProps {
 }
 
 const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
-  const [hoveredRowIdx, setHoveredRowIdx] = useState<number | null>(null);
-  
   const { show: showContextMenu } = useContextMenu();
   const { transcriptLines } = useUserData();
   const { editState } = useStructureEdit();
@@ -81,7 +79,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
 
     if (hasMultiLineSelection) {
       if (event.preventDefault) event.preventDefault();
-      showContextMenu({ id: ERROR_MULTIPLE_LINES_MENU_ID, event });
+      showContextMenu({ event, id: TranscriptMenuId.ErrorMultipleLinesMenu });
     } else if (!isHeaderRow && isTextColumn && hasSelection && range) {
       if (event.preventDefault) event.preventDefault();
       setHighlightedPhrase(new Phrase(
@@ -89,7 +87,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
         (range.startOffset + beginPhraseLineStartIdx) || 0,
         (range.endOffset + endPhraseLineStartIdx) || 0
       ));
-      showContextMenu({ event, id: HIGHLIGHT_MENU_ID });
+      showContextMenu({ event, id: TranscriptMenuId.HighlightMenu });
     }
   }, [editState, clearClick, setHighlightedPhrase, showContextMenu]);
 
@@ -121,45 +119,39 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
     </div>
   ), []);
 
-  const dataRows = useMemo(() => (
-    <>
-    { transcriptLines.map((line, idx) => idx === 0 ? null : (
-        <div
-          key={line.lineNumber}
-          data-transcript-line-idx={idx}
-          className={classnames('flex', { ['bg-gray-100']: hoveredRowIdx === idx })}
-          onMouseOver={() => setHoveredRowIdx(idx)}
-          onMouseOut={() => setHoveredRowIdx(null)}
-        >
+  const dataRows = useMemo(() => transcriptLines.map((line, idx) => idx === 0 ? null : (
+    <div
+      key={line.lineNumber}
+      data-transcript-line-idx={idx}
+      className={classnames('flex', { ['bg-gray-100']: idx % 2 === 0 })}
+    >
 
-          <div
-            className="px-2 py-2 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
-            data-column data-column-id={TranscriptGridColumnId.Line} data-transcript-line-idx={idx}
-          >
-            {line.lineNumber}
-          </div>
+      <div
+        className="px-2 py-2 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
+        data-column data-column-id={TranscriptGridColumnId.Line} data-transcript-line-idx={idx}
+      >
+        {line.lineNumber}
+      </div>
 
-          <div
-            className="px-2 py-2 border-b-1 border-gray-400 basis-[100px] shrink-0"
-            data-column data-column-id={TranscriptGridColumnId.Speaker} data-transcript-line-idx={idx}
-          >
-            { line.speaker }
-          </div>
+      <div
+        className="px-2 py-2 border-b-1 border-gray-400 basis-[100px] shrink-0"
+        data-column data-column-id={TranscriptGridColumnId.Speaker} data-transcript-line-idx={idx}
+      >
+        { line.speaker }
+      </div>
 
-          <SplitTextCell
-            line={line}
-            className="border-b-1 border-gray-400 grow-1"
-            attributes={{
-              ['data-column']: 'true',
-              ['data-column-id']: TranscriptGridColumnId.Text,
-              ['data-transcript-line-idx']: idx
-            }}
-          />
+      <SplitTextCell
+        line={line}
+        className="border-b-1 border-gray-400 grow-1"
+        attributes={{
+          ['data-column']: 'true',
+          ['data-column-id']: TranscriptGridColumnId.Text,
+          ['data-transcript-line-idx']: idx
+        }}
+      />
 
-        </div>
-      )) }
-    </>
-  ), [transcriptLines, hoveredRowIdx, setHoveredRowIdx]);
+    </div>
+  )), [transcriptLines]);
 
   return transcriptLines?.length ? (
     <div
