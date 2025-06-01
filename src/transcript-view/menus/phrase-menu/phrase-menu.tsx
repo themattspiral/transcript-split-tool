@@ -1,11 +1,10 @@
-import { ReactElement, useMemo } from 'react';
+import { ReactElement, useMemo, useState } from 'react';
 import { Menu, Item, Separator } from 'react-contexify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
-import '../transcript-menus.css';
 import { TranscriptMenuId } from '../transcript-menus';
-import { PhraseRole, PoeticStructureRelationshipType } from '../../../shared/data';
+import { PhraseRole, PoeticStructureRelationshipType, sortPhrases } from '../../../shared/data';
 import { useUserData } from '../../../context/user-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
 import { EditItem } from './edit-item';
@@ -19,6 +18,7 @@ import { MultiLinkItem } from './multi-link-item';
 export const PhraseMenu: React.FC = () => {
   const { phraseLinks } = useUserData();
   const { contextPhraseIds, updateMenuVisibility } = useTranscriptInteraction();
+  const [multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey] = useState<string | null>();
 
   const menuItems = useMemo(() => {
     const items: ReactElement[] = [];
@@ -31,11 +31,10 @@ export const PhraseMenu: React.FC = () => {
     } else {
       // multiple phrases, or multiple links - user must make a choice
       items.push(
-        <Item key="menu-header" disabled style={{ opacity: 1 }} className="text-sm font-semibold">
-          <FontAwesomeIcon icon={faPenToSquare} className="mr-1" /> Choose the Poetic Strcture to Edit:
+        <Item key="menu-header" disabled style={{ opacity: 1 }} className="text-sm font-medium border-b-1 border-gray-500 mb-2">
+          <FontAwesomeIcon icon={faPenToSquare} className="mr-1" size="lg" /> Choose the Poetic Strcture to Edit:
         </Item>
       );
-      items.push(<Separator key="menu-header-separator" />);
 
       // generate menu items based on the context phrases specified, and their links
       contextPhraseIds.forEach((contextPhraseId, contextPhraseIdx) => {
@@ -57,13 +56,17 @@ export const PhraseMenu: React.FC = () => {
           //                 which share this same phrase for either a destination or source
 
           // group links by the role the context phrase plays in the structure
-          const unaryLinks = info?.links.filter(l => l.structure.relationshipType === PoeticStructureRelationshipType.Unary) || [];
-          const repetitionLinks = info?.links.filter(l => {
-            return l.role === PhraseRole.Repetition && l.structure.relationshipType !== PoeticStructureRelationshipType.Unary
-          }) || [];
-          const sourceLinks = info?.links.filter(l => {
-            return l.role === PhraseRole.Source && l.structure.relationshipType !== PoeticStructureRelationshipType.Unary
-          }) || [];
+          const unaryLinks = info.links.filter(l => l.structure.relationshipType === PoeticStructureRelationshipType.Unary);
+          const repetitionLinks = info.links
+            .filter(l => {
+              return l.role === PhraseRole.Repetition && l.structure.relationshipType !== PoeticStructureRelationshipType.Unary
+            })
+            .sort((a, b) => sortPhrases(a.structure.sources[0], b.structure.sources[0]));
+          const sourceLinks = info.links
+            .filter(l => {
+              return l.role === PhraseRole.Source && l.structure.relationshipType !== PoeticStructureRelationshipType.Unary
+            })
+            .sort((a, b) => sortPhrases(a.structure.repetition, b.structure.repetition));
 
           // unary links
           if (unaryLinks.length > 0) {
@@ -88,14 +91,21 @@ export const PhraseMenu: React.FC = () => {
             );
           } else if (repetitionLinks.length > 1) {
             // create a non-selectable item (header) to represent the common repetition
+            const headerKey = `${contextPhraseId}-rep-header`;
             items.push(
-              <MultiLinkHeaderItem key={`${contextPhraseId}-rep-header`} contextPhrase={info.phrase} role={PhraseRole.Repetition} />
+              <MultiLinkHeaderItem
+                key={headerKey} contextPhrase={info.phrase} role={PhraseRole.Repetition}
+                hovered={multiLinkHeaderHoveredKey === headerKey}
+              />
             );
             
             // create a selectable item for each structure linked, displayed as the differing sources
             repetitionLinks.forEach(link => {
               items.push(
-                <MultiLinkItem key={`${contextPhraseId}-src-${link.structure.id}`} link={link} role={PhraseRole.Source} />
+                <MultiLinkItem
+                  key={`${contextPhraseId}-src-${link.structure.id}`} link={link} role={PhraseRole.Source}
+                  onMouseOverOut={isOver => setMultiLinkHeaderHoveredKey(isOver ? headerKey : null)}
+                />
               );
             });
           }
@@ -114,14 +124,21 @@ export const PhraseMenu: React.FC = () => {
             );
           } else if (sourceLinks.length > 1) {
             // create a non-selectable item (header) to represent the common source
+            const headerKey = `${contextPhraseId}-src-header`;
             items.push(
-              <MultiLinkHeaderItem key={`${contextPhraseId}-src-header`} contextPhrase={info.phrase} role={PhraseRole.Source} />
+              <MultiLinkHeaderItem
+                key={headerKey} contextPhrase={info.phrase} role={PhraseRole.Source}
+                hovered={multiLinkHeaderHoveredKey === headerKey}
+              />
             );
 
             // create a selectable item for each structure linked, displayed as the differing repetitions
             sourceLinks.forEach(link => {
               items.push(
-                <MultiLinkItem key={`${contextPhraseId}-rep-${link.structure.id}`} link={link} role={PhraseRole.Repetition} />
+                <MultiLinkItem
+                  key={`${contextPhraseId}-rep-${link.structure.id}`} link={link} role={PhraseRole.Repetition}
+                  onMouseOverOut={isOver => setMultiLinkHeaderHoveredKey(isOver ? headerKey : null)}
+                />
               );
             });
 
@@ -133,15 +150,14 @@ export const PhraseMenu: React.FC = () => {
       });
     }
 
-    console.log(items);
     return items;
-  }, [contextPhraseIds, phraseLinks]);
+  }, [contextPhraseIds, phraseLinks, multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey]);
 
   return (
     <Menu
       id={TranscriptMenuId.PhraseMenu}
       animation="slide"
-      className="max-w-[400px] font-sans"
+      className="max-w-[400px] font-sans text-sm"
       onVisibilityChange={isVisible => updateMenuVisibility(TranscriptMenuId.PhraseMenu, isVisible)}
     >
 

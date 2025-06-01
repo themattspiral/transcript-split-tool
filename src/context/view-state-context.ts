@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 
 import { TabId } from '../shared/data';
+import { CustomCSSVariables } from './view-state-provider';
 
 interface ViewStateContextProps {
   activeTabId: TabId;
@@ -11,6 +12,7 @@ interface ViewStateContextProps {
   hideModals: () => void;
   modalMessage: string | null;
   modalOnConfirm: (() => void) | null;
+  cssVariables: { [key in CustomCSSVariables]: string };
 }
 
 export const ViewStateContext = createContext<ViewStateContextProps>({
@@ -21,7 +23,8 @@ export const ViewStateContext = createContext<ViewStateContextProps>({
   showConfirmationModal: () => {},
   hideModals: () => {},
   modalMessage: null,
-  modalOnConfirm: null
+  modalOnConfirm: null,
+  cssVariables: {} as { [key in CustomCSSVariables]: string }
 });
 
 export const useViewState = () => {

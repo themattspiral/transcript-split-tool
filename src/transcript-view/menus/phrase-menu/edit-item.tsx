@@ -14,11 +14,12 @@ export const EditItem: React.FC<EditItemProps> = ({ link }) => {
 
   return (
     <Item
+      className="text-sm font-medium"
       onMouseOver={() => handlePhraseMenuAction(link.structure.id, MenuAction.HoverStructure)}
       onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
       onClick={() => handlePhraseMenuAction(link.structure.id, MenuAction.Click)}
     >
-      <FontAwesomeIcon icon={faPenToSquare} className="mr-1" /> Edit
+      <FontAwesomeIcon icon={faPenToSquare} className="mr-1" size="lg" /> Edit Poetic Structure
     </Item>
   );
 };

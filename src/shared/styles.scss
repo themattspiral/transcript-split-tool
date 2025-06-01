@@ -28,5 +28,12 @@ body {
   --color-overlapping-lite: var(--color-fuchsia-100);
   --color-overlapping-heavy: var(--color-fuchsia-400);
 
-  --color-span-border: var(--color-gray-600)
+  --color-span-border: var(--color-gray-600);
+  --color-structure-arrows: var(--color-gray-600);
+  --color-badge: var(--color-gray-600);
+}
+
+// menus
+.text-always-menu-gray {
+  color: var(--contexify-item-color) !important;
 }

@@ -103,6 +103,13 @@ export interface TypeOfPoeticStructure {
   relationshipType: PoeticStructureRelationshipType;
 }
 
+export enum SpanType {
+  Repetition = 'repetition',
+  Source = 'source',
+  Overlapping = 'overlapping',
+  Text = 'text'
+}
+
 
 /******* CONSTANTS *******/
 /* These are defined here to avoid circular dependency issues */

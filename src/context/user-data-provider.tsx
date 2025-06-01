@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import {
-  OverallPhraseRole, Phrase, PhraseLink, PhraseLinkInfo,
-  PhraseRole, PoeticStructure, PoeticStructureRelationshipType, TranscriptLine
+  OverallPhraseRole, Phrase, PhraseLink, PhraseLinkInfo, PhraseRole, 
+  PoeticStructure, PoeticStructureRelationshipType, sortPhrases, TranscriptLine
 } from '../shared/data';
 import { UserDataContext } from './user-data-context';
 import testStructures from '../shared/test-structures.data.json';
@@ -88,7 +88,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
 
     Object.keys(uniqueLinePhrases).forEach(lineNumber => {
-      lines[lineNumber] = Object.values(uniqueLinePhrases[lineNumber]);
+      lines[lineNumber] = Object.values(uniqueLinePhrases[lineNumber]).sort(sortPhrases);
     });
 
     return {

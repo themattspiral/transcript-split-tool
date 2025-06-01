@@ -4,6 +4,7 @@ import 'react-contexify/dist/ReactContexify.css';
 
 import './main.css';
 import './shared/styles.scss';
+import './shared/components/components.scss';
 
 import { App } from './app';
 import { ViewStateProvider } from './context/view-state-provider';

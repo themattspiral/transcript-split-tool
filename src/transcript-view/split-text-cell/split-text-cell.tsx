@@ -1,17 +1,9 @@
 import { CSSProperties, useMemo } from 'react';
 import classnames from 'classnames';
 
-import './split-text-cell.scss';
-import { OverallPhraseRole, Phrase, PhraseAction, PhraseLinkInfo, TranscriptLine } from '../../shared/data';
+import { OverallPhraseRole, Phrase, PhraseAction, PhraseLinkInfo, SpanType, TranscriptLine } from '../../shared/data';
 import { useUserData } from '../../context/user-data-context';
 import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
-
-enum SpanType {
-  Repetition = 'repetition',
-  Source = 'source',
-  Overlapping = 'overlapping',
-  Text = 'text'
-}
 
 interface SpanDefinition {
   start: number;
@@ -43,7 +35,7 @@ const SplitTextCell: React.FC<SplitTextCellProps> = props => {
 
   // flatten plain text and phrases into discreet SpanDefinitions, handling potential range overlaps 
   const spanDefinitions: SpanDefinition[] = useMemo(() => {
-    const thisLinesPhrases = Object.values(linePhrases[line.lineNumber.toString()] || {});
+    const thisLinesPhrases = linePhrases[line.lineNumber.toString()] || [];
     const idxSpanSplitPoints = new Set<number>([0, line.text.length]);
 
     thisLinesPhrases?.forEach(phrase => {

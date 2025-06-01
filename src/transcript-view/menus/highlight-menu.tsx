@@ -3,7 +3,6 @@ import { Menu, Item, Separator } from 'react-contexify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
 
-import './transcript-menus.css';
 import { TranscriptMenuId } from './transcript-menus';
 import { getPhraseText, PhraseRole } from '../../shared/data';
 import { useStructureEdit } from '../../context/structure-edit-context';
