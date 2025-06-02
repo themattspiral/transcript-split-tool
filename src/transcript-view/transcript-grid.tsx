@@ -7,7 +7,7 @@ import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '..
 import { TranscriptMenuId } from './menus/transcript-menus';
 import { HighlightMenu } from './menus/highlight-menu';
 import { ErrorMultipleLinesMenu } from './menus/error-multiple-lines-menu';
-import { SplitTextCell } from './split-text-cell/split-text-cell';
+import { SplitTextCell } from './split-text-cell';
 import { EditState, useStructureEdit } from '../context/structure-edit-context';
 import { useUserData } from '../context/user-data-context';
 import { useTranscriptInteraction } from '../context/transcript-interaction-context';
