@@ -11,7 +11,7 @@ import { SplitTextCell } from './split-text-cell/split-text-cell';
 import { EditState, useStructureEdit } from '../context/structure-edit-context';
 import { useUserData } from '../context/user-data-context';
 import { useTranscriptInteraction } from '../context/transcript-interaction-context';
-import { PhraseMenu } from './menus/phrase-menu/phrase-menu';
+import { PhraseMenu } from './menus/structure-select-menu/phrase-menu';
 
 enum TranscriptGridColumnId {
   Line = 'line',
