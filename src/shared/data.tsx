@@ -28,7 +28,7 @@ export class PoeticStructure {
     public repetition: Phrase,
     public sources: Phrase[],
     public relationshipType: PoeticStructureRelationshipType = PoeticStructureRelationshipType.Paired,
-    public tops: string = GenericTOPS.fullHierarchyName,
+    public topsId: string = GenericTOPS.id,
     public topsNotes: string = '',
     public syntax: string = '',
     public notes: string = ''
@@ -96,8 +96,8 @@ export enum TabId {
 }
 
 export interface TypeOfPoeticStructure {
-  name: string;
-  fullHierarchyName: string;
+  id: string;
+  displayName: string;
   selectable: boolean;
   subtypes: TypeOfPoeticStructure[];
   relationshipType: PoeticStructureRelationshipType;
@@ -117,16 +117,16 @@ export enum SpanType {
 export const HEADER_ROW_ID = 'header';
 
 export const GenericTOPS: TypeOfPoeticStructure = {
-  name: 'Generic',
-  fullHierarchyName: 'Generic',
+  id: 'generic',
+  displayName: 'Generic',
   selectable: true,
   subtypes: [],
   relationshipType: PoeticStructureRelationshipType.Paired
 };
 
 export const ConsolidationTOPS: TypeOfPoeticStructure = {
-  name: 'Consolidation',
-  fullHierarchyName: 'Consolidation',
+  id: 'consolidation',
+  displayName: 'Consolidation',
   selectable: true,
   subtypes: [],
   relationshipType: PoeticStructureRelationshipType.MultipleSource
@@ -136,20 +136,20 @@ export const DefaultTOPSValues: TypeOfPoeticStructure[] = [
   GenericTOPS,
   ConsolidationTOPS,
   {
-    name: 'List',
-    fullHierarchyName: 'List',
+    id: 'list',
+    displayName: 'List',
     selectable: false,
     subtypes: [
       {
-        name: 'Single',
-        fullHierarchyName: 'List > Single',
+        id: 'list-single',
+        displayName: 'Single',
         selectable: true,
         subtypes: [],
         relationshipType: PoeticStructureRelationshipType.Unary
       },
       {
-        name: 'Interposed',
-        fullHierarchyName: 'List > Interposed',
+        id: 'list-interposed',
+        displayName: 'Interposed',
         selectable: true,
         subtypes: [],
         relationshipType: PoeticStructureRelationshipType.Paired
@@ -158,20 +158,20 @@ export const DefaultTOPSValues: TypeOfPoeticStructure[] = [
     relationshipType: PoeticStructureRelationshipType.Paired
   },
   {
-    name: 'Echo',
-    fullHierarchyName: 'Echo',
+    id: 'echo',
+    displayName: 'Echo',
     selectable: false,
     subtypes: [
       {
-        name: 'Self-echo',
-        fullHierarchyName: 'Echo > Self-echo',
+        id: 'echo-self-echo',
+        displayName: 'Self-echo',
         selectable: true,
         subtypes: [],
         relationshipType: PoeticStructureRelationshipType.Paired
       },
       {
-        name: 'Echo-of-another',
-        fullHierarchyName: 'Echo > Echo-of-another',
+        id: 'echo-echo-of-another',
+        displayName: 'Echo-of-another',
         selectable: true,
         subtypes: [],
         relationshipType: PoeticStructureRelationshipType.Paired
@@ -180,20 +180,20 @@ export const DefaultTOPSValues: TypeOfPoeticStructure[] = [
     relationshipType: PoeticStructureRelationshipType.Paired
   },
   {
-    name: 'Comparison',
-    fullHierarchyName: 'Comparison',
+    id: 'comparison',
+    displayName: 'Comparison',
     selectable: false,
     subtypes: [
       {
-        name: 'Sameness',
-        fullHierarchyName: 'Comparison > Sameness',
+        id: 'comparison-sameness',
+        displayName: 'Sameness',
         selectable: true,
         subtypes: [],
         relationshipType: PoeticStructureRelationshipType.Paired
       },
       {
-        name: 'Difference',
-        fullHierarchyName: 'Comparison > Difference',
+        id: 'comparison-difference',
+        displayName: 'Difference',
         selectable: true,
         subtypes: [],
         relationshipType: PoeticStructureRelationshipType.Paired
@@ -202,20 +202,20 @@ export const DefaultTOPSValues: TypeOfPoeticStructure[] = [
     relationshipType: PoeticStructureRelationshipType.Paired
   },
   {
-    name: 'Elaboration',
-    fullHierarchyName: 'Elaboration',
+    id: 'elaboration',
+    displayName: 'Elaboration',
     selectable: false,
     subtypes: [
       {
-        name: 'Elaborating',
-        fullHierarchyName: 'Elaboration > Elaborating',
+        id: 'elaboration-elaborating',
+        displayName: 'Elaborating',
         selectable: true,
         subtypes: [],
         relationshipType: PoeticStructureRelationshipType.Paired
       },
       {
-        name: 'Expanding',
-        fullHierarchyName: 'Elaboration > Expanding',
+        id: 'elaboration-expanding',
+        displayName: 'Expanding',
         selectable: true,
         subtypes: [],
         relationshipType: PoeticStructureRelationshipType.Paired
@@ -224,8 +224,8 @@ export const DefaultTOPSValues: TypeOfPoeticStructure[] = [
     relationshipType: PoeticStructureRelationshipType.Paired
   },
   {
-    name: 'Reversal',
-    fullHierarchyName: 'Reversal',
+    id: 'reversal',
+    displayName: 'Reversal',
     selectable: true,
     subtypes: [],
     relationshipType: PoeticStructureRelationshipType.Paired

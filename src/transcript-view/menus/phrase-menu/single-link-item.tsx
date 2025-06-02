@@ -12,7 +12,7 @@ interface SingleLinkItemProps {
 }
 
 export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
-  const { transcriptLines } = useUserData();
+  const { transcriptLines, topsDisplayNames } = useUserData();
   const { handlePhraseMenuAction } = useTranscriptInteraction();
 
   return (
@@ -22,7 +22,14 @@ export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
       onClick={() => handlePhraseMenuAction(link.structure.id, MenuAction.Click)}
     >
       { link.role === PhraseRole.Repetition && 
-        <div>
+        <div className="w-full">
+
+          <div className="flex justify-end w-full mb-1">
+            <Badge>
+              { topsDisplayNames[link.structure.topsId] }
+            </Badge>
+          </div>
+
           <div className="flex items-center">
             <span className={RepetitionClasses}>
               { getPhraseText(link.structure.repetition, transcriptLines) }
@@ -40,10 +47,17 @@ export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
               </span>
             </div>
           }
+
         </div>
       }
       { link.role === PhraseRole.Source && 
-        <div>
+        <div className="w-full">
+          <div className="flex justify-end w-full mb-1">
+            <Badge>
+              { topsDisplayNames[link.structure.topsId] }
+            </Badge>
+          </div>
+
           { link.structure.relationshipType !== PoeticStructureRelationshipType.Unary &&
             <div className="flex items-center mb-1">
               <span className={SourceClasses}>

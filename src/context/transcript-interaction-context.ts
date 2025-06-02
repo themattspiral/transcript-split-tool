@@ -14,6 +14,8 @@ interface TranscriptInteractionContextProps {
   highlightedPhrase: Phrase | null;
   setHighlightedPhrase: (phrase: Phrase | null) => void;
   makeHighlightedPhrasePending: (role: PhraseRole) => void;
+  multiLinkHeaderHoveredKey: string | null;
+  setMultiLinkHeaderHoveredKey: (key: string | null) => void;
 }
 
 export const TranscriptInteractionContext = createContext<TranscriptInteractionContextProps>({
@@ -26,7 +28,9 @@ export const TranscriptInteractionContext = createContext<TranscriptInteractionC
   contextPhraseIds: [],
   highlightedPhrase: null,
   setHighlightedPhrase: () => {},
-  makeHighlightedPhrasePending: () => {}
+  makeHighlightedPhrasePending: () => {},
+  multiLinkHeaderHoveredKey: null,
+  setMultiLinkHeaderHoveredKey: () => {}
 });
 
 export const useTranscriptInteraction = () => {

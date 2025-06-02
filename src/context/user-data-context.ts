@@ -1,18 +1,20 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseLink, PhraseLinkInfo, PoeticStructure, TranscriptLine } from '../shared/data';
+import { Phrase, PhraseLink, PhraseLinkInfo, PoeticStructure, TranscriptLine, TypeOfPoeticStructure } from '../shared/data';
 
 interface UserDataContextProps {
   transcriptLines: TranscriptLine[];
   setNewTranscript: (lines: TranscriptLine[]) => void;
-  poeticStructures: { [psId: string]: PoeticStructure };
+  poeticStructures: { [structureId: string]: PoeticStructure };
   addPoeticStructure: (structure: PoeticStructure) => void;
-  removePoeticStructure: (psId: string) => void;
+  removePoeticStructure: (structureId: string) => void;
   phraseLinks: { [phraseId: string]: PhraseLinkInfo };
   getAllLinkedPhraseIds: (phraseIds: string[]) => string[];
   getAllPhraseLinks: (phraseIds: string[]) => PhraseLink[];
   getAllStructurePhraseIds: (structureId: string) => string[];
   linePhrases: { [lineNumber: string]: Phrase[] };
+  topsOptions: TypeOfPoeticStructure[];
+  topsDisplayNames: { [topsId: string]: string };
 }
 
 export const UserDataContext = createContext<UserDataContextProps>({
@@ -25,7 +27,9 @@ export const UserDataContext = createContext<UserDataContextProps>({
   getAllLinkedPhraseIds: () => [],
   getAllPhraseLinks: () => [],
   getAllStructurePhraseIds: () => [],
-  linePhrases: {}
+  linePhrases: {},
+  topsOptions: [],
+  topsDisplayNames: {}
 });
 
 export const useUserData = () => {

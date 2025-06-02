@@ -1,4 +1,4 @@
-import { ReactElement, useMemo, useState } from 'react';
+import { ReactElement, useMemo } from 'react';
 import { Menu, Item, Separator } from 'react-contexify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
@@ -17,8 +17,9 @@ import { MultiLinkItem } from './multi-link-item';
 // from those associated with the context-clicked span bubble
 export const PhraseMenu: React.FC = () => {
   const { phraseLinks } = useUserData();
-  const { contextPhraseIds, updateMenuVisibility } = useTranscriptInteraction();
-  const [multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey] = useState<string | null>();
+  const {
+    contextPhraseIds, updateMenuVisibility, multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey
+  } = useTranscriptInteraction();
 
   const menuItems = useMemo(() => {
     const items: ReactElement[] = [];

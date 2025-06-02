@@ -14,6 +14,10 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
   const [contextPhraseIds, setContextPhraseIds] = useState<string[]>([]);
   // highlighted phrase when it is right-clicked
   const [highlightedPhrase, setHighlightedPhrase] = useState<Phrase | null>(null);
+  // when a multilink menu item is hovered, it sets this key for the corresponding header to be hovered
+  const [multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey] = useState<string | null>(null);
+
+  const [lme, setLme] = useState<React.MouseEvent | null>(null);
   
   const [transcriptMenuVisibility, setTranscriptMenuVisibility] = useState<{ [key in TranscriptMenuId]: boolean }>({
     [TranscriptMenuId.PhraseMenu]: false,
@@ -99,6 +103,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
         }
 
         showContextMenu({ event, id: TranscriptMenuId.PhraseMenu });
+        setLme(event);
         break;
     }
   }, [
@@ -148,19 +153,28 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     setPhraseViewStates(pvs);
   }, [setPhraseViewStates, phraseLinks]);
 
-  // clear hover whenever a menu is closed
+  // clear hover any header key states whenever a menu is closed
   useEffect(() => {
     if (allTranscriptMenusClosed) {
       clearHover();
+      setMultiLinkHeaderHoveredKey(null);
+
+      // TODO remove after done debugging
+      // uncomment to keep menu open
+      // if (lme) {
+      //   showContextMenu({ event: lme, id: TranscriptMenuId.PhraseMenu });
+      // }
     }
-  }, [allTranscriptMenusClosed, clearHover]);
+  }, [allTranscriptMenusClosed, clearHover, setMultiLinkHeaderHoveredKey, lme]);
 
   const value = useMemo(() => ({
     phraseViewStates, handlePhraseAction, handlePhraseMenuAction, updateMenuVisibility, clearHover, clearClick,
-    contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending
+    contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending,
+    multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey
   }), [
     phraseViewStates, handlePhraseAction, handlePhraseMenuAction, updateMenuVisibility, clearHover, clearClick,
-    contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending
+    contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending,
+    multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey
   ]);
 
   return (

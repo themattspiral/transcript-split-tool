@@ -1,15 +1,32 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import {
-  OverallPhraseRole, Phrase, PhraseLink, PhraseLinkInfo, PhraseRole, 
-  PoeticStructure, PoeticStructureRelationshipType, sortPhrases, TranscriptLine
+  DefaultTOPSValues, OverallPhraseRole, Phrase, PhraseLink, PhraseLinkInfo, PhraseRole, 
+  PoeticStructure, PoeticStructureRelationshipType, sortPhrases, TranscriptLine,
+  TypeOfPoeticStructure
 } from '../shared/data';
 import { UserDataContext } from './user-data-context';
 import testStructures from '../shared/test-structures.data.json';
 
+const flattenTops = (option: TypeOfPoeticStructure): { [topsId: string]: string } => {
+  let map = {} as { [topsId: string]: string };
+
+  if (option.selectable) {
+    map[option.id] = option.displayName;
+  }
+
+  if (option.subtypes.length > 0) {
+    option.subtypes.forEach(subtype => {
+      map = { ...map, ...flattenTops(subtype) };
+    });
+  }
+  return map;
+};
+
 export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
-  const [poeticStructures, setPoeticStructures] = useState<{ [psId: string]: PoeticStructure }>({});
+  const [poeticStructures, setPoeticStructures] = useState<{ [structureId: string]: PoeticStructure }>({});
+  const [topsOptions, setTopsOptions] = useState<TypeOfPoeticStructure[]>(DefaultTOPSValues);
 
   // calculated values:
   //   phraseLinks: mapping from phrase.id (for all defined phrases) to an array
@@ -20,7 +37,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   //                to array of phrases specific to each line
   const { phraseLinks, linePhrases } = useMemo(() => {
     const phraseMap = {} as { [phraseId: string]: Phrase};
-    const uniqueLinks = {} as { [phraseId: string]: { [psId: string]: PhraseLink } };
+    const uniqueLinks = {} as { [phraseId: string]: { [structureId: string]: PhraseLink } };
     const uniqueLinePhrases = {} as { [lineNumber: string]: { [phraseId: string]: Phrase } };
 
     Object.values(poeticStructures).forEach(structure => {
@@ -126,7 +143,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // TEMP: LOAD TEST DATA
     // TODO - replace with saved data load
 
-    Object.entries(testStructures).forEach(([psId, ps]) => {
+    Object.entries(testStructures).forEach(([structureId, ps]) => {
       const repetition = new Phrase(
         ps.repetition.lineNumber,
         ps.repetition.start,
@@ -141,10 +158,10 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
       
       const structure = new PoeticStructure(
-        repetition, sources, ps.relationshipType as PoeticStructureRelationshipType, ps.tops, ps.topsNotes, ps.syntax, ps.notes
+        repetition, sources, ps.relationshipType as PoeticStructureRelationshipType, ps.topsId, ps.topsNotes, ps.syntax, ps.notes
       );
       
-      delete (testStructures as { [id: string]: any })[psId];
+      delete (testStructures as { [id: string]: any })[structureId];
 
       (testStructures as { [id: string]: any })[structure.id] = structure;
     })
@@ -159,24 +176,34 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   }, [setPoeticStructures]);
 
-  const removePoeticStructure = useCallback((psId: string) => {
+  const removePoeticStructure = useCallback((structureId: string) => {
     setPoeticStructures(structures => {
       const newStructures = { ...structures };
-      delete newStructures[psId];
+      delete newStructures[structureId];
       return newStructures;
     });
   }, [setPoeticStructures]);
+
+  const topsDisplayNames = useMemo(() => {
+    let map = {} as { [topsId: string]: string };
+
+    topsOptions.forEach(option => {
+      map = { ...map, ...flattenTops(option) };
+    });
+
+    return map;
+  }, [topsOptions]);
   
   const value = useMemo(() => ({
     transcriptLines, setNewTranscript,
     poeticStructures, addPoeticStructure, removePoeticStructure,
     phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
-    linePhrases
+    linePhrases, topsOptions, topsDisplayNames
   }), [
     transcriptLines, setNewTranscript,
     poeticStructures, addPoeticStructure, removePoeticStructure,
     phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
-    linePhrases
+    linePhrases, topsOptions, topsDisplayNames
   ]);
 
   return (

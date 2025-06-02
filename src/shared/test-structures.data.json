@@ -13,7 +13,7 @@
             }
         ],
         "relationshipType": "Paired",
-        "tops": "Generic",
+        "topsId": "generic",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
@@ -32,7 +32,7 @@
             }
         ],
         "relationshipType": "Paired",
-        "tops": "Generic",
+        "topsId": "generic",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
@@ -51,7 +51,7 @@
             }
         ],
         "relationshipType": "Paired",
-        "tops": "Generic",
+        "topsId": "generic",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
@@ -70,7 +70,7 @@
             }
         ],
         "relationshipType": "Paired",
-        "tops": "Generic",
+        "topsId": "echo-echo-of-another",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
@@ -89,7 +89,7 @@
             }
         ],
         "relationshipType": "Paired",
-        "tops": "Generic",
+        "topsId": "generic",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
@@ -108,7 +108,7 @@
             }
         ],
         "relationshipType": "Paired",
-        "tops": "Generic",
+        "topsId": "echo-echo-of-another",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
@@ -127,7 +127,7 @@
             }
         ],
         "relationshipType": "Paired",
-        "tops": "Generic",
+        "topsId": "generic",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
@@ -146,7 +146,7 @@
             }
         ],
         "relationshipType": "Paired",
-        "tops": "Generic",
+        "topsId": "generic",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
@@ -165,7 +165,7 @@
             }
         ],
         "relationshipType": "Paired",
-        "tops": "Generic",
+        "topsId": "comparison-sameness",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
@@ -184,7 +184,7 @@
             }
         ],
         "relationshipType": "Paired",
-        "tops": "Generic",
+        "topsId": "generic",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
@@ -203,7 +203,7 @@
             }
         ],
         "relationshipType": "Paired",
-        "tops": "Generic",
+        "topsId": "generic",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
@@ -222,7 +222,7 @@
             }
         ],
         "relationshipType": "Paired",
-        "tops": "Generic",
+        "topsId": "generic",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
