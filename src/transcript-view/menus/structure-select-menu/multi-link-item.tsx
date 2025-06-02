@@ -15,7 +15,7 @@ interface MultiLinkItemProps {
 
 export const MultiLinkItem: React.FC<MultiLinkItemProps> = ({ link, role, onMouseOverOut }) => {
   const { transcriptLines, topsDisplayNames } = useUserData();
-  const { handlePhraseMenuAction } = useTranscriptInteraction();
+  const { handleStructureSelectMenuAction } = useTranscriptInteraction();
   const phraseText = getPhraseText(
     role === PhraseRole.Repetition ? link.structure.repetition : link.structure.sources[0],
     transcriptLines
@@ -24,18 +24,18 @@ export const MultiLinkItem: React.FC<MultiLinkItemProps> = ({ link, role, onMous
   return (
     <Item
       onMouseOver={() => {
-        handlePhraseMenuAction(link.structure.id, MenuAction.HoverStructure);
+        handleStructureSelectMenuAction(link.structure.id, MenuAction.HoverStructure);
         if (onMouseOverOut) {
           onMouseOverOut(true);
         }
       }}
       onMouseOut={() => {
-        handlePhraseMenuAction('', MenuAction.Unhover);
+        handleStructureSelectMenuAction('', MenuAction.Unhover);
         if (onMouseOverOut) {
           onMouseOverOut(false);
         }
       }}
-      onClick={() => handlePhraseMenuAction(link.structure.id, MenuAction.Click)}
+      onClick={() => handleStructureSelectMenuAction(link.structure.id, MenuAction.Click)}
     >
       <div className="w-full">
 

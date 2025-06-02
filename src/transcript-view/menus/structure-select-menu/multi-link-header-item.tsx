@@ -17,7 +17,7 @@ interface MultiLinkHeaderItemProps {
 export const MultiLinkHeaderItem: React.FC<MultiLinkHeaderItemProps> = ({ contextPhrase, role, hovered = false }) => {
   const { cssVariables } = useViewState();
   const { transcriptLines } = useUserData();
-  const { handlePhraseMenuAction } = useTranscriptInteraction();
+  const { handleStructureSelectMenuAction } = useTranscriptInteraction();
 
   const itemStyles: CSSProperties = { opacity: 1 };
   if (hovered) {
@@ -29,8 +29,8 @@ export const MultiLinkHeaderItem: React.FC<MultiLinkHeaderItemProps> = ({ contex
       disabled
       className="header rounded-[4px]"
       style={itemStyles}
-      onMouseOver={() => handlePhraseMenuAction(contextPhrase.id, MenuAction.HoverPhrase)}
-      onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
+      onMouseOver={() => handleStructureSelectMenuAction(contextPhrase.id, MenuAction.HoverPhrase)}
+      onMouseOut={() => handleStructureSelectMenuAction('', MenuAction.Unhover)}
     >
       <div className="flex items-center">
         <span className={role === PhraseRole.Repetition ? RepetitionClasses : SourceClasses}>

@@ -1,7 +1,7 @@
 import { SpanType } from '../../shared/data';
 
 export enum TranscriptMenuId {
-  PhraseMenu = 'phrase-menu-id',
+  StructureSelectMenu = 'structure-select-menu-id',
   HighlightMenu = 'highlight-menu-id',
   ErrorMultipleLinesMenu = 'error-multiple-lines-menu-id'
 }

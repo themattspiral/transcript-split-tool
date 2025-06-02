@@ -13,9 +13,9 @@ import { UnaryItem } from './unary-item';
 import { MultiLinkHeaderItem } from './multi-link-header-item';
 import { MultiLinkItem } from './multi-link-item';
 
-// the phrase menu allows users to choose which poetic structure to edit,
+// allows users to choose which poetic structure to edit,
 // from those associated with the context-clicked span bubble
-export const PhraseMenu: React.FC = () => {
+export const StructureSelectMenu: React.FC = () => {
   const { phraseLinks } = useUserData();
   const {
     contextPhraseIds, updateMenuVisibility, multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey
@@ -156,10 +156,10 @@ export const PhraseMenu: React.FC = () => {
 
   return (
     <Menu
-      id={TranscriptMenuId.PhraseMenu}
+      id={TranscriptMenuId.StructureSelectMenu}
       animation="slide"
       className="max-w-[400px] font-sans text-sm"
-      onVisibilityChange={isVisible => updateMenuVisibility(TranscriptMenuId.PhraseMenu, isVisible)}
+      onVisibilityChange={isVisible => updateMenuVisibility(TranscriptMenuId.StructureSelectMenu, isVisible)}
     >
 
       { menuItems }

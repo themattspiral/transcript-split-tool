@@ -11,7 +11,7 @@ import { SplitTextCell } from './split-text-cell/split-text-cell';
 import { EditState, useStructureEdit } from '../context/structure-edit-context';
 import { useUserData } from '../context/user-data-context';
 import { useTranscriptInteraction } from '../context/transcript-interaction-context';
-import { PhraseMenu } from './menus/structure-select-menu/phrase-menu';
+import { StructureSelectMenu } from './menus/structure-select-menu/structure-select-menu';
 
 enum TranscriptGridColumnId {
   Line = 'line',
@@ -160,7 +160,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       onContextMenu={event => handleGridAction(event, false)}
       style={style}
     >
-      <PhraseMenu />
+      <StructureSelectMenu />
       <HighlightMenu />
       <ErrorMultipleLinesMenu />
       

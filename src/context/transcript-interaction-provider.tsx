@@ -20,7 +20,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
   const [lme, setLme] = useState<React.MouseEvent | null>(null);
   
   const [transcriptMenuVisibility, setTranscriptMenuVisibility] = useState<{ [key in TranscriptMenuId]: boolean }>({
-    [TranscriptMenuId.PhraseMenu]: false,
+    [TranscriptMenuId.StructureSelectMenu]: false,
     [TranscriptMenuId.HighlightMenu]: false,
     [TranscriptMenuId.ErrorMultipleLinesMenu]: false
   });
@@ -102,7 +102,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
           clearAllThenUpdatePhrases(getAllLinkedPhraseIds(phraseIds), 'isHovered', true);
         }
 
-        showContextMenu({ event, id: TranscriptMenuId.PhraseMenu });
+        showContextMenu({ event, id: TranscriptMenuId.StructureSelectMenu });
         setLme(event);
         break;
     }
@@ -111,7 +111,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     getAllLinkedPhraseIds, setPhraseViewStates, setContextPhraseIds, showContextMenu
   ]);
 
-  const handlePhraseMenuAction = useCallback((structureOrPhraseId: string, action: MenuAction) => {
+  const handleStructureSelectMenuAction = useCallback((structureOrPhraseId: string, action: MenuAction) => {
     switch (action) {
       case MenuAction.Click:
         clearHover();
@@ -162,17 +162,17 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
       // TODO remove after done debugging
       // uncomment to keep menu open
       // if (lme) {
-      //   showContextMenu({ event: lme, id: TranscriptMenuId.PhraseMenu });
+      //   showContextMenu({ event: lme, id: TranscriptMenuId.StructureSelectMenu });
       // }
     }
   }, [allTranscriptMenusClosed, clearHover, setMultiLinkHeaderHoveredKey, lme]);
 
   const value = useMemo(() => ({
-    phraseViewStates, handlePhraseAction, handlePhraseMenuAction, updateMenuVisibility, clearHover, clearClick,
+    phraseViewStates, handlePhraseAction, handleStructureSelectMenuAction, updateMenuVisibility, clearHover, clearClick,
     contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending,
     multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey
   }), [
-    phraseViewStates, handlePhraseAction, handlePhraseMenuAction, updateMenuVisibility, clearHover, clearClick,
+    phraseViewStates, handlePhraseAction, handleStructureSelectMenuAction, updateMenuVisibility, clearHover, clearClick,
     contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending,
     multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey
   ]);

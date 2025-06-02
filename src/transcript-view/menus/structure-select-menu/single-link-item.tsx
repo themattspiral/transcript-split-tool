@@ -13,13 +13,13 @@ interface SingleLinkItemProps {
 
 export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
   const { transcriptLines, topsDisplayNames } = useUserData();
-  const { handlePhraseMenuAction } = useTranscriptInteraction();
+  const { handleStructureSelectMenuAction } = useTranscriptInteraction();
 
   return (
     <Item
-      onMouseOver={() => handlePhraseMenuAction(link.structure.id, MenuAction.HoverStructure)}
-      onMouseOut={() => handlePhraseMenuAction('', MenuAction.Unhover)}
-      onClick={() => handlePhraseMenuAction(link.structure.id, MenuAction.Click)}
+      onMouseOver={() => handleStructureSelectMenuAction(link.structure.id, MenuAction.HoverStructure)}
+      onMouseOut={() => handleStructureSelectMenuAction('', MenuAction.Unhover)}
+      onClick={() => handleStructureSelectMenuAction(link.structure.id, MenuAction.Click)}
     >
       { link.role === PhraseRole.Repetition && 
         <div className="w-full">
