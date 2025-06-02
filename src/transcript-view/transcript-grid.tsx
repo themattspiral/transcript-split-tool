@@ -32,13 +32,15 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
   const handleGridAction = useCallback((event: React.MouseEvent, handleAsPrimaryClick: boolean): void => {
     // using handler for onClick event, button was right click
     if (handleAsPrimaryClick && event.button !== 0) {
-      clearPhraseSelection();
+      // TODO - decide on selected phrase behavior
+      // clearPhraseSelection();
       return;
     }
 
     // using handler for onClick, nothing being set/edited
     if (handleAsPrimaryClick && event.button === 0 && editState === EditState.Idle) {
-      clearPhraseSelection();
+      // TODO - decide on selected phrase behavior
+      // clearPhraseSelection();
       return;
     }
 
@@ -48,7 +50,8 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
 
     // using handler for onContextMenu, but no selection is present
     if (!handleAsPrimaryClick && (!sel || !selText || !range)) {
-      clearPhraseSelection();
+      // TODO - decide on selected phrase behavior
+      // clearPhraseSelection();
       return;
     }
 

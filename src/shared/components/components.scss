@@ -40,7 +40,7 @@
   &.repetition {
     background-color: var(--color-repetition);
 
-    &.deemphasized {
+    &.deemphasized, &.selected.deemphasized {
       background-color: var(--color-repetition-lite);
     }
 
@@ -58,7 +58,7 @@
   &.source {
     background-color: var(--color-source);
     
-    &.deemphasized {
+    &.deemphasized, &.selected.deemphasized {
       background-color: var(--color-source-lite);
     }
 
@@ -76,7 +76,7 @@
   &.overlapping {
     background-color: var(--color-overlapping);
 
-    &.deemphasized {
+    &.deemphasized, &.selected.deemphasized {
       background-color: var(--color-overlapping-lite);
     }
     
@@ -100,7 +100,7 @@
     border: 2px dashed;
   }
 
-  &.pending, &.emphasized, &.selected {
+  &.pending, &.emphasized {
     font-weight: 600;
   }
   
