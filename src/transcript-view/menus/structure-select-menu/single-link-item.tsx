@@ -5,7 +5,7 @@ import { useUserData } from '../../../context/user-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
 import { CurvedArrow } from '../../../shared/components/curved-arrow';
 import { Badge } from '../../../shared/components/badge';
-import { SimpleSpanBubble } from '../../../shared/simple-span-bubble';
+import { SimpleSpanBubble } from '../../../shared/components/simple-span-bubble';
 
 interface SingleLinkItemProps {
   link: PhraseLink;

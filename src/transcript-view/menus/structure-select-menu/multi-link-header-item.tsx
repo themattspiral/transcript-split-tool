@@ -6,7 +6,7 @@ import { useUserData } from '../../../context/user-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
 import { useViewState } from '../../../context/view-state-context';
 import { CustomCSSVariables } from '../../../context/view-state-provider';
-import { SimpleSpanBubble } from '../../../shared/simple-span-bubble';
+import { SimpleSpanBubble } from '../../../shared/components/simple-span-bubble';
 
 interface MultiLinkHeaderItemProps {
   contextPhrase: Phrase;

@@ -3,7 +3,7 @@ import { Item } from 'react-contexify';
 import { getPhraseText, MenuAction, PhraseLink, SpanType } from '../../../shared/data';
 import { useUserData } from '../../../context/user-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
-import { SimpleSpanBubble } from '../../../shared/simple-span-bubble';
+import { SimpleSpanBubble } from '../../../shared/components/simple-span-bubble';
 
 interface UnaryItemProps {
   link: PhraseLink;
