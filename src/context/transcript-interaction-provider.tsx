@@ -66,11 +66,11 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
   }, [setPhraseViewStates]);
 
   const clearHover = useCallback(() => {
-    updateAllPhrases('isHovered', false);
+    updateAllPhrases('isEmphasized', false);
   }, [updateAllPhrases]);
 
   const clearClick = useCallback(() => {
-    updateAllPhrases('isClicked', false);
+    updateAllPhrases('isSelected', false);
   }, [setPhraseViewStates]);
 
   const handlePhraseAction = useCallback((event: React.MouseEvent, phraseIds: string[], action: PhraseAction) => {
@@ -78,7 +78,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
       case PhraseAction.Hover:
         // only update hover if no menus are currently showing
         if (allTranscriptMenusClosed) {
-          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(phraseIds), 'isHovered', true);
+          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(phraseIds), 'isEmphasized', true);
         }
         break;
       case PhraseAction.Unhover:
@@ -91,15 +91,15 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
         // only process click if no menus are currently showing
         if (allTranscriptMenusClosed) {
           // toggle click state
-          const currentState = phraseViewStates[phraseIds[0]].isClicked;
-          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(phraseIds), 'isClicked', !currentState);
+          const currentState = phraseViewStates[phraseIds[0]].isSelected;
+          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(phraseIds), 'isSelected', !currentState);
         }
         break;
       case PhraseAction.Context:
         setContextPhraseIds(phraseIds);
 
         if (!allTranscriptMenusClosed) {
-          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(phraseIds), 'isHovered', true);
+          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(phraseIds), 'isEmphasized', true);
         }
 
         showContextMenu({ event, id: TranscriptMenuId.StructureSelectMenu });
@@ -118,14 +118,14 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
         beginStructureEdit(structureOrPhraseId);
         break;
       case MenuAction.HoverStructure:
-        clearAllThenUpdatePhrases(getAllStructurePhraseIds(structureOrPhraseId), 'isHovered', true);
+        clearAllThenUpdatePhrases(getAllStructurePhraseIds(structureOrPhraseId), 'isEmphasized', true);
         break;
       case MenuAction.HoverPhrase:
-        clearAllThenUpdatePhrases([structureOrPhraseId], 'isHovered', true);
+        clearAllThenUpdatePhrases([structureOrPhraseId], 'isEmphasized', true);
         break;
       case MenuAction.Unhover:
         if (!allTranscriptMenusClosed) {
-          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(contextPhraseIds), 'isHovered', true);
+          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(contextPhraseIds), 'isEmphasized', true);
         }
         break;
     }
@@ -147,7 +147,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
   useEffect(() => {
     const pvs: { [phraseId: string]: PhraseViewState } = {};
     Object.keys(phraseLinks).forEach((phraseId: string) => {
-      pvs[phraseId] = { isClicked: false, isDeemphasized: false, isHovered: false, isPending: false };
+      pvs[phraseId] = { isSelected: false, isDeemphasized: false, isEmphasized: false, isPending: false };
     });
 
     setPhraseViewStates(pvs);

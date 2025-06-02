@@ -1,9 +1,9 @@
 import { Item } from 'react-contexify';
 
-import { getPhraseText, MenuAction, PhraseLink } from '../../../shared/data';
+import { getPhraseText, MenuAction, PhraseLink, SpanType } from '../../../shared/data';
 import { useUserData } from '../../../context/user-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
-import { RepetitionClasses } from '../transcript-menus';
+import { SimpleSpanBubble } from '../../../shared/simple-span-bubble';
 
 interface UnaryItemProps {
   link: PhraseLink;
@@ -20,9 +20,9 @@ export const UnaryItem: React.FC<UnaryItemProps> = ({ link }) => {
       onClick={() => handleStructureSelectMenuAction(link.structure.id, MenuAction.Click)}
     >
       <div>
-        <span className={RepetitionClasses}>
+        <SimpleSpanBubble spanType={SpanType.Repetition}>
           [U] { getPhraseText(link.structure.repetition, transcriptLines) }
-        </span>
+        </SimpleSpanBubble>
       </div>
     </Item>
   );

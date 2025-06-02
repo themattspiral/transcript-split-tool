@@ -1,12 +1,12 @@
 import { CSSProperties } from 'react';
 import { Item } from 'react-contexify';
 
-import { getPhraseText, MenuAction, Phrase, PhraseRole } from '../../../shared/data';
+import { getPhraseText, MenuAction, Phrase, PhraseRole, SpanType } from '../../../shared/data';
 import { useUserData } from '../../../context/user-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
-import { RepetitionClasses, SourceClasses } from '../transcript-menus';
 import { useViewState } from '../../../context/view-state-context';
 import { CustomCSSVariables } from '../../../context/view-state-provider';
+import { SimpleSpanBubble } from '../../../shared/simple-span-bubble';
 
 interface MultiLinkHeaderItemProps {
   contextPhrase: Phrase;
@@ -33,9 +33,9 @@ export const MultiLinkHeaderItem: React.FC<MultiLinkHeaderItemProps> = ({ contex
       onMouseOut={() => handleStructureSelectMenuAction('', MenuAction.Unhover)}
     >
       <div className="flex items-center">
-        <span className={role === PhraseRole.Repetition ? RepetitionClasses : SourceClasses}>
+        <SimpleSpanBubble spanType={role === PhraseRole.Source ? SpanType.Source : SpanType.Repetition}>
           { getPhraseText(contextPhrase, transcriptLines) }
-        </span>
+        </SimpleSpanBubble>
       </div>
     </Item>
   );

@@ -64,11 +64,11 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       return;
     }
 
-    const lineNumberString = gridAttrs.getNamedItem('data-transcript-line-idx')?.value;
+    const lineNumberString = gridAttrs.getNamedItem('data-transcript-line-number')?.value;
     const lineNumber = parseInt(lineNumberString || '');
     
-    const beginPhraseLineStartIdxString = getSelectionRangeContainerAttribute(range?.startContainer, 'data-pls-idx');
-    const endPhraseLineStartIdxString = getSelectionRangeContainerAttribute(range?.endContainer, 'data-pls-idx');
+    const beginPhraseLineStartIdxString = getSelectionRangeContainerAttribute(range?.startContainer, 'data-span-start-idx');
+    const endPhraseLineStartIdxString = getSelectionRangeContainerAttribute(range?.endContainer, 'data-span-start-idx');
     const beginPhraseLineStartIdx = parseInt(beginPhraseLineStartIdxString || '0');
     const endPhraseLineStartIdx = parseInt(endPhraseLineStartIdxString || '0');
     
@@ -94,24 +94,24 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
   const headerRow = useMemo(() => (
     <div
       className="flex font-medium font-sans sticky top-0 z-5 bg-gray-200 shadow-sm shadow-gray-400 select-none"
-      data-transcript-line-idx={HEADER_ROW_ID}
+      data-transcript-line-number={HEADER_ROW_ID}
     >
 
       <div
         className="px-2 py-2 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0"
-        data-column data-column-id={TranscriptGridColumnId.Line} data-transcript-line-idx={HEADER_ROW_ID}
+        data-column data-column-id={TranscriptGridColumnId.Line} data-transcript-line-number={HEADER_ROW_ID}
       >
         Line
       </div>
       <div
         className="px-2 py-2 border-b-1 border-gray-400 basis-[100px] shrink-0"
-        data-column data-column-id={TranscriptGridColumnId.Speaker} data-transcript-line-idx={HEADER_ROW_ID}
+        data-column data-column-id={TranscriptGridColumnId.Speaker} data-transcript-line-number={HEADER_ROW_ID}
       >
         Speaker
       </div>
       <div
         className="px-2 py-2 border-b-1 border-gray-400 grow-1"
-        data-column data-column-id={TranscriptGridColumnId.Text} data-transcript-line-idx={HEADER_ROW_ID}
+        data-column data-column-id={TranscriptGridColumnId.Text} data-transcript-line-number={HEADER_ROW_ID}
       >
         Transcript Text
       </div>
@@ -122,20 +122,20 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
   const dataRows = useMemo(() => transcriptLines.map((line, idx) => idx === 0 ? null : (
     <div
       key={line.lineNumber}
-      data-transcript-line-idx={idx}
+      data-transcript-line-number={idx}
       className={classnames('flex', { ['bg-gray-100']: idx % 2 === 0 })}
     >
 
       <div
         className="px-2 py-2 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
-        data-column data-column-id={TranscriptGridColumnId.Line} data-transcript-line-idx={idx}
+        data-column data-column-id={TranscriptGridColumnId.Line} data-transcript-line-number={idx}
       >
         {line.lineNumber}
       </div>
 
       <div
         className="px-2 py-2 border-b-1 border-gray-400 basis-[100px] shrink-0"
-        data-column data-column-id={TranscriptGridColumnId.Speaker} data-transcript-line-idx={idx}
+        data-column data-column-id={TranscriptGridColumnId.Speaker} data-transcript-line-number={idx}
       >
         { line.speaker }
       </div>
@@ -146,7 +146,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
         attributes={{
           ['data-column']: 'true',
           ['data-column-id']: TranscriptGridColumnId.Text,
-          ['data-transcript-line-idx']: idx
+          ['data-transcript-line-number']: idx
         }}
       />
 

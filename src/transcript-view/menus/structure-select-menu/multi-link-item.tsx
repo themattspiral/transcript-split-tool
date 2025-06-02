@@ -1,11 +1,11 @@
 import { Item } from 'react-contexify';
 
-import { getPhraseText, MenuAction, PhraseLink, PhraseRole } from '../../../shared/data';
+import { getPhraseText, MenuAction, PhraseLink, PhraseRole, SpanType } from '../../../shared/data';
 import { useUserData } from '../../../context/user-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
-import { RepetitionClasses, SourceClasses } from '../transcript-menus';
 import { Badge } from '../../../shared/components/badge';
 import { CurvedArrow } from '../../../shared/components/curved-arrow';
+import { SimpleSpanBubble } from '../../../shared/simple-span-bubble';
 
 interface MultiLinkItemProps {
   link: PhraseLink;
@@ -52,9 +52,9 @@ export const MultiLinkItem: React.FC<MultiLinkItemProps> = ({ link, role, onMous
             { role === PhraseRole.Repetition ? link.structure.repetition.lineNumber : link.structure.sources[0].lineNumber }
           </Badge>
           
-          <span className={role === PhraseRole.Repetition ? RepetitionClasses : SourceClasses}>
+          <SimpleSpanBubble spanType={role === PhraseRole.Source ? SpanType.Source : SpanType.Repetition}>
             { phraseText }
-          </span>
+          </SimpleSpanBubble>
         </div>
 
       </div>

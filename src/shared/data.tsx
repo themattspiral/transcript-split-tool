@@ -70,8 +70,8 @@ export interface PhraseLinkInfo {
 }
 
 export interface PhraseViewState {
-  isHovered: boolean;
-  isClicked: boolean;
+  isEmphasized: boolean;
+  isSelected: boolean;
   isDeemphasized: boolean;
   isPending: boolean;
 }
@@ -108,6 +108,25 @@ export enum SpanType {
   Source = 'source',
   Overlapping = 'overlapping',
   Text = 'text'
+}
+
+export interface SplitTextSpanBubbleDefinition {
+  start: number;
+  end: number;
+  spanPhraseIds: string[];
+  spanType: SpanType;
+  isPending: boolean;
+  isHoverable: boolean;
+  isClickable: boolean;
+  isContextable: boolean;
+  isEmphasized: boolean;
+  isSelected: boolean;
+  isDeemphasized: boolean;
+  isLeftmostSpan: boolean;
+  isRightmostSpan: boolean;
+  isLeftmostClickedSpan: boolean;
+  isRightmostClickedSpan: boolean;
+  isPreviousSpanClicked: boolean;
 }
 
 

@@ -33,7 +33,7 @@
   }
 }
 
-.split-text-span {
+.span-bubble {
   position: relative;
 
   /* SpanType.Repetition */
@@ -49,7 +49,7 @@
       border-color: var(--color-orange-400);
     }
 
-    &.hovered, &.clicked {
+    &.emphasized, &.selected {
       background-color: var(--color-repetition-heavy);
     }
   }
@@ -67,7 +67,7 @@
       border-color: var(--color-blue-400);
     }
 
-    &.hovered, &.clicked {
+    &.emphasized, &.selected {
       background-color: var(--color-source-heavy);
     }
   }
@@ -85,7 +85,7 @@
       border-color: var(--color-fuchsia-400);
     }
 
-    &.hovered, &.clicked {
+    &.emphasized, &.selected {
       background-color: var(--color-overlapping-heavy);
     }
   }
@@ -100,7 +100,7 @@
     border: 2px dashed;
   }
 
-  &.pending, &.hovered, &.clicked {
+  &.pending, &.emphasized, &.selected {
     font-weight: 600;
   }
   
@@ -113,7 +113,7 @@
     cursor: pointer;
   }
 
-  &:not(.text):not(.menu) {
+  &:not(.text):not(.simple) {
     &.leftmost {
       border-top-left-radius: var(--radius-xl);
       border-bottom-left-radius: var(--radius-xl);
@@ -128,8 +128,8 @@
       margin-right: -4px;
     }
 
-    &:not(.leftmost):not(.clicked):not(.previous-clicked),
-    &:not(.leftmost-clicked).clicked {
+    &:not(.leftmost):not(.selected):not(.previous-selected),
+    &:not(.leftmost-selected).selected {
       border-left: 1px dashed var(--color-span-border);
       padding-left: 1px;
     }
@@ -138,24 +138,24 @@
       padding-right: 1px;
     }
 
-    &.clicked {
+    &.selected {
       border-top: 2px solid;
       border-bottom: 2px solid;
       border-color: var(--color-span-border);
     }
   
-    &.clicked.leftmost, &.leftmost-clicked {
+    &.selected.leftmost, &.leftmost-selected {
       border-left: 2px solid;
       border-color: var(--color-span-border);
     }
     
-    &.clicked.rightmost, &.rightmost-clicked {
+    &.selected.rightmost, &.rightmost-selected {
       border-right: 2px solid;
       border-color: var(--color-span-border);
     }
   }
 
-  &.menu {
+  &.simple {
     font-family: var(--font-mono);
     border: 0;
     // same as .text-always-menu-gray

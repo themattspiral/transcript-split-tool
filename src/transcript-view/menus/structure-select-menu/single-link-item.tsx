@@ -1,11 +1,11 @@
 import { Item } from 'react-contexify';
 
-import { getPhraseText, MenuAction, PhraseLink, PhraseRole, PoeticStructureRelationshipType } from '../../../shared/data';
+import { getPhraseText, MenuAction, PhraseLink, PhraseRole, PoeticStructureRelationshipType, SpanType } from '../../../shared/data';
 import { useUserData } from '../../../context/user-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
-import { RepetitionClasses, SourceClasses } from '../transcript-menus';
 import { CurvedArrow } from '../../../shared/components/curved-arrow';
 import { Badge } from '../../../shared/components/badge';
+import { SimpleSpanBubble } from '../../../shared/simple-span-bubble';
 
 interface SingleLinkItemProps {
   link: PhraseLink;
@@ -31,9 +31,9 @@ export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
           </div>
 
           <div className="flex items-center">
-            <span className={RepetitionClasses}>
+            <SimpleSpanBubble spanType={SpanType.Repetition}>
               { getPhraseText(link.structure.repetition, transcriptLines) }
-            </span>
+            </SimpleSpanBubble>
           </div>
 
           { link.structure.relationshipType !== PoeticStructureRelationshipType.Unary &&
@@ -42,9 +42,9 @@ export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
 
               <Badge mode='line-number'>{ link.structure.sources[0].lineNumber }</Badge>
               
-              <span className={SourceClasses}>
+              <SimpleSpanBubble spanType={SpanType.Source}>
                 { getPhraseText(link.structure.sources[0], transcriptLines) }
-              </span>
+              </SimpleSpanBubble>
             </div>
           }
 
@@ -60,9 +60,9 @@ export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
 
           { link.structure.relationshipType !== PoeticStructureRelationshipType.Unary &&
             <div className="flex items-center mb-1">
-              <span className={SourceClasses}>
+              <SimpleSpanBubble spanType={SpanType.Source}>
                 { getPhraseText(link.structure.sources[0], transcriptLines) }
-                </span>
+              </SimpleSpanBubble>
             </div>
           }
 
@@ -73,9 +73,9 @@ export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
             
             <Badge mode='line-number'>{ link.structure.repetition.lineNumber }</Badge>
             
-            <span className={RepetitionClasses}>
+            <SimpleSpanBubble spanType={SpanType.Repetition}>
               { getPhraseText(link.structure.repetition, transcriptLines) }
-            </span>
+            </SimpleSpanBubble>
           </div>
         </div>
       }
