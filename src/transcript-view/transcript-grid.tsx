@@ -27,18 +27,18 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
   const { show: showContextMenu } = useContextMenu();
   const { transcriptLines } = useUserData();
   const { editState } = useStructureEdit();
-  const { clearClick, setHighlightedPhrase } = useTranscriptInteraction();
+  const { clearPhraseSelection, setHighlightedPhrase } = useTranscriptInteraction();
 
   const handleGridAction = useCallback((event: React.MouseEvent, handleAsPrimaryClick: boolean): void => {
     // using handler for onClick event, button was right click
     if (handleAsPrimaryClick && event.button !== 0) {
-      clearClick();
+      clearPhraseSelection();
       return;
     }
 
     // using handler for onClick, nothing being set/edited
     if (handleAsPrimaryClick && event.button === 0 && editState === EditState.Idle) {
-      clearClick();
+      clearPhraseSelection();
       return;
     }
 
@@ -48,7 +48,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
 
     // using handler for onContextMenu, but no selection is present
     if (!handleAsPrimaryClick && (!sel || !selText || !range)) {
-      clearClick();
+      clearPhraseSelection();
       return;
     }
 
@@ -89,7 +89,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
       ));
       showContextMenu({ event, id: TranscriptMenuId.HighlightMenu });
     }
-  }, [editState, clearClick, setHighlightedPhrase, showContextMenu]);
+  }, [editState, clearPhraseSelection, setHighlightedPhrase, showContextMenu]);
 
   const headerRow = useMemo(() => (
     <div

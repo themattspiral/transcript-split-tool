@@ -64,27 +64,83 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
       return updated;
     });
   }, [setPhraseViewStates]);
+  
+  // internal helper
+  const clearAllThenUpdateAndCounterupdatePhrases = useCallback((
+    fieldsToClear: (keyof PhraseViewState)[],
+    fieldsToUpdate: (keyof PhraseViewState)[],
+    fieldsToCounterupdate: (keyof PhraseViewState)[],
+    phraseIds: string[],
+    valueForUpdate: boolean,
+    valueForCounterpdate: boolean
+  ) => {
+    // for quick lookups later
+    const idMap = {} as { [phraseId: string]: boolean };
+    phraseIds.forEach(id => {
+      idMap[id] = true
+    });
 
-  const clearHover = useCallback(() => {
-    updateAllPhrases('isEmphasized', false);
-  }, [updateAllPhrases]);
+    setPhraseViewStates(pvs => {
+      const updated = { ...pvs };
+            
+      Object.keys(updated).forEach(id => {
+        // clear (set to false) all specified fields on all phrases
+        fieldsToClear.forEach(fieldName => {
+          updated[id][fieldName] = false;
+        });
 
-  const clearClick = useCallback(() => {
-    updateAllPhrases('isSelected', false);
+        if (idMap[id]) {
+          // update all specified fields for all specified phrases,
+          fieldsToUpdate.forEach(fieldName => {
+            updated[id][fieldName] = valueForUpdate;
+          });
+        } else {
+          // counterupdate all specified fields **for all non-specified phrases** (counterupdate)
+          fieldsToCounterupdate.forEach(fieldName => {
+            updated[id][fieldName] = valueForCounterpdate;
+          });
+        }
+      });
+
+      phraseIds.forEach(id => {
+        const p = updated[id];
+        if (p) {
+          fieldsToUpdate.forEach(fieldName => {
+            p[fieldName] = valueForUpdate;
+          });
+        }
+      });
+      return updated;
+    });
   }, [setPhraseViewStates]);
+
+  const clearPhraseEmphasis = useCallback(() => {
+    clearAllThenUpdateAndCounterupdatePhrases(['isEmphasized', 'isDeemphasized'], [], [], [], false, false);
+  }, [clearAllThenUpdateAndCounterupdatePhrases]);
+
+  const clearPhraseSelection = useCallback(() => {
+    updateAllPhrases('isSelected', false);
+  }, [updateAllPhrases]);
 
   const handlePhraseAction = useCallback((event: React.MouseEvent, phraseIds: string[], action: PhraseAction) => {
     switch (action) {
       case PhraseAction.Hover:
-        // only update hover if no menus are currently showing
+        // only update emphasis if no menus are currently showing
         if (allTranscriptMenusClosed) {
-          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(phraseIds), 'isEmphasized', true);
+          clearAllThenUpdateAndCounterupdatePhrases(
+            ['isEmphasized', 'isDeemphasized'], // clear
+            ['isEmphasized'],                   // update
+            ['isDeemphasized'],                 // counterupdate
+            getAllLinkedPhraseIds(phraseIds),
+            true,
+            true
+          );
         }
         break;
       case PhraseAction.Unhover:
-        // only clear hover if no menus are currently showing
+        // only clear emphasis if no menus are currently showing
         if (allTranscriptMenusClosed) {
-          clearHover();
+          clearPhraseEmphasis();
         }
         break;
       case PhraseAction.Click:
@@ -98,8 +154,16 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
       case PhraseAction.Context:
         setContextPhraseIds(phraseIds);
 
+        // handle opening another context menu while one is already open
         if (!allTranscriptMenusClosed) {
-          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(phraseIds), 'isEmphasized', true);
+          clearAllThenUpdateAndCounterupdatePhrases(
+            ['isEmphasized', 'isDeemphasized'], // clear
+            ['isEmphasized'],                   // update
+            ['isDeemphasized'],                 // counterupdate
+            getAllLinkedPhraseIds(phraseIds),
+            true,
+            true
+          );
         }
 
         showContextMenu({ event, id: TranscriptMenuId.StructureSelectMenu });
@@ -107,29 +171,53 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
         break;
     }
   }, [
-    phraseViewStates, allTranscriptMenusClosed, clearAllThenUpdatePhrases, clearHover,
+    phraseViewStates, allTranscriptMenusClosed, clearAllThenUpdateAndCounterupdatePhrases, clearAllThenUpdatePhrases, clearPhraseEmphasis,
     getAllLinkedPhraseIds, setPhraseViewStates, setContextPhraseIds, showContextMenu
   ]);
 
   const handleStructureSelectMenuAction = useCallback((structureOrPhraseId: string, action: MenuAction) => {
     switch (action) {
       case MenuAction.Click:
-        clearHover();
+        clearPhraseEmphasis();
         beginStructureEdit(structureOrPhraseId);
         break;
       case MenuAction.HoverStructure:
-        clearAllThenUpdatePhrases(getAllStructurePhraseIds(structureOrPhraseId), 'isEmphasized', true);
+        clearAllThenUpdateAndCounterupdatePhrases(
+          ['isEmphasized', 'isDeemphasized'], // clear
+          ['isEmphasized'],                   // update
+          ['isDeemphasized'],                 // counterupdate
+          getAllStructurePhraseIds(structureOrPhraseId),
+          true,
+          true
+        );
         break;
       case MenuAction.HoverPhrase:
-        clearAllThenUpdatePhrases([structureOrPhraseId], 'isEmphasized', true);
+        clearAllThenUpdateAndCounterupdatePhrases(
+          ['isEmphasized', 'isDeemphasized'], // clear
+          ['isEmphasized'],                   // update
+          ['isDeemphasized'],                 // counterupdate
+          [structureOrPhraseId],              // phraseId in the case of MenuAction.HoverPhrase
+          true,
+          true
+        );
         break;
       case MenuAction.Unhover:
         if (!allTranscriptMenusClosed) {
-          clearAllThenUpdatePhrases(getAllLinkedPhraseIds(contextPhraseIds), 'isEmphasized', true);
+          clearAllThenUpdateAndCounterupdatePhrases(
+            ['isEmphasized', 'isDeemphasized'], // clear
+            ['isEmphasized'],                   // update
+            ['isDeemphasized'],                 // counterupdate
+            getAllLinkedPhraseIds(contextPhraseIds),
+            true,
+            true
+          );
         }
         break;
     }
-  }, [clearHover, beginStructureEdit, clearAllThenUpdatePhrases, contextPhraseIds, allTranscriptMenusClosed]);
+  }, [
+    clearPhraseEmphasis, beginStructureEdit, clearAllThenUpdateAndCounterupdatePhrases, getAllStructurePhraseIds,
+    contextPhraseIds, allTranscriptMenusClosed
+  ]);
 
   const updateMenuVisibility = useCallback((menuId: TranscriptMenuId, isVisible: boolean) => {
     setTranscriptMenuVisibility(vis => ({
@@ -153,10 +241,11 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     setPhraseViewStates(pvs);
   }, [setPhraseViewStates, phraseLinks]);
 
-  // clear hover any header key states whenever a menu is closed
   useEffect(() => {
     if (allTranscriptMenusClosed) {
-      clearHover();
+      clearPhraseEmphasis();
+      // clear hover on header key whenever a menu is closed so it doesn't remain 
+      // hover-styled in the menu after being clicked
       setMultiLinkHeaderHoveredKey(null);
 
       // TODO remove after done debugging
@@ -165,14 +254,14 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
       //   showContextMenu({ event: lme, id: TranscriptMenuId.StructureSelectMenu });
       // }
     }
-  }, [allTranscriptMenusClosed, clearHover, setMultiLinkHeaderHoveredKey, lme]);
+  }, [allTranscriptMenusClosed, clearPhraseEmphasis, setMultiLinkHeaderHoveredKey, lme]);
 
   const value = useMemo(() => ({
-    phraseViewStates, handlePhraseAction, handleStructureSelectMenuAction, updateMenuVisibility, clearHover, clearClick,
+    phraseViewStates, handlePhraseAction, handleStructureSelectMenuAction, updateMenuVisibility, clearPhraseEmphasis, clearPhraseSelection,
     contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending,
     multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey
   }), [
-    phraseViewStates, handlePhraseAction, handleStructureSelectMenuAction, updateMenuVisibility, clearHover, clearClick,
+    phraseViewStates, handlePhraseAction, handleStructureSelectMenuAction, updateMenuVisibility, clearPhraseEmphasis, clearPhraseSelection,
     contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending,
     multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey
   ]);

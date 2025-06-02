@@ -8,8 +8,8 @@ interface TranscriptInteractionContextProps {
   handlePhraseAction: (event: React.MouseEvent, phraseIds: string[], action: PhraseAction) => void;
   handleStructureSelectMenuAction: (structureOrPhraseId: string, action: MenuAction) => void;
   updateMenuVisibility: (menuId: TranscriptMenuId, isVisible: boolean) => void;
-  clearHover: () => void;
-  clearClick: () => void;
+  clearPhraseEmphasis: () => void;
+  clearPhraseSelection: () => void;
   contextPhraseIds: string[];
   highlightedPhrase: Phrase | null;
   setHighlightedPhrase: (phrase: Phrase | null) => void;
@@ -23,8 +23,8 @@ export const TranscriptInteractionContext = createContext<TranscriptInteractionC
   handlePhraseAction: () => {},
   handleStructureSelectMenuAction: () => {},
   updateMenuVisibility: () => {},
-  clearHover: () => {},
-  clearClick: () => {},
+  clearPhraseEmphasis: () => {},
+  clearPhraseSelection: () => {},
   contextPhraseIds: [],
   highlightedPhrase: null,
   setHighlightedPhrase: () => {},
