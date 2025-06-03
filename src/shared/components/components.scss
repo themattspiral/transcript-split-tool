@@ -23,6 +23,17 @@
     padding: 2px 0;
     margin: 0 3px 0 0;
   }
+
+  &.large {
+    font-size: 14px;
+    line-height: 14px;
+
+    &.line-number {
+      width: 35px;
+      padding: 3px 0;
+      margin: 0 5px 0 0;
+    }
+  }
 }
 
 .curved-arrow {
@@ -34,13 +45,14 @@
 }
 
 .span-bubble {
-  position: relative;
+  font-family: var(--font-mono);
 
   /* SpanType.Repetition */
   &.repetition {
     background-color: var(--color-repetition);
 
-    &.deemphasized, &.selected.deemphasized {
+    &.deemphasized,
+    &.selected.deemphasized {
       background-color: var(--color-repetition-lite);
     }
 
@@ -49,7 +61,8 @@
       border-color: var(--color-orange-400);
     }
 
-    &.emphasized, &.selected {
+    &.emphasized,
+    &.selected {
       background-color: var(--color-repetition-heavy);
     }
   }
@@ -58,7 +71,8 @@
   &.source {
     background-color: var(--color-source);
     
-    &.deemphasized, &.selected.deemphasized {
+    &.deemphasized,
+    &.selected.deemphasized {
       background-color: var(--color-source-lite);
     }
 
@@ -67,7 +81,8 @@
       border-color: var(--color-blue-400);
     }
 
-    &.emphasized, &.selected {
+    &.emphasized,
+    &.selected {
       background-color: var(--color-source-heavy);
     }
   }
@@ -76,7 +91,8 @@
   &.overlapping {
     background-color: var(--color-overlapping);
 
-    &.deemphasized, &.selected.deemphasized {
+    &.deemphasized,
+    &.selected.deemphasized {
       background-color: var(--color-overlapping-lite);
     }
     
@@ -85,7 +101,8 @@
       border-color: var(--color-fuchsia-400);
     }
 
-    &.emphasized, &.selected {
+    &.emphasized,
+    &.selected {
       background-color: var(--color-overlapping-heavy);
     }
   }
@@ -100,7 +117,8 @@
     border: 2px dashed;
   }
 
-  &.pending, &.emphasized {
+  &.pending,
+  &.emphasized {
     font-weight: 600;
   }
   
@@ -113,11 +131,16 @@
     cursor: pointer;
   }
 
+  /* conditional styling for poetic structure phrase span bubbles */
   &:not(.text):not(.simple) {
+    
     &.leftmost {
       border-top-left-radius: var(--radius-xl);
       border-bottom-left-radius: var(--radius-xl);
       padding-left: 4px;
+
+      /* negative margin prevents the extra padding from inserting more space between words
+      or letters (which looks unnatural), so it behaves more like a highlight here  */
       margin-left: -4px;
     }
   
@@ -125,15 +148,27 @@
       border-top-right-radius: var(--radius-xl);
       border-bottom-right-radius: var(--radius-xl);
       padding-right: 4px;
+
+      /* negative margin prevents the extra padding from inserting more space between words
+      or letters (which looks unnatural), so it behaves more like a highlight here */
       margin-right: -4px;
     }
 
-    &:not(.leftmost):not(.selected):not(.previous-selected),
-    &:not(.leftmost-selected).selected {
+    /* draw a dashed border between immediatly adjacent span bubbles under 2 conditions:
+         1. span is NOT selected and NOT leftmost (i.e. it is a plain, non-interacted-with span),
+            AND does NOT have a selected span immediately previous/left (so that we don't get 2 borders)
+         2. span IS selected, but is NOT the leftmost-selected (i.e. there IS a selected span to the left),
+            so that we still get the dashed border between adjacent phrases
+            within a larger selected group of spans */
+    &:not(.selected):not(.leftmost):not(.previous-selected),
+    &.selected:not(.leftmost-selected) {
       border-left: 1px dashed var(--color-span-border);
+
+      /* so that text inside is not right against the dashed border */
       padding-left: 1px;
     }
 
+    /* so that text inside is not right against the dashed border */
     &:not(.rightmost) {
       padding-right: 1px;
     }
@@ -144,23 +179,31 @@
       border-color: var(--color-span-border);
     }
   
-    &.selected.leftmost, &.leftmost-selected {
+    /* special cases:
+         1. selected AND leftmost: override the dashed border that would otherwise 
+            be applied to separate adjacent spans (so outside left edge isn't dashed)
+         2. leftmost-selected: add the selected-style border to a span the is the 
+            furthest left selected span in the middle of a group */
+    &.selected.leftmost,
+    &.leftmost-selected {
       border-left: 2px solid;
       border-color: var(--color-span-border);
     }
     
-    &.selected.rightmost, &.rightmost-selected {
+    /* same as above but for the right side */
+    &.selected.rightmost,
+    &.rightmost-selected {
       border-right: 2px solid;
       border-color: var(--color-span-border);
     }
   }
 
-  &.simple {
-    font-family: var(--font-mono);
-    border: 0;
-    // same as .text-always-menu-gray
-    color: var(--contexify-item-color) !important;
-    
+  /* in simple and menu mode, this component is always leftmost & rightmost,
+    (i.e. just one lone span), so it always:
+      - has rounded corners on both ends
+      - has padding on both ends (but NOT negative margins, so that it takes up space) */
+  &.simple,
+  &.menu {    
     border-top-left-radius: var(--radius-xl);
     border-bottom-left-radius: var(--radius-xl);
     padding-left: 4px;
@@ -168,5 +211,11 @@
     border-top-right-radius: var(--radius-xl);
     border-bottom-right-radius: var(--radius-xl);
     padding-right: 4px;
+  }
+
+  &.menu {
+    /* when used in a react-contexify menu, make sure the text in the span bubble does
+       not change colors when hovered and the menu item background changes color */
+    color: var(--contexify-item-color) !important;
   }
 }

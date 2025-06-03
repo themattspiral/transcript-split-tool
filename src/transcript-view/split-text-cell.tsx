@@ -1,5 +1,5 @@
 import { CSSProperties, useMemo } from 'react';
-import classnames from 'classnames';
+import classNames from 'classnames';
 
 import { OverallPhraseRole, Phrase, PhraseLinkInfo, SpanType, SplitTextSpanBubbleDefinition, TranscriptLine } from '../shared/data';
 import { useUserData } from '../context/user-data-context';
@@ -128,7 +128,7 @@ export const SplitTextCell: React.FC<SplitTextCellProps> = props => {
   )), [spanDefinitions]);
 
   return (
-    <div className={classnames('px-2 py-2 relative whitespace-pre-wrap', className)} style={style} {...attributes}>
+    <div className={classNames('px-2 py-2 relative whitespace-pre-wrap', className)} style={style} {...attributes}>
       { spanBubbles }
     </div>
   );

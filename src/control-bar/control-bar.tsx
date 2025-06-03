@@ -1,13 +1,11 @@
 import { useMemo, useRef } from 'react';
 import { extractRawText } from 'mammoth';
-import classnames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from '@fortawesome/free-regular-svg-icons';
 
 import { TranscriptLine, TabId } from '../shared/data';
 import { useViewState } from '../context/view-state-context';
 import { useUserData } from '../context/user-data-context';
-import { PendingPhraseBar } from './pending-phrase-bar';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
@@ -87,12 +85,10 @@ const ControlBar: React.FC = () => {
       />
 
       {/* Left Side Container */}
-      <div className="pb-2 h-full grow-1 flex flex-col gap-1 transition-[height] duration-2000 overflow-hidden ease-in-out">
-        <div className="flex gap-2">
+      <div className="pb-2 h-full grow-1 flex gap-2">
+        
           <button
-            onClick={() => {
-              fileInputRef.current?.click();
-            }}
+            onClick={() => fileInputRef.current?.click()}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer flex items-center"
           >
             Import New Transcript
@@ -111,16 +107,7 @@ const ControlBar: React.FC = () => {
             Export Grid
             <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
           </button>
-        </div>
         
-        <div className={classnames(
-          // "transition-[height] duration-2000 overflow-hidden ease-in-out border-1",
-          // pendingPhraseRepetition ? 'h-full' : 'h-0'
-        )}
-          // style={{transitionDuration: '10000ms' }}
-        >
-          <PendingPhraseBar />
-        </div>
       </div>
 
       {/* Right Side Container */}

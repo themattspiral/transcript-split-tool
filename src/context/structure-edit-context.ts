@@ -15,6 +15,7 @@ interface StructureEditContextProps {
   setPendingPhrase: (phrase: Phrase | null, role: PhraseRole) => void;
   beginStructureEdit: (structureId: string) => void;
   savePendingStructureEdit: () => void;
+  deleteStructureUnderEdit: () => void;
   createNewStructureFromPendingPhrases: () => void;
   clearAllPending: () => void;
 }
@@ -26,6 +27,7 @@ export const StructureEditContext = createContext<StructureEditContextProps>({
   setPendingPhrase: () => {},
   beginStructureEdit: () => {},
   savePendingStructureEdit: () => {},
+  deleteStructureUnderEdit: () => {},
   createNewStructureFromPendingPhrases: () => {},
   clearAllPending: () => {}
 });

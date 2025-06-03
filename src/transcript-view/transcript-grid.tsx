@@ -1,6 +1,6 @@
 import { CSSProperties, useMemo, useCallback } from 'react';
 import { useContextMenu } from 'react-contexify';
-import classnames from 'classnames';
+import classNames from 'classnames';
 
 import { Phrase, HEADER_ROW_ID } from '../shared/data';
 import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../shared/util';
@@ -20,10 +20,11 @@ enum TranscriptGridColumnId {
 }
 
 interface TranscriptGridProps {
+  className?: string | undefined;
   style?: CSSProperties | undefined;
 }
 
-const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
+const TranscriptGrid: React.FC<TranscriptGridProps> = ({ className, style }) => {
   const { show: showContextMenu } = useContextMenu();
   const { transcriptLines } = useUserData();
   const { editState } = useStructureEdit();
@@ -126,7 +127,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
     <div
       key={line.lineNumber}
       data-transcript-line-number={idx}
-      className={classnames('flex', { ['bg-gray-100']: idx % 2 === 0 })}
+      className={classNames('flex', { ['bg-gray-100']: idx % 2 === 0 })}
     >
 
       <div
@@ -158,7 +159,7 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
 
   return transcriptLines?.length ? (
     <div
-      className="flex flex-col overflow-auto box-border w-full font-mono"
+      className={classNames('flex flex-col overflow-auto box-border w-full font-mono', className)}
       onClick={event => handleGridAction(event, true)}
       onContextMenu={event => handleGridAction(event, false)}
       style={style}
@@ -173,8 +174,8 @@ const TranscriptGrid: React.FC<TranscriptGridProps> = ({ style }) => {
 
     </div>
   ) : (
-    <div className="flex flex-col grow-1 justify-center" style={style}>
-      <h1 className="flex justify-center text-2xl text-gray-600">
+    <div className={classNames('flex flex-col justify-center', className)} style={style}>
+      <h1 className="flex justify-center text-2xl text-gray-600 p-2">
         Please import a transcript to get started.
       </h1>
     </div>

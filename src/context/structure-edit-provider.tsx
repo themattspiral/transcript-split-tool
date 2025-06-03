@@ -47,6 +47,7 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
 
     setEditingStructureId(structureId);
 
+    // todo - use pending for changes only
     const s = poeticStructures[structureId];
     setPendingRepetition(s.repetition);
     // TODO - handle multiple & unary
@@ -62,6 +63,18 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [editState, editingStructureId, pendingRepetition, pendingSource, addPoeticStructure, removePoeticStructure, clearAllPending]);
 
+  const deleteStructureUnderEdit = useCallback(() => {
+    setEditingStructureId(id => {
+      if (id) {
+        removePoeticStructure(id);
+      }
+
+      return null;
+    });
+    clearAllPending();
+    setEditState(EditState.Idle);
+  }, [removePoeticStructure, setEditingStructureId, clearAllPending, setEditState]);
+
   const createNewStructureFromPendingPhrases = useCallback(() => {
     if (editState === EditState.CreatingNew && pendingRepetition && pendingSource) {
       addPoeticStructure(new PoeticStructure(pendingRepetition, [pendingSource]));
@@ -71,10 +84,12 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const value = useMemo(() => ({
     editState, pendingRepetition, pendingSource, editingStructureId,
-    setPendingPhrase, clearAllPending, beginStructureEdit, savePendingStructureEdit, createNewStructureFromPendingPhrases
+    setPendingPhrase, clearAllPending, beginStructureEdit, savePendingStructureEdit, deleteStructureUnderEdit,
+    createNewStructureFromPendingPhrases
   }), [
     editState, pendingRepetition, pendingSource, editingStructureId,
-    setPendingPhrase, clearAllPending, beginStructureEdit, savePendingStructureEdit, createNewStructureFromPendingPhrases
+    setPendingPhrase, clearAllPending, beginStructureEdit, savePendingStructureEdit, deleteStructureUnderEdit,
+    createNewStructureFromPendingPhrases
   ]);
 
   return (

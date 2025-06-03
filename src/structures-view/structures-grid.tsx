@@ -230,4 +230,4 @@ const StructuresGrid: React.FC<StructuresGridProps> = props => {
   );
 };
 
-export { StructuresGrid as PhraseGrid };
+export { StructuresGrid };

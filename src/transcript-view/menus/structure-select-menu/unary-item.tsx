@@ -20,7 +20,7 @@ export const UnaryItem: React.FC<UnaryItemProps> = ({ link }) => {
       onClick={() => handleStructureSelectMenuAction(link.structure.id, MenuAction.Click)}
     >
       <div>
-        <SimpleSpanBubble spanType={SpanType.Repetition}>
+        <SimpleSpanBubble mode='menu' spanType={SpanType.Repetition}>
           [U] { getPhraseText(link.structure.repetition, transcriptLines) }
         </SimpleSpanBubble>
       </div>

@@ -31,7 +31,7 @@ export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
           </div>
 
           <div className="flex items-center">
-            <SimpleSpanBubble spanType={SpanType.Repetition}>
+            <SimpleSpanBubble mode='menu' spanType={SpanType.Repetition}>
               { getPhraseText(link.structure.repetition, transcriptLines) }
             </SimpleSpanBubble>
           </div>
@@ -42,7 +42,7 @@ export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
 
               <Badge mode='line-number'>{ link.structure.sources[0].lineNumber }</Badge>
               
-              <SimpleSpanBubble spanType={SpanType.Source}>
+              <SimpleSpanBubble mode='menu' spanType={SpanType.Source}>
                 { getPhraseText(link.structure.sources[0], transcriptLines) }
               </SimpleSpanBubble>
             </div>
@@ -60,7 +60,7 @@ export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
 
           { link.structure.relationshipType !== PoeticStructureRelationshipType.Unary &&
             <div className="flex items-center mb-1">
-              <SimpleSpanBubble spanType={SpanType.Source}>
+              <SimpleSpanBubble mode='menu' spanType={SpanType.Source}>
                 { getPhraseText(link.structure.sources[0], transcriptLines) }
               </SimpleSpanBubble>
             </div>
@@ -73,7 +73,7 @@ export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
             
             <Badge mode='line-number'>{ link.structure.repetition.lineNumber }</Badge>
             
-            <SimpleSpanBubble spanType={SpanType.Repetition}>
+            <SimpleSpanBubble mode='menu' spanType={SpanType.Repetition}>
               { getPhraseText(link.structure.repetition, transcriptLines) }
             </SimpleSpanBubble>
           </div>

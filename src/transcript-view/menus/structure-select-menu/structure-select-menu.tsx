@@ -41,6 +41,10 @@ export const StructureSelectMenu: React.FC = () => {
       contextPhraseIds.forEach((contextPhraseId, contextPhraseIdx) => {
         const info = phraseLinks[contextPhraseId];
 
+        if (!info || info.links.length === 0) {
+          return;
+        }
+
         if (info.links.length === 1) {
           // single link: make a single selectable item to represent the structure
           const link = info.links[0];

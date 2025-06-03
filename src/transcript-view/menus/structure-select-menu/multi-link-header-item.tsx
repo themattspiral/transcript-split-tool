@@ -33,7 +33,10 @@ export const MultiLinkHeaderItem: React.FC<MultiLinkHeaderItemProps> = ({ contex
       onMouseOut={() => handleStructureSelectMenuAction('', MenuAction.Unhover)}
     >
       <div className="flex items-center">
-        <SimpleSpanBubble spanType={role === PhraseRole.Source ? SpanType.Source : SpanType.Repetition}>
+        <SimpleSpanBubble
+          mode='menu'
+          spanType={role === PhraseRole.Source ? SpanType.Source : SpanType.Repetition}
+        >
           { getPhraseText(contextPhrase, transcriptLines) }
         </SimpleSpanBubble>
       </div>

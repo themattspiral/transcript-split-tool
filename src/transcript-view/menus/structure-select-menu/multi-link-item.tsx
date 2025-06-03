@@ -52,7 +52,10 @@ export const MultiLinkItem: React.FC<MultiLinkItemProps> = ({ link, role, onMous
             { role === PhraseRole.Repetition ? link.structure.repetition.lineNumber : link.structure.sources[0].lineNumber }
           </Badge>
           
-          <SimpleSpanBubble spanType={role === PhraseRole.Source ? SpanType.Source : SpanType.Repetition}>
+          <SimpleSpanBubble
+            mode='menu'
+            spanType={role === PhraseRole.Source ? SpanType.Source : SpanType.Repetition}
+          >
             { phraseText }
           </SimpleSpanBubble>
         </div>
