@@ -1,9 +1,9 @@
-import { CSSProperties, useCallback } from 'react';
+import { CSSProperties } from 'react';
 import classNames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faX, faTrash, faCaretDown } from '@fortawesome/free-solid-svg-icons';
 
-import { getPhraseText, Phrase, PoeticStructureRelationshipType, SpanType, TypeOfPoeticStructure } from '../../shared/data';
+import { getPhraseText, PoeticStructureRelationshipType, SpanType } from '../../shared/data';
 import { useUserData } from '../../context/user-data-context';
 import { EditState, useStructureEdit } from '../../context/structure-edit-context';
 import { SimpleSpanBubble } from '../../shared/components/simple-span-bubble';
@@ -17,67 +17,28 @@ interface StructureBuilderProps {
 const CONTAINER_CLASSES = 'pl-3 pr-4 pt-6 pb-6 flex flex-col justify-center items-center overflow-x-hidden overflow-y-auto';
 
 export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, style }) => {
-  const { transcriptLines, poeticStructures, topsMap } = useUserData();
+  const { transcriptLines } = useUserData();
   const {
-    editState, pendingRepetition, pendingSource, pendingTops, editingStructureId,
-    clearAllPending, createNewStructureFromPending, savePendingStructureEdit,
+    editState, editInfo,
+    clearAllPending, savePendingStructureEdit,
     deleteStructureUnderEdit
   } = useStructureEdit();
-
-  const handleConfirm = useCallback(() => {
-    if (editState === EditState.EditingExisting) {
-      savePendingStructureEdit();
-    } else {
-      createNewStructureFromPending();
-    }
-  }, [editState, createNewStructureFromPending, savePendingStructureEdit]);
   
-  const isSameLine = pendingRepetition?.lineNumber === pendingSource?.lineNumber;
-  const hasOrderingError = pendingRepetition && pendingSource && (
-    pendingSource.lineNumber > pendingRepetition.lineNumber
-    || (isSameLine && pendingRepetition.start < pendingSource.end)
+  const repetitionText = getPhraseText(editInfo.repetitionToShow, transcriptLines) || '<selection pending>';
+  const sourceText = getPhraseText(editInfo.sourceToShow, transcriptLines) || '<selection pending>';
+
+  const isSameLine = editInfo.repetitionToShow?.lineNumber === editInfo.sourceToShow?.lineNumber;
+  const hasOrderingError = editInfo.repetitionToShow && editInfo.sourceToShow && (
+    editInfo.sourceToShow.lineNumber > editInfo.repetitionToShow.lineNumber
+    || (isSameLine && editInfo.repetitionToShow.start < editInfo.sourceToShow.end)
   );
   
-  let repetitionPhraseToShow: Phrase | null = null;
-  let sourcePhraseToShow: Phrase | null = null;
-  let topsToShow: TypeOfPoeticStructure | null = null;
-  let repetitionModified = false;
-  let sourceModified = false;
-  let topsModified = false;
-  
-  if (editState === EditState.CreatingNew) {
-    repetitionPhraseToShow = pendingRepetition;
-    sourcePhraseToShow = pendingSource;
-    topsToShow = pendingTops;
-  } else if (editState === EditState.EditingExisting && editingStructureId) {
-    const structure = poeticStructures[editingStructureId]
-
-    if (pendingRepetition) {
-      repetitionPhraseToShow = pendingRepetition;
-      repetitionModified = true;
-    } else {
-      repetitionPhraseToShow = structure.repetition;
-    }
-
-    if (pendingSource) {
-      sourcePhraseToShow = pendingSource;
-      sourceModified = true;
-    } else {
-      sourcePhraseToShow = structure.sources[0];
-    }
-
-    if (pendingTops) {
-      topsToShow = pendingTops;
-      topsModified = true;
-    } else {
-      topsToShow = topsMap[structure.topsId];
-    }
+  let submitEnabled = false;
+  if (editState === EditState.EditingExisting) {
+    submitEnabled = !hasOrderingError && (editInfo.repetitionModified || editInfo.sourceModified);
+  } else if (editState === EditState.CreatingNew) {
+    submitEnabled = !hasOrderingError && !!editInfo.repetitionToShow && !!editInfo.sourceToShow;
   }
-  
-  const repetitionText = getPhraseText(repetitionPhraseToShow, transcriptLines) || '<selection pending>';
-  const sourceText = getPhraseText(sourcePhraseToShow, transcriptLines) || '<selection pending>';
-  
-  const submitEnabled = pendingRepetition && pendingSource && !hasOrderingError;
 
   return editState === EditState.Idle ? (
 
@@ -113,13 +74,13 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
         <h2 className="w-full text-gray-600 text-md font-bold flex items-center">
           <span className="mr-4">ToPS:</span>
           <span className="grow-1 flex items-center justify-end">
-            <Badge size="large">{topsToShow?.displayName}</Badge>
+            <Badge size="large">{editInfo.topsToShow?.displayName}</Badge>
             <FontAwesomeIcon icon={faCaretDown} size="sm" className="ml-2" />
           </span>
         </h2>
         <div
           className="w-full flex justify-end text-red-500 text-xs font-semibold mt-1 mb-4"
-          style={{ visibility: topsModified ? 'visible' : 'hidden' }}
+          style={{ visibility: editInfo.topsModified ? 'visible' : 'hidden' }}
         >
           Modified
         </div>
@@ -130,15 +91,15 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
 
         <div className="flex items-center w-full">
           <Badge mode="line-number" size="large" className="shrink-0">
-            { repetitionPhraseToShow?.lineNumber || '--' }
+            { editInfo.repetitionToShow?.lineNumber || '--' }
           </Badge>
           
           <SimpleSpanBubble
             spanType={SpanType.Repetition}
             mode='general'
             className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
-            style={{ padding: '10px 20px', color: !repetitionPhraseToShow ? 'gray' : undefined }}
-            showDeemphasized={!repetitionPhraseToShow}
+            style={{ padding: '10px 20px', color: !editInfo.repetitionToShow ? 'gray' : undefined }}
+            showDeemphasized={!editInfo.repetitionToShow}
           >
             { repetitionText }
           </SimpleSpanBubble>
@@ -146,28 +107,28 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
 
         <div
           className="w-full flex justify-end text-red-500 text-xs font-semibold mt-1 mb-4"
-          style={{ visibility: repetitionModified ? 'visible' : 'hidden' }}
+          style={{ visibility: editInfo.repetitionModified ? 'visible' : 'hidden' }}
         >
           Modified
         </div>
     
-        { topsToShow?.relationshipType !== PoeticStructureRelationshipType.Unary &&
+        { editInfo.topsToShow?.relationshipType !== PoeticStructureRelationshipType.Unary &&
           <>
           <h2 className="w-full text-gray-600 text-md font-bold mb-2">
-            Source{topsToShow?.relationshipType === PoeticStructureRelationshipType.MultipleSource ? 's' : ''}:
+            Source{editInfo.topsToShow?.relationshipType === PoeticStructureRelationshipType.MultipleSource ? 's' : ''}:
           </h2>
 
           <div className="flex items-center w-full">
             <Badge mode="line-number" size="large" className="shrink-0">
-              { sourcePhraseToShow?.lineNumber || '--' }
+              { editInfo.sourceToShow?.lineNumber || '--' }
             </Badge>
 
             <SimpleSpanBubble
               spanType={SpanType.Source}
               mode='general'
               className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
-              style={{ padding: '10px 20px', color: !sourcePhraseToShow ? 'gray' : undefined }}
-              showDeemphasized={!sourcePhraseToShow}
+              style={{ padding: '10px 20px', color: !editInfo.sourceToShow ? 'gray' : undefined }}
+              showDeemphasized={!editInfo.sourceToShow}
               >
               { sourceText }
             </SimpleSpanBubble>
@@ -175,7 +136,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
 
           <div
             className="w-full flex justify-end text-red-500 text-xs font-semibold mt-1"
-            style={{ visibility: sourceModified ? 'visible' : 'hidden' }}
+            style={{ visibility: editInfo.sourceModified ? 'visible' : 'hidden' }}
           >
             Modified
           </div>
@@ -193,7 +154,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
             'w-full h-[35px] rounded-lg text-white',
             submitEnabled ? 'bg-green-500 hover:bg-green-600 hover:text-green-100 cursor-pointer shadow-md shadow-gray-400' : 'bg-gray-300 cursor-not-allowed'
           )}
-          onClick={handleConfirm}
+          onClick={savePendingStructureEdit}
         >
           <FontAwesomeIcon icon={faCheck} size="xl" />
           <span className="font-semibold ml-2">Save {editState === EditState.EditingExisting ? 'Changes' : 'New'}</span>

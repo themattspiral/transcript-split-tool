@@ -8,33 +8,34 @@ export enum EditState {
   EditingExisting = 'EditingExisting'
 }
 
+export interface EditInfo {
+  repetitionToShow: Phrase | null;
+  sourceToShow: Phrase | null;
+  topsToShow: TypeOfPoeticStructure | null;
+  repetitionModified: boolean;
+  sourceModified: boolean;
+  topsModified: boolean;
+}
+
 interface StructureEditContextProps {
   editState: EditState,
-  pendingRepetition: Phrase | null;
-  pendingSource: Phrase | null;
+  editInfo: EditInfo,
   setPendingPhrase: (phrase: Phrase | null, role: PhraseRole) => void;
-  pendingTops: TypeOfPoeticStructure | null;
   setPendingTops: (tops: TypeOfPoeticStructure) => void;
-  editingStructureId: string | null;
   beginStructureEdit: (structureId: string) => void;
   savePendingStructureEdit: () => void;
   deleteStructureUnderEdit: () => void;
-  createNewStructureFromPending: () => void;
   clearAllPending: () => void;
 }
 
 export const StructureEditContext = createContext<StructureEditContextProps>({
   editState: EditState.Idle,
-  pendingRepetition: null,
-  pendingSource: null,
+  editInfo: { } as EditInfo,
   setPendingPhrase: () => {},
-  pendingTops: null,
   setPendingTops: () => {},
-  editingStructureId: null,
   beginStructureEdit: () => {},
   savePendingStructureEdit: () => {},
   deleteStructureUnderEdit: () => {},
-  createNewStructureFromPending: () => {},
   clearAllPending: () => {}
 });
 
