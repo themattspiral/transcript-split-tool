@@ -3,11 +3,11 @@ import classNames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faX, faTrash, faCaretDown } from '@fortawesome/free-solid-svg-icons';
 
-import { getPhraseText, Phrase, PoeticStructureRelationshipType, SpanType, TypeOfPoeticStructure } from '../shared/data';
-import { useUserData } from '../context/user-data-context';
-import { EditState, useStructureEdit } from '../context/structure-edit-context';
-import { SimpleSpanBubble } from '../shared/components/simple-span-bubble';
-import { Badge } from '../shared/components/badge';
+import { getPhraseText, Phrase, PoeticStructureRelationshipType, SpanType, TypeOfPoeticStructure } from '../../shared/data';
+import { useUserData } from '../../context/user-data-context';
+import { EditState, useStructureEdit } from '../../context/structure-edit-context';
+import { SimpleSpanBubble } from '../../shared/components/simple-span-bubble';
+import { Badge } from '../../shared/components/badge';
 
 interface StructureBuilderProps {
   className?: string | undefined;

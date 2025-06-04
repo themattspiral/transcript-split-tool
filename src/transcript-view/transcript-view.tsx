@@ -6,7 +6,7 @@ import { useViewState } from '../context/view-state-context';
 import { CustomCSSVariables } from '../context/view-state-provider';
 import { TranscriptGrid } from './transcript-grid';
 import classNames from 'classnames';
-import { StructureBuilder } from './structure-builder';
+import { StructureBuilder } from './structure-builder/structure-builder';
 
 const RESIZE_ACTIVE_COLOR = 'red';
 const RESIZE_COLUMN_WIDTH_PX = 7;
