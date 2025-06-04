@@ -4,4 +4,3 @@
 /* https://tailwindcss.com/docs/detecting-classes-in-source-files#explicitly-registering-sources */
 @source "./shared/styles.scss";
 @source "./shared/components/components.scss";
-

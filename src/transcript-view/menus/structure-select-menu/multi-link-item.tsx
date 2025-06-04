@@ -14,7 +14,7 @@ interface MultiLinkItemProps {
 }
 
 export const MultiLinkItem: React.FC<MultiLinkItemProps> = ({ link, role, onMouseOverOut }) => {
-  const { transcriptLines, topsDisplayNames } = useUserData();
+  const { transcriptLines, topsMap } = useUserData();
   const { handleStructureSelectMenuAction } = useTranscriptInteraction();
   const phraseText = getPhraseText(
     role === PhraseRole.Repetition ? link.structure.repetition : link.structure.sources[0],
@@ -41,7 +41,7 @@ export const MultiLinkItem: React.FC<MultiLinkItemProps> = ({ link, role, onMous
 
         <div className="flex justify-end w-full mb-1">
           <Badge>
-            { topsDisplayNames[link.structure.topsId] }
+            { topsMap[link.structure.topsId].displayName }
           </Badge>
         </div>
 

@@ -12,7 +12,7 @@ interface SingleLinkItemProps {
 }
 
 export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
-  const { transcriptLines, topsDisplayNames } = useUserData();
+  const { transcriptLines, topsMap } = useUserData();
   const { handleStructureSelectMenuAction } = useTranscriptInteraction();
 
   return (
@@ -26,7 +26,7 @@ export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
 
           <div className="flex justify-end w-full mb-1">
             <Badge>
-              { topsDisplayNames[link.structure.topsId] }
+              { topsMap[link.structure.topsId].displayName }
             </Badge>
           </div>
 
@@ -54,7 +54,7 @@ export const SingleLinkItem: React.FC<SingleLinkItemProps> = ({ link }) => {
         <div className="w-full">
           <div className="flex justify-end w-full mb-1">
             <Badge>
-              { topsDisplayNames[link.structure.topsId] }
+              { topsMap[link.structure.topsId].displayName }
             </Badge>
           </div>
 

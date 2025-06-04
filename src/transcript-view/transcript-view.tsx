@@ -8,14 +8,13 @@ import { TranscriptGrid } from './transcript-grid';
 import classNames from 'classnames';
 import { StructureBuilder } from './structure-builder';
 
+const RESIZE_ACTIVE_COLOR = 'red';
 const RESIZE_COLUMN_WIDTH_PX = 7;
 const STRUCTURE_BUILDER_MIN_WIDTH_PCT = 10;
 const STRUCTURE_BUILDER_MAX_WIDTH_PCT = 50;
 
 interface ResizeDetails {
-  transcriptGridWidthPx: number;
   transcriptGridWidthPct: number;
-  structureBuilderWidthPx: number;
   structureBuilderWidthPct: number;
 }
 
@@ -37,14 +36,12 @@ export const TranscriptView: React.FC<TranscriptViewProps> = ({ className, style
     isResizing: false
   });
   const [resizeDetails, setResizeDetails] = useState<ResizeDetails>({
-    transcriptGridWidthPx: 0,
     transcriptGridWidthPct: 80,
-    structureBuilderWidthPx: 0,
     structureBuilderWidthPct: 20
   });
 
   const spanBorderColor = cssVariables[CustomCSSVariables.ColorSpanBorder];
-  const isResizingColor = resizeContext.isResizing ? 'red' : spanBorderColor;
+  const isResizingColor = resizeContext.isResizing ? RESIZE_ACTIVE_COLOR : spanBorderColor;
 
   const handleMouseDown = useCallback(() => {
     if (containerRef.current) {
@@ -62,9 +59,7 @@ export const TranscriptView: React.FC<TranscriptViewProps> = ({ className, style
     const pxRemaining = resizeContext.containerBoundingRect.width - RESIZE_COLUMN_WIDTH_PX - pxIntoRect;
 
     const details: ResizeDetails = {
-      transcriptGridWidthPx: pxIntoRect,
       transcriptGridWidthPct: (pxIntoRect / resizeContext.containerBoundingRect.width) * 100,
-      structureBuilderWidthPx: pxRemaining,
       structureBuilderWidthPct: (pxRemaining / resizeContext.containerBoundingRect.width) * 100
     };
 
@@ -114,17 +109,19 @@ export const TranscriptView: React.FC<TranscriptViewProps> = ({ className, style
         className="h-full flex items-center justify-center relative select-none"
         style={{ width: `${RESIZE_COLUMN_WIDTH_PX}px`}}
       >
+        {/* divider line */}
         <div
-          className="divider-line h-full w-[1px] absolute"
+          className="h-full w-[1px] absolute"
           style={{ backgroundColor: isResizingColor }}
         />
 
+        {/* resize handle box */}
         <div
-          className="resize-handle-box cursor-col-resize w-[20px] h-[30px] flex items-center justify-center absolute"
+          className="cursor-col-resize w-[20px] h-[30px] flex items-center justify-center absolute"
           style={{ color: isResizingColor }}
           onMouseDown={handleMouseDown}
         >
-          <FontAwesomeIcon icon={faGripLinesVertical} className="fa-xl" />
+          <FontAwesomeIcon icon={faGripLinesVertical} className="fa-xl"  />
         </div>
       </div>
 

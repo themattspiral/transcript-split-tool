@@ -8,12 +8,8 @@ import {
 import { UserDataContext } from './user-data-context';
 import testStructures from '../shared/test-structures.data.json';
 
-const flattenTops = (option: TypeOfPoeticStructure): { [topsId: string]: string } => {
-  let map = {} as { [topsId: string]: string };
-
-  if (option.selectable) {
-    map[option.id] = option.displayName;
-  }
+const flattenTops = (option: TypeOfPoeticStructure): { [topsId: string]: TypeOfPoeticStructure } => {
+  let map = { [option.id]: option } as { [topsId: string]: TypeOfPoeticStructure };
 
   if (option.subtypes.length > 0) {
     option.subtypes.forEach(subtype => {
@@ -184,8 +180,8 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   }, [setPoeticStructures]);
 
-  const topsDisplayNames = useMemo(() => {
-    let map = {} as { [topsId: string]: string };
+  const topsMap = useMemo(() => {
+    let map = {} as { [topsId: string]: TypeOfPoeticStructure };
 
     topsOptions.forEach(option => {
       map = { ...map, ...flattenTops(option) };
@@ -198,12 +194,12 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     transcriptLines, setNewTranscript,
     poeticStructures, addPoeticStructure, removePoeticStructure,
     phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
-    linePhrases, topsOptions, topsDisplayNames
+    linePhrases, topsOptions, topsMap
   }), [
     transcriptLines, setNewTranscript,
     poeticStructures, addPoeticStructure, removePoeticStructure,
     phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
-    linePhrases, topsOptions, topsDisplayNames
+    linePhrases, topsOptions, topsMap
   ]);
 
   return (
