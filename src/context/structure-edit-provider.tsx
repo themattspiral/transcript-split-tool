@@ -1,13 +1,14 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { StructureEditContext, EditState } from './structure-edit-context';
-import { PoeticStructure, Phrase, PhraseRole } from '../shared/data';
+import { PoeticStructure, Phrase, PhraseRole, TypeOfPoeticStructure, GenericTOPS } from '../shared/data';
 import { useUserData } from './user-data-context';
 
 export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [editState, setEditState] = useState<EditState>(EditState.Idle);
   const [pendingRepetition, setPendingRepetition] = useState<Phrase | null>(null);
   const [pendingSource, setPendingSource] = useState<Phrase | null>(null);
+  const [pendingTops, setPendingTops] = useState<TypeOfPoeticStructure | null>(null);
   const [editingStructureId, setEditingStructureId] = useState<string | null>(null);
 
   const { poeticStructures, addPoeticStructure, removePoeticStructure } = useUserData();
@@ -15,6 +16,7 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
   const setPendingPhrase = useCallback((phrase: Phrase | null, role: PhraseRole) => {
     if (editState === EditState.Idle) {
       setEditState(EditState.CreatingNew);
+      setPendingTops(GenericTOPS);
     }
 
     if (role === PhraseRole.Repetition) {
@@ -31,7 +33,10 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
     //   // AUTO ADD
     //   // then switch to edit mode
     // }
-  }, [editState, pendingRepetition, pendingSource, setPendingRepetition, setPendingSource]);
+  }, [
+    editState, pendingRepetition, pendingSource, pendingTops,
+    setPendingRepetition, setPendingSource, setPendingTops
+  ]);
   
   const clearAllPending = useCallback(() => {
     setPendingRepetition(null);
@@ -83,13 +88,13 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [editState, pendingRepetition, pendingSource, addPoeticStructure, clearAllPending]);
 
   const value = useMemo(() => ({
-    editState, pendingRepetition, pendingSource, editingStructureId,
+    editState, pendingRepetition, pendingSource, pendingTops, editingStructureId,
     setPendingPhrase, clearAllPending, beginStructureEdit, savePendingStructureEdit, deleteStructureUnderEdit,
-    createNewStructureFromPendingPhrases
+    createNewStructureFromPendingPhrases, setPendingTops
   }), [
-    editState, pendingRepetition, pendingSource, editingStructureId,
+    editState, pendingRepetition, pendingSource, pendingTops, editingStructureId,
     setPendingPhrase, clearAllPending, beginStructureEdit, savePendingStructureEdit, deleteStructureUnderEdit,
-    createNewStructureFromPendingPhrases
+    createNewStructureFromPendingPhrases, setPendingTops
   ]);
 
   return (

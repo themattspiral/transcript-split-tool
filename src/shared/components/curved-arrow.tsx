@@ -8,7 +8,7 @@ interface CurverdArrowProps {
   size?: number;
   direction?: 'up' | 'down';
   color?: string;
-  style?: CSSProperties,
+  style?: CSSProperties | undefined,
   mode?: 'general' | 'phrase-link'
 }
 

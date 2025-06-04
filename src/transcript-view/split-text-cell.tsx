@@ -9,7 +9,7 @@ import { SplitTextSpanBubble } from './split-text-span-bubble';
 interface SplitTextCellProps {
   line: TranscriptLine;
   className?: string;
-  style?: CSSProperties;
+  style?: CSSProperties | undefined;
   attributes?: any;
 }
 

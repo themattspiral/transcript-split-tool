@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseRole } from '../shared/data';
+import { Phrase, PhraseRole, TypeOfPoeticStructure } from '../shared/data';
 
 export enum EditState {
   Idle,
@@ -13,6 +13,8 @@ interface StructureEditContextProps {
   pendingRepetition: Phrase | null;
   pendingSource: Phrase | null;
   setPendingPhrase: (phrase: Phrase | null, role: PhraseRole) => void;
+  pendingTops: TypeOfPoeticStructure | null;
+  setPendingTops: (tops: TypeOfPoeticStructure) => void;
   beginStructureEdit: (structureId: string) => void;
   savePendingStructureEdit: () => void;
   deleteStructureUnderEdit: () => void;
@@ -25,6 +27,8 @@ export const StructureEditContext = createContext<StructureEditContextProps>({
   pendingRepetition: null,
   pendingSource: null,
   setPendingPhrase: () => {},
+  pendingTops: null,
+  setPendingTops: () => {},
   beginStructureEdit: () => {},
   savePendingStructureEdit: () => {},
   deleteStructureUnderEdit: () => {},
