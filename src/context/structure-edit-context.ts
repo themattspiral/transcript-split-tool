@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseRole, TypeOfPoeticStructure } from '../shared/data';
+import { Phrase, PhraseLinkInfo, PhraseRole, TypeOfPoeticStructure } from '../shared/data';
 
 export enum EditState {
   Idle = 'Idle',
@@ -26,6 +26,8 @@ interface StructureEditContextProps {
   savePendingStructureEdit: () => void;
   deleteStructureUnderEdit: () => void;
   clearAllPending: () => void;
+  pendingPhraseLinks: { [phraseId: string]: PhraseLinkInfo };
+  pendingLinePhrases: { [lineNumber: string]: Phrase[] };
 }
 
 export const StructureEditContext = createContext<StructureEditContextProps>({
@@ -36,7 +38,9 @@ export const StructureEditContext = createContext<StructureEditContextProps>({
   beginStructureEdit: () => {},
   savePendingStructureEdit: () => {},
   deleteStructureUnderEdit: () => {},
-  clearAllPending: () => {}
+  clearAllPending: () => {},
+  pendingPhraseLinks: {},
+  pendingLinePhrases: {}
 });
 
 export const useStructureEdit = () => {

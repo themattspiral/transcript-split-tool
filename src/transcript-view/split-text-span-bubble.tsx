@@ -20,10 +20,9 @@ export const SplitTextSpanBubble: React.FC<SplitTextSpanBubbleProps> = ({ span, 
       emphasized: span.isEmphasized,
       deemphasized: span.isDeemphasized,
       leftmost: span.isLeftmostSpan,
-      rightmost: span.isRightmostSpan
-      // ['leftmost-selected']: span.isLeftmostClickedSpan,
-      // ['rightmost-selected']: span.isRightmostClickedSpan,
-      // ['previous-selected']: span.isPreviousSpanClicked
+      rightmost: span.isRightmostSpan,
+      ['previous-pending']: span.isPreviousSpanPending,
+      ['next-pending']: span.isNextSpanPending
     }
   );
 

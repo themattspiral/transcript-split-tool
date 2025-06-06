@@ -129,7 +129,7 @@ export const StructureSelectMenu: React.FC = () => {
           }
 
           if (sourceLinks.length === 1) {
-            const link = repetitionLinks[0];
+            const link = sourceLinks[0];
             items.push(
               <SingleLinkItem key={`${contextPhraseId}-${link.role}-${link.structure.id}`} link={link} />
             );

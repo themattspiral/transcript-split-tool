@@ -49,7 +49,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
   const [lme, setLme] = useState<React.MouseEvent | null>(null);
 
   // view states represent a modification to the way a standard phrase's span buuble is styled,
-  // either because something is hovered (changes emphasis), or for displaying pending phrases under edit
+  // because something is hovered, which changes emphasis
   const phraseViewStates: { [phraseId: string]: PhraseViewState } = useMemo(() => {
     const pvs: { [phraseId: string]: PhraseViewState } = {};
     
@@ -78,18 +78,8 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     Object.keys(phraseLinks).forEach((phraseId: string) => {
       const inMap = phraseIdMap[phraseId] || false;
 
-      pvs[phraseId] = { isDeemphasized: !inMap && phraseIdsToEmphasize.length > 0, isEmphasized: inMap, isPending: false };
+      pvs[phraseId] = { isDeemphasized: !inMap && phraseIdsToEmphasize.length > 0, isEmphasized: inMap };
     });
-
-    if (editState !== EditState.Idle) {
-      if (editInfo.repetitionToShow) {
-        pvs[editInfo.repetitionToShow.id] = { isEmphasized: true, isDeemphasized: false, isPending: true };
-      }
-
-      if (editInfo.sourceToShow) {
-        pvs[editInfo.sourceToShow.id] = { isEmphasized: true, isDeemphasized: false, isPending: true };
-      }
-    }
 
     return pvs;
   }, [editState, editInfo, phraseLinks, hoverState, getAllLinkedPhraseIds, getAllStructurePhraseIds]);

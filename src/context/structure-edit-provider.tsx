@@ -1,7 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
 
+import {
+  PoeticStructure, Phrase, PhraseRole, TypeOfPoeticStructure, 
+  GenericTOPS, PhraseLinkInfo, OverallPhraseRole
+} from '../shared/data';
 import { StructureEditContext, EditState, EditInfo } from './structure-edit-context';
-import { PoeticStructure, Phrase, PhraseRole, TypeOfPoeticStructure, GenericTOPS } from '../shared/data';
 import { useUserData } from './user-data-context';
 
 export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -130,12 +133,52 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
     clearAllPending();
   }, [editingStructureId, removePoeticStructure, clearAllPending]);
 
+  const { pendingPhraseLinks, pendingLinePhrases } = useMemo(() => {
+    if (editState === EditState.Idle) {
+      return { pendingPhraseLinks: {}, pendingLinePhrases: {} };
+    }
+
+    const links = {} as { [phraseId: string]: PhraseLinkInfo };
+    const lines = {} as { [lineNumber: string]: Phrase[] };
+
+    if (pendingRepetition) {
+      links[pendingRepetition.id] = {
+        phrase: pendingRepetition,
+        overallRole: OverallPhraseRole.Repetition,
+        links: [],
+        linkedPhraseIds:[]
+      }
+
+      lines[pendingRepetition.lineNumber.toString()] = [pendingRepetition];
+    }
+
+    if (pendingSource) {
+      links[pendingSource.id] = {
+        phrase: pendingSource,
+        overallRole: OverallPhraseRole.Source,
+        links: [],
+        linkedPhraseIds:[]
+      }
+
+      const ln = pendingSource.lineNumber.toString();
+      if (!lines[ln]) {
+        lines[ln] = [];
+      }
+      lines[ln].push(pendingSource);
+    }
+
+    return {
+      pendingPhraseLinks: links,
+      pendingLinePhrases: lines
+    };
+  }, [editState, pendingRepetition, pendingSource]);
+
   const value = useMemo(() => ({
-    editState, editInfo, setPendingPhrase, setPendingTops, clearAllPending, 
-    beginStructureEdit, savePendingStructureEdit, deleteStructureUnderEdit
+    editState, editInfo, setPendingPhrase, setPendingTops, clearAllPending, beginStructureEdit,
+    savePendingStructureEdit, deleteStructureUnderEdit, pendingPhraseLinks, pendingLinePhrases
   }), [
-    editState, editInfo, setPendingPhrase, setPendingTops, clearAllPending,
-    beginStructureEdit, savePendingStructureEdit, deleteStructureUnderEdit
+    editState, editInfo, setPendingPhrase, setPendingTops, clearAllPending, beginStructureEdit,
+    savePendingStructureEdit, deleteStructureUnderEdit, pendingPhraseLinks, pendingLinePhrases
   ]);
 
   return (

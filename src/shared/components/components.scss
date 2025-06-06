@@ -56,18 +56,11 @@
   &.repetition {
     background-color: var(--color-repetition);
 
-    &.deemphasized,
-    &.selected.deemphasized {
+    &.deemphasized {
       background-color: var(--color-repetition-lite);
     }
 
-    &.pending {
-      background-color: var(--color-orange-200);
-      border-color: var(--color-orange-400);
-    }
-
-    &.emphasized,
-    &.selected {
+    &.emphasized {
       background-color: var(--color-repetition-heavy);
     }
   }
@@ -76,18 +69,11 @@
   &.source {
     background-color: var(--color-source);
     
-    &.deemphasized,
-    &.selected.deemphasized {
+    &.deemphasized {
       background-color: var(--color-source-lite);
     }
 
-    &.pending {
-      background-color: var(--color-blue-200);
-      border-color: var(--color-blue-400);
-    }
-
-    &.emphasized,
-    &.selected {
+    &.emphasized {
       background-color: var(--color-source-heavy);
     }
   }
@@ -96,18 +82,11 @@
   &.overlapping {
     background-color: var(--color-overlapping);
 
-    &.deemphasized,
-    &.selected.deemphasized {
+    &.deemphasized {
       background-color: var(--color-overlapping-lite);
     }
-    
-    &.pending {
-      background-color: var(--color-fuchsia-300);
-      border-color: var(--color-fuchsia-400);
-    }
 
-    &.emphasized,
-    &.selected {
+    &.emphasized {
       background-color: var(--color-overlapping-heavy);
     }
   }
@@ -118,22 +97,16 @@
     z-index: 2;
   }
 
-  &.pending {
-    border: 2px dashed;
-  }
-
-  &.pending,
-  &.emphasized {
-    font-weight: 600;
-  }
-  
-  &.pending {
-    /* pending bubble spans sit on top of phrase bubbles, but not over plaintext */
-    z-index: 1;
-  }
-
   &.clickable {
     cursor: pointer;
+  }
+
+  &.pending {
+    border: 2px dashed var(--color-span-border);
+    font-weight: 600;
+
+    /* pending bubble spans sit on top of phrase bubbles, but not over plaintext */
+    z-index: 1;
   }
 
   /* conditional styling for poetic structure phrase span bubbles */
@@ -159,14 +132,10 @@
       margin-right: -4px;
     }
 
-    /* draw a dashed border between immediatly adjacent span bubbles under 2 conditions:
-         1. span is NOT selected and NOT leftmost (i.e. it is a plain, non-interacted-with span),
-            AND does NOT have a selected span immediately previous/left (so that we don't get 2 borders)
-         2. span IS selected, but is NOT the leftmost-selected (i.e. there IS a selected span to the left),
-            so that we still get the dashed border between adjacent phrases
-            within a larger selected group of spans */
-    &:not(.selected):not(.leftmost):not(.previous-selected),
-    &.selected:not(.leftmost-selected) {
+    /* draw a dashed border between immediatly adjacent span bubbles as long as:
+         span is NOT pending and NOT leftmost (i.e. it is a plain, non-interacted-with span),
+        AND does NOT have a pending span immediately previous/left (so that we don't get 2 borders) */
+    &:not(.pending):not(.leftmost):not(.previous-pending) {
       border-left: 1px dashed var(--color-span-border);
 
       /* so that text inside is not right against the dashed border */
@@ -178,28 +147,12 @@
       padding-right: 1px;
     }
 
-    &.selected {
-      border-top: 2px solid;
-      border-bottom: 2px solid;
-      border-color: var(--color-span-border);
+    /* remove internal borders in pending blocks */
+    &.pending.previous-pending:not(.leftmost) {
+      border-left: 0;
     }
-  
-    /* special cases:
-         1. selected AND leftmost: override the dashed border that would otherwise 
-            be applied to separate adjacent spans (so outside left edge isn't dashed)
-         2. leftmost-selected: add the selected-style border to a span the is the 
-            furthest left selected span in the middle of a group */
-    &.selected.leftmost,
-    &.leftmost-selected {
-      border-left: 2px solid;
-      border-color: var(--color-span-border);
-    }
-    
-    /* same as above but for the right side */
-    &.selected.rightmost,
-    &.rightmost-selected {
-      border-right: 2px solid;
-      border-color: var(--color-span-border);
+    &.pending.next-pending:not(.rightmost) {
+      border-right: 0;
     }
   }
 
