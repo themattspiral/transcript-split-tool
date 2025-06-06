@@ -7,6 +7,7 @@ interface UserDataContextProps {
   setNewTranscript: (lines: TranscriptLine[]) => void;
   poeticStructures: { [structureId: string]: PoeticStructure };
   addPoeticStructure: (structure: PoeticStructure) => void;
+  replacePoeticStructure: (oldStructureId: string, newStructure: PoeticStructure) => void;
   removePoeticStructure: (structureId: string) => void;
   phraseLinks: { [phraseId: string]: PhraseLinkInfo };
   getAllLinkedPhraseIds: (phraseIds: string[]) => string[];
@@ -22,6 +23,7 @@ export const UserDataContext = createContext<UserDataContextProps>({
   setNewTranscript: () => {},
   poeticStructures: {},
   addPoeticStructure: () => {},
+  replacePoeticStructure: () => {},
   removePoeticStructure: () => {},
   phraseLinks: {},
   getAllLinkedPhraseIds: () => [],

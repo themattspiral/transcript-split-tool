@@ -18,13 +18,12 @@ export const SplitTextSpanBubble: React.FC<SplitTextSpanBubbleProps> = ({ span, 
       clickable: span.isClickable,
       pending: span.isPending,
       emphasized: span.isEmphasized,
-      selected: span.isSelected,
       deemphasized: span.isDeemphasized,
       leftmost: span.isLeftmostSpan,
-      rightmost: span.isRightmostSpan,
-      ['leftmost-selected']: span.isLeftmostClickedSpan,
-      ['rightmost-selected']: span.isRightmostClickedSpan,
-      ['previous-selected']: span.isPreviousSpanClicked
+      rightmost: span.isRightmostSpan
+      // ['leftmost-selected']: span.isLeftmostClickedSpan,
+      // ['rightmost-selected']: span.isRightmostClickedSpan,
+      // ['previous-selected']: span.isPreviousSpanClicked
     }
   );
 

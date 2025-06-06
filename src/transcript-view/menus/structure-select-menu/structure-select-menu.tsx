@@ -18,7 +18,7 @@ import { MultiLinkItem } from './multi-link-item';
 export const StructureSelectMenu: React.FC = () => {
   const { phraseLinks } = useUserData();
   const {
-    contextPhraseIds, updateMenuVisibility, multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey
+    contextPhraseIds, updateMenuVisibility, menuMultiLinkHoveredHeaderKey, setMenuMultiLinkHoveredHeaderKey
   } = useTranscriptInteraction();
 
   const menuItems = useMemo(() => {
@@ -32,8 +32,14 @@ export const StructureSelectMenu: React.FC = () => {
     } else {
       // multiple phrases, or multiple links - user must make a choice
       items.push(
-        <Item key="menu-header" disabled style={{ opacity: 1 }} className="text-sm font-medium border-b-1 border-gray-500 mb-2">
-          <FontAwesomeIcon icon={faPenToSquare} className="mr-1" size="lg" /> Choose the Poetic Strcture to Edit:
+        <Item
+          key="menu-header" disabled style={{ opacity: 1 }}
+          className="menu-header bg-gray-200 px-1 pt-[3px] pb-[2px] border-b-1 border-gray-500 mb-2 text-gray-600 text-sm font-medium"
+        >
+          <div className="w-full flex justify-end items-center">
+            Choose Poetic Strcture
+            <FontAwesomeIcon icon={faPenToSquare} className="ml-1" size="sm" />
+          </div>
         </Item>
       );
 
@@ -95,12 +101,12 @@ export const StructureSelectMenu: React.FC = () => {
               <SingleLinkItem key={`${contextPhraseId}-${link.role}-${link.structure.id}`} link={link} />
             );
           } else if (repetitionLinks.length > 1) {
-            // create a non-selectable item (header) to represent the common repetition
+            // create a non-selectable item header to represent the common repetition
             const headerKey = `${contextPhraseId}-rep-header`;
             items.push(
               <MultiLinkHeaderItem
                 key={headerKey} contextPhrase={info.phrase} role={PhraseRole.Repetition}
-                hovered={multiLinkHeaderHoveredKey === headerKey}
+                hovered={menuMultiLinkHoveredHeaderKey === headerKey}
               />
             );
             
@@ -109,7 +115,7 @@ export const StructureSelectMenu: React.FC = () => {
               items.push(
                 <MultiLinkItem
                   key={`${contextPhraseId}-src-${link.structure.id}`} link={link} role={PhraseRole.Source}
-                  onMouseOverOut={isOver => setMultiLinkHeaderHoveredKey(isOver ? headerKey : null)}
+                  onMouseOverOut={isOver => setMenuMultiLinkHoveredHeaderKey(isOver ? headerKey : null)}
                 />
               );
             });
@@ -128,12 +134,12 @@ export const StructureSelectMenu: React.FC = () => {
               <SingleLinkItem key={`${contextPhraseId}-${link.role}-${link.structure.id}`} link={link} />
             );
           } else if (sourceLinks.length > 1) {
-            // create a non-selectable item (header) to represent the common source
+            // create a non-selectable item header to represent the common source
             const headerKey = `${contextPhraseId}-src-header`;
             items.push(
               <MultiLinkHeaderItem
                 key={headerKey} contextPhrase={info.phrase} role={PhraseRole.Source}
-                hovered={multiLinkHeaderHoveredKey === headerKey}
+                hovered={menuMultiLinkHoveredHeaderKey === headerKey}
               />
             );
 
@@ -142,7 +148,7 @@ export const StructureSelectMenu: React.FC = () => {
               items.push(
                 <MultiLinkItem
                   key={`${contextPhraseId}-rep-${link.structure.id}`} link={link} role={PhraseRole.Repetition}
-                  onMouseOverOut={isOver => setMultiLinkHeaderHoveredKey(isOver ? headerKey : null)}
+                  onMouseOverOut={isOver => setMenuMultiLinkHoveredHeaderKey(isOver ? headerKey : null)}
                 />
               );
             });
@@ -156,9 +162,9 @@ export const StructureSelectMenu: React.FC = () => {
     }
 
     return items;
-  }, [contextPhraseIds, phraseLinks, multiLinkHeaderHoveredKey, setMultiLinkHeaderHoveredKey]);
+  }, [contextPhraseIds, phraseLinks, menuMultiLinkHoveredHeaderKey, setMenuMultiLinkHoveredHeaderKey]);
 
-  return (
+  return menuItems.length === 0 ? null : (
     <Menu
       id={TranscriptMenuId.StructureSelectMenu}
       animation="slide"

@@ -5,13 +5,16 @@ import { PoeticStructure, Phrase, PhraseRole, TypeOfPoeticStructure, GenericTOPS
 import { useUserData } from './user-data-context';
 
 export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const {
+    poeticStructures, topsMap,
+    addPoeticStructure, replacePoeticStructure, removePoeticStructure
+  } = useUserData();
+
   const [editState, setEditState] = useState<EditState>(EditState.Idle);
   const [pendingRepetition, setPendingRepetition] = useState<Phrase | null>(null);
   const [pendingSource, setPendingSource] = useState<Phrase | null>(null);
   const [pendingTops, setPendingTops] = useState<TypeOfPoeticStructure | null>(null);
   const [editingStructureId, setEditingStructureId] = useState<string | null>(null);
-
-  const { poeticStructures, topsMap, addPoeticStructure, removePoeticStructure } = useUserData();
 
   const editInfo: EditInfo = useMemo(() => {
     let repetitionToShow: Phrase | null = null;
@@ -110,8 +113,7 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
       && editInfo.repetitionToShow && editInfo.sourceToShow && editInfo.topsToShow
       && (editInfo.repetitionModified || editInfo.sourceModified || editInfo.topsModified)
     ) {
-      removePoeticStructure(editingStructureId);
-      addPoeticStructure(new PoeticStructure(
+      replacePoeticStructure(editingStructureId, new PoeticStructure(
         editInfo.repetitionToShow,
         [editInfo.sourceToShow],
         editInfo.topsToShow.relationshipType,
@@ -119,19 +121,14 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
       ));
       clearAllPending();
     }
-  }, [editState, editingStructureId, editInfo, addPoeticStructure, removePoeticStructure, clearAllPending]);
+  }, [editState, editingStructureId, editInfo, addPoeticStructure, replacePoeticStructure, clearAllPending]);
 
   const deleteStructureUnderEdit = useCallback(() => {
-    setEditingStructureId(id => {
-      if (id) {
-        removePoeticStructure(id);
-      }
-
-      return null;
-    });
+    if (editingStructureId) {
+      removePoeticStructure(editingStructureId);
+    }
     clearAllPending();
-    setEditState(EditState.Idle);
-  }, [removePoeticStructure, setEditingStructureId, clearAllPending, setEditState]);
+  }, [editingStructureId, removePoeticStructure, clearAllPending]);
 
   const value = useMemo(() => ({
     editState, editInfo, setPendingPhrase, setPendingTops, clearAllPending, 

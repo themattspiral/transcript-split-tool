@@ -32,3 +32,18 @@ body {
   --color-structure-arrows: var(--color-gray-600);
   --color-badge: var(--color-gray-600);
 }
+
+.contexify .menu-header {
+  /* counteract menu outer padding */
+  margin-left: calc(-1 * var(--contexify-menu-padding));
+  margin-right: calc(-1 * var(--contexify-menu-padding));
+  margin-top: calc(-1 * var(--contexify-menu-padding));
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+
+  /* eliminate inner padding and allow color to flow down */
+  .contexify_itemContent {
+    padding: 0;
+    color: inherit;
+  }
+}

@@ -96,7 +96,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
           
           <SimpleSpanBubble
             spanType={SpanType.Repetition}
-            mode='general'
+            mode="general"
             className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
             style={{ padding: '10px 20px', color: !editInfo.repetitionToShow ? 'gray' : undefined }}
             showDeemphasized={!editInfo.repetitionToShow}
@@ -125,7 +125,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
 
             <SimpleSpanBubble
               spanType={SpanType.Source}
-              mode='general'
+              mode="general"
               className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
               style={{ padding: '10px 20px', color: !editInfo.sourceToShow ? 'gray' : undefined }}
               showDeemphasized={!editInfo.sourceToShow}

@@ -1,21 +1,23 @@
 import { useMemo } from 'react';
 import { Menu, Item, Separator } from 'react-contexify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faArrowsRotate, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 import { TranscriptMenuId } from './transcript-menus';
-import { getPhraseText, PhraseRole } from '../../shared/data';
-import { useStructureEdit } from '../../context/structure-edit-context';
+import { getPhraseText, PhraseRole, SpanType } from '../../shared/data';
+import { EditState, useStructureEdit } from '../../context/structure-edit-context';
 import { useUserData } from '../../context/user-data-context';
 import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
 import { clearDocumentTextSelection } from '../../shared/util';
+import { SimpleSpanBubble } from '../../shared/components/simple-span-bubble';
 
 export const HighlightMenu: React.FC = () => {
   const { transcriptLines } = useUserData();
   const { highlightedPhrase, makeHighlightedPhrasePending, updateMenuVisibility } = useTranscriptInteraction();
-  const { pendingRepetition, pendingSource } = useStructureEdit();
+  const { editState, editInfo } = useStructureEdit();
 
-  const selectedText = useMemo(() => getPhraseText(highlightedPhrase, transcriptLines), [highlightedPhrase, transcriptLines]);
+  const highlightedText = useMemo(() => getPhraseText(highlightedPhrase, transcriptLines), [highlightedPhrase, transcriptLines]);
+  const showEditHeader = editState === EditState.EditingExisting;
 
   return (
     <Menu
@@ -24,11 +26,19 @@ export const HighlightMenu: React.FC = () => {
       className="max-w-[400px] font-sans"
       onVisibilityChange={isVisible => updateMenuVisibility(TranscriptMenuId.HighlightMenu, isVisible)}
     >
-      <div className="text-xs">New Poetic Strcture:</div>
+      <Item
+        key="menu-header" disabled style={{ opacity: 1 }}
+        className="menu-header bg-gray-200 px-1 pt-[3px] pb-[2px] border-b-1 border-gray-500 mb-2 text-gray-600 text-sm font-medium"
+      >
+        <div className="w-full flex justify-end items-center">
+          { showEditHeader ? 'Edit' : 'New' }  Poetic Strcture
+          <FontAwesomeIcon icon={showEditHeader ? faPenToSquare : faPlus} className="ml-1" size="sm" />
+        </div>
+      </Item>
 
       <Item disabled style={{ opacity: 1 }}>
-        <div className="font-bold font-mono flex whitespace-normal">
-          { selectedText }
+        <div className="font-bold font-mono whitespace-normal w-full flex justify-end">
+          { highlightedText }
         </div>
       </Item>
       
@@ -39,11 +49,16 @@ export const HighlightMenu: React.FC = () => {
         clearDocumentTextSelection();
       }}>
         <div className="flex items-center">
-          <FontAwesomeIcon icon={pendingRepetition ? faArrowsRotate : faPlus} className="mr-1" />
-          { pendingRepetition ? 'Replace' : 'Set as' }
-          <span className="ml-1 rounded-xl px-[3px] mx-[-3px] bg-orange-200 border-orange-400 border-2 border-dashed font-mono text-always-menu-gray">
+          <FontAwesomeIcon icon={editInfo.repetitionToShow ? faArrowsRotate : faPlus} className="mr-1" />
+          { editInfo.repetitionToShow ? 'Replace' : 'Set as' }
+
+          <SimpleSpanBubble
+            spanType={SpanType.Repetition}
+            mode="menu"
+            className="ml-1 border-gray-600 border-2 border-dashed"
+          >
             Repetition
-          </span>
+          </SimpleSpanBubble>
         </div>
       </Item>
 
@@ -52,11 +67,16 @@ export const HighlightMenu: React.FC = () => {
         clearDocumentTextSelection();
       }}>
         <div className="flex items-center">
-          <FontAwesomeIcon icon={pendingSource ? faArrowsRotate : faPlus} className="mr-1" />
-          { pendingSource ? 'Replace' : 'Set as' }
-          <span className="ml-1 rounded-xl px-[3px] mx-[-3px] bg-blue-200 border-blue-400 border-2 border-dashed font-mono text-always-menu-gray">
+          <FontAwesomeIcon icon={editInfo.sourceToShow ? faArrowsRotate : faPlus} className="mr-1" />
+          { editInfo.sourceToShow ? 'Replace' : 'Set as' }
+          
+          <SimpleSpanBubble
+            spanType={SpanType.Source}
+            mode="menu"
+            className="ml-1 border-gray-600 border-2 border-dashed"
+          >
             Source
-          </span>
+          </SimpleSpanBubble>
         </div>
       </Item>
     </Menu>

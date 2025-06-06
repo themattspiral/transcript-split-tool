@@ -34,7 +34,7 @@ export const MultiLinkHeaderItem: React.FC<MultiLinkHeaderItemProps> = ({ contex
     >
       <div className="flex items-center">
         <SimpleSpanBubble
-          mode='menu'
+          mode="menu"
           spanType={role === PhraseRole.Source ? SpanType.Source : SpanType.Repetition}
         >
           { getPhraseText(contextPhrase, transcriptLines) }

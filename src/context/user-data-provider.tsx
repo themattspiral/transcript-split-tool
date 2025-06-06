@@ -172,6 +172,16 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   }, [setPoeticStructures]);
 
+  const replacePoeticStructure = useCallback((oldStructureId: string, newStructure: PoeticStructure) => {
+    setPoeticStructures(structures => {
+      const newStructures = { ...structures };
+      delete newStructures[oldStructureId];
+      newStructures[newStructure.id] = newStructure;
+
+      return newStructures;
+    });
+  }, [setPoeticStructures]);
+
   const removePoeticStructure = useCallback((structureId: string) => {
     setPoeticStructures(structures => {
       const newStructures = { ...structures };
@@ -192,12 +202,12 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   const value = useMemo(() => ({
     transcriptLines, setNewTranscript,
-    poeticStructures, addPoeticStructure, removePoeticStructure,
+    poeticStructures, addPoeticStructure, replacePoeticStructure, removePoeticStructure,
     phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
     linePhrases, topsOptions, topsMap
   }), [
     transcriptLines, setNewTranscript,
-    poeticStructures, addPoeticStructure, removePoeticStructure,
+    poeticStructures, addPoeticStructure, replacePoeticStructure, removePoeticStructure,
     phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
     linePhrases, topsOptions, topsMap
   ]);

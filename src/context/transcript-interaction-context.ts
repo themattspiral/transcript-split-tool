@@ -8,14 +8,12 @@ interface TranscriptInteractionContextProps {
   handlePhraseAction: (event: React.MouseEvent, phraseIds: string[], action: PhraseAction) => void;
   handleStructureSelectMenuAction: (structureOrPhraseId: string, action: MenuAction) => void;
   updateMenuVisibility: (menuId: TranscriptMenuId, isVisible: boolean) => void;
-  clearPhraseEmphasis: () => void;
-  clearPhraseSelection: () => void;
   contextPhraseIds: string[];
   highlightedPhrase: Phrase | null;
   setHighlightedPhrase: (phrase: Phrase | null) => void;
   makeHighlightedPhrasePending: (role: PhraseRole) => void;
-  multiLinkHeaderHoveredKey: string | null;
-  setMultiLinkHeaderHoveredKey: (key: string | null) => void;
+  menuMultiLinkHoveredHeaderKey: string | null;
+  setMenuMultiLinkHoveredHeaderKey: (key: string | null) => void;
 }
 
 export const TranscriptInteractionContext = createContext<TranscriptInteractionContextProps>({
@@ -23,14 +21,12 @@ export const TranscriptInteractionContext = createContext<TranscriptInteractionC
   handlePhraseAction: () => {},
   handleStructureSelectMenuAction: () => {},
   updateMenuVisibility: () => {},
-  clearPhraseEmphasis: () => {},
-  clearPhraseSelection: () => {},
   contextPhraseIds: [],
   highlightedPhrase: null,
   setHighlightedPhrase: () => {},
   makeHighlightedPhrasePending: () => {},
-  multiLinkHeaderHoveredKey: null,
-  setMultiLinkHeaderHoveredKey: () => {}
+  menuMultiLinkHoveredHeaderKey: null,
+  setMenuMultiLinkHoveredHeaderKey: () => {}
 });
 
 export const useTranscriptInteraction = () => {

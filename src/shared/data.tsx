@@ -71,7 +71,6 @@ export interface PhraseLinkInfo {
 
 export interface PhraseViewState {
   isEmphasized: boolean;
-  isSelected: boolean;
   isDeemphasized: boolean;
   isPending: boolean;
 }
@@ -120,7 +119,6 @@ export interface SplitTextSpanBubbleDefinition {
   isClickable: boolean;
   isContextable: boolean;
   isEmphasized: boolean;
-  isSelected: boolean;
   isDeemphasized: boolean;
   isLeftmostSpan: boolean;
   isRightmostSpan: boolean;
