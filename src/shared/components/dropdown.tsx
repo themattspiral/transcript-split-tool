@@ -1,16 +1,11 @@
-import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import classNames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 
+import { DropdownOption } from '../data';
 import { useViewState } from '../../context/view-state-context';
 import { Badge } from './badge';
-import classNames from 'classnames';
-
-interface DropdownOption {
-  id: string;
-  label: ReactNode;
-  selectable: boolean;
-}
 
 interface DropdownProps {
   options: DropdownOption[];
@@ -43,7 +38,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ options, selectedId, onChang
         className="dropdown-button flex items-center cursor-pointer"
         onClick={() => setIsOpen(o => !o)}
       >
-        <Badge size="large">{ selectedItem.label }</Badge>
+        <Badge size="large">{ selectedItem.textLabel }</Badge>
         <FontAwesomeIcon icon={faCaretDown} size="sm" className={classNames('caret ml-2', { open: isOpen })} />
       </button>
 
@@ -59,13 +54,13 @@ export const Dropdown: React.FC<DropdownProps> = ({ options, selectedId, onChang
         {options.map(op => (
           <div
             key={op.id} 
-            className={classNames('dropdown-menu-option py-1 px-2 select-none', { selectable: op.selectable })}
-            onClick={ op.selectable ? () => {
+            className={classNames('dropdown-menu-option py-1 px-2 select-none', { selectable: op.selectable !== false })}
+            onClick={ op.selectable === false ? undefined : () => {
               onChange(op.id);
               setIsOpen(false)
-            } : undefined }
+            } }
           >
-            { op.label }
+            { op.label || op.textLabel }
           </div>
         ))}
       </div>

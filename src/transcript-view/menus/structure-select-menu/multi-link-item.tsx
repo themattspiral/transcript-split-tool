@@ -41,7 +41,7 @@ export const MultiLinkItem: React.FC<MultiLinkItemProps> = ({ link, role, onMous
 
         <div className="flex justify-end w-full mb-1">
           <Badge>
-            { topsMap[link.structure.topsId].displayName }
+            { topsMap[link.structure.topsId].type.displayName }
           </Badge>
         </div>
 

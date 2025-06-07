@@ -15,7 +15,7 @@ interface UserDataContextProps {
   getAllStructurePhraseIds: (structureId: string) => string[];
   linePhrases: { [lineNumber: string]: Phrase[] };
   topsOptions: TypeOfPoeticStructure[];
-  topsMap: { [topsId: string]: TypeOfPoeticStructure };
+  topsMap: { [topsId: string]: { type: TypeOfPoeticStructure, level: number } };
 }
 
 export const UserDataContext = createContext<UserDataContextProps>({

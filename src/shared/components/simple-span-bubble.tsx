@@ -9,15 +9,22 @@ interface SimpleSpanBubbleProps {
   children: React.ReactNode;
   className?: string | undefined;
   style?: CSSProperties | undefined;
+  showEmphasized?: boolean;
   showDeemphasized?: boolean;
 }
 
-export const SimpleSpanBubble: React.FC<SimpleSpanBubbleProps> = ({ spanType, mode, children, className, style, showDeemphasized = false }) => {
+export const SimpleSpanBubble: React.FC<SimpleSpanBubbleProps> = (props) => {
+  const {
+    spanType, mode, children, className, style,
+    showEmphasized = false, showDeemphasized = false
+  } = props;
+
   const classes = classNames(
     'span-bubble simple leftmost rightmost',
     spanType, // SpanType string enum values match class names in scss file
     mode,
     className,
+    { emphasized: showEmphasized },
     { deemphasized: showDeemphasized }
   );
 

@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+
 export interface TranscriptLine {
   lineNumber: number;
   speaker: string;
@@ -72,6 +74,13 @@ export interface PhraseLinkInfo {
 export interface PhraseViewState {
   isEmphasized: boolean;
   isDeemphasized: boolean;
+}
+
+export interface DropdownOption {
+  id: string;
+  label?: ReactNode;
+  textLabel: string;
+  selectable?: boolean;
 }
 
 export enum PhraseAction {

@@ -49,7 +49,7 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
         topsToShow = pendingTops;
         topsModified = true;
       } else {
-        topsToShow = topsMap[structure.topsId];
+        topsToShow = topsMap[structure.topsId].type;
       }
     }
 

@@ -1,4 +1,4 @@
-import { CSSProperties } from 'react';
+import { CSSProperties, useMemo } from 'react';
 import classNames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faX, faTrash } from '@fortawesome/free-solid-svg-icons';
@@ -9,6 +9,7 @@ import { EditState, useStructureEdit } from '../../context/structure-edit-contex
 import { SimpleSpanBubble } from '../../shared/components/simple-span-bubble';
 import { Badge } from '../../shared/components/badge';
 import { Dropdown } from '../../shared/components/dropdown';
+import { ManyToOneIcon } from '../../shared/components/many-to-one-icon';
 
 interface StructureBuilderProps {
   className?: string | undefined;
@@ -23,6 +24,24 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
     editState, editInfo,
     clearAllPending, savePendingStructureEdit, deleteStructureUnderEdit, setPendingTops
   } = useStructureEdit();
+
+  const topsDropdownOptions = useMemo(() => {
+    return Object.values(topsMap).map(t => ({
+      id: t.type.id,
+      selectable: t.type.selectable,
+      level: t.level,
+      textLabel: t.type.displayName,
+      label: (
+        <div className="flex items-center">
+          <span className="inline-block shrink-0" style={{ width: `${t.level * 15}px` }}></span>
+          <span className="grow-1">{ t.type.displayName }</span>
+          { t.type.relationshipType === PoeticStructureRelationshipType.MultipleSource &&
+            <ManyToOneIcon className="ml-2" />
+          }
+        </div>
+      )
+    }));
+  }, [topsMap]);
   
   const repetitionText = getPhraseText(editInfo.repetitionToShow, transcriptLines) || '<selection pending>';
   const sourceText = getPhraseText(editInfo.sourceToShow, transcriptLines) || '<selection pending>';
@@ -75,9 +94,9 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
           <span className="mr-4">ToPS:</span>
           <div className="grow-1 flex justify-end">
             <Dropdown
-              options={Object.values(topsMap).map(t => ({ id: t.id, label: t.displayName, selectable: t.selectable }))}
+              options={topsDropdownOptions}
               selectedId={editInfo.topsToShow?.id || ''}
-              onChange={(id: string) => setPendingTops(topsMap[id])}
+              onChange={(id: string) => setPendingTops(topsMap[id].type)}
             />
           </div>
         </h2>
@@ -102,6 +121,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
             mode="general"
             className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
             style={{ padding: '10px 20px', color: !editInfo.repetitionToShow ? 'gray' : undefined }}
+            showEmphasized={!!editInfo.repetitionToShow}
             showDeemphasized={!editInfo.repetitionToShow}
           >
             { repetitionText }
@@ -131,6 +151,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
               mode="general"
               className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
               style={{ padding: '10px 20px', color: !editInfo.sourceToShow ? 'gray' : undefined }}
+              showEmphasized={!!editInfo.sourceToShow}
               showDeemphasized={!editInfo.sourceToShow}
               >
               { sourceText }
@@ -160,15 +181,15 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
           onClick={savePendingStructureEdit}
         >
           <FontAwesomeIcon icon={faCheck} size="xl" />
-          <span className="font-semibold ml-2">Save {editState === EditState.EditingExisting ? 'Changes' : 'New'}</span>
+          <span className="font-semibold ml-2">{editState === EditState.EditingExisting ? 'Save' : 'Create'}</span>
         </button>
 
         <button
-          className="w-full h-[35px] rounded-lg bg-gray-500 hover:bg-gray-600 text-white hover:text-gray-100 cursor-pointer shadow-md shadow-gray-400"
+          className="w-full h-[35px] rounded-lg bg-gray-400 hover:bg-gray-500 text-white hover:text-gray-100 cursor-pointer shadow-md shadow-gray-400"
           onClick={clearAllPending}
         >
           <FontAwesomeIcon icon={faX} size="lg" />
-          <span className="font-semibold ml-2">{editState === EditState.EditingExisting ? 'Discard Changes' : 'Cancel'}</span>
+          <span className="font-semibold ml-2">Cancel</span>
         </button>
 
         { editState === EditState.EditingExisting &&

@@ -8,12 +8,12 @@ import {
 import { UserDataContext } from './user-data-context';
 import testStructures from '../shared/test-structures.data.json';
 
-const flattenTops = (option: TypeOfPoeticStructure): { [topsId: string]: TypeOfPoeticStructure } => {
-  let map = { [option.id]: option } as { [topsId: string]: TypeOfPoeticStructure };
+const flattenTops = (option: TypeOfPoeticStructure, level: number) => {
+  let map = { [option.id]: { type: option, level } } as { [topsId: string]: { type: TypeOfPoeticStructure, level: number } };
 
   if (option.subtypes.length > 0) {
     option.subtypes.forEach(subtype => {
-      map = { ...map, ...flattenTops(subtype) };
+      map = { ...map, ...flattenTops(subtype, level + 1) };
     });
   }
   return map;
@@ -191,10 +191,10 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [setPoeticStructures]);
 
   const topsMap = useMemo(() => {
-    let map = {} as { [topsId: string]: TypeOfPoeticStructure };
+    let map = {} as { [topsId: string]: { type: TypeOfPoeticStructure, level: number } };
 
     topsOptions.forEach(option => {
-      map = { ...map, ...flattenTops(option) };
+      map = { ...map, ...flattenTops(option, 0) };
     });
 
     return map;
