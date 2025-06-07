@@ -16,13 +16,13 @@ export const SplitTextSpanBubble: React.FC<SplitTextSpanBubbleProps> = ({ span, 
     span.spanType, // SpanType string enum values match class names in scss file
     {
       clickable: span.isClickable,
-      pending: span.isPending,
       emphasized: span.isEmphasized,
       deemphasized: span.isDeemphasized,
       leftmost: span.isLeftmostSpan,
       rightmost: span.isRightmostSpan,
-      ['previous-pending']: span.isPreviousSpanPending,
-      ['next-pending']: span.isNextSpanPending
+      ['under-edit']: span.isUnderEdit,
+      ['previous-under-edit']: span.isPreviousSpanUnderEdit,
+      ['next-under-edit']: span.isNextSpanUnderEdit
     }
   );
 

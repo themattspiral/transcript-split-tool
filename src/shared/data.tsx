@@ -113,7 +113,7 @@ export interface SplitTextSpanBubbleDefinition {
   end: number;
   spanPhraseIds: string[];
   spanType: SpanType;
-  isPending: boolean;
+  isUnderEdit: boolean;
   isHoverable: boolean;
   isClickable: boolean;
   isContextable: boolean;
@@ -121,8 +121,8 @@ export interface SplitTextSpanBubbleDefinition {
   isDeemphasized: boolean;
   isLeftmostSpan: boolean;
   isRightmostSpan: boolean;
-  isPreviousSpanPending: boolean;
-  isNextSpanPending: boolean;
+  isPreviousSpanUnderEdit: boolean;
+  isNextSpanUnderEdit: boolean;
 }
 
 

@@ -2,7 +2,7 @@ import { CSSProperties } from 'react';
 import classNames from 'classnames';
 
 import { useViewState } from '../../context/view-state-context';
-import { CustomCSSVariables } from '../../context/view-state-provider';
+import { CustomCSSVariables } from '../../context/view-state-context';
 
 interface CurverdArrowProps {
   size?: number;

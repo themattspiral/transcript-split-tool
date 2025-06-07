@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGripLinesVertical } from '@fortawesome/free-solid-svg-icons';
 
 import { useViewState } from '../context/view-state-context';
-import { CustomCSSVariables } from '../context/view-state-provider';
+import { CustomCSSVariables } from '../context/view-state-context';
 import { TranscriptGrid } from './transcript-grid';
 import classNames from 'classnames';
 import { StructureBuilder } from './structure-builder/structure-builder';
@@ -126,7 +126,7 @@ export const TranscriptView: React.FC<TranscriptViewProps> = ({ className, style
       </div>
 
       <StructureBuilder
-        className="h-full"
+        className="h-full min-w-min"
         style={{ width: `${resizeDetails.structureBuilderWidthPct}%` }}
       />
 

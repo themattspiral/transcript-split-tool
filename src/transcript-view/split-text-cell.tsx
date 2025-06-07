@@ -7,8 +7,8 @@ import {
 } from '../shared/data';
 import { useTranscriptInteraction } from '../context/transcript-interaction-context';
 import { EditState, useStructureEdit } from '../context/structure-edit-context';
-import { SplitTextSpanBubble } from './split-text-span-bubble';
 import { useUserData } from '../context/user-data-context';
+import { SplitTextSpanBubble } from './split-text-span-bubble';
 
 interface SplitTextCellProps {
   line: TranscriptLine;
@@ -21,17 +21,14 @@ export const SplitTextCell: React.FC<SplitTextCellProps> = props => {
   const { line, className, style, attributes } = props;
 
   const { phraseLinks, linePhrases } = useUserData();
-  const { editState, pendingPhraseLinks, pendingLinePhrases } = useStructureEdit();
+  const { editState, editInfo } = useStructureEdit();
   const { phraseViewStates } = useTranscriptInteraction();
 
   // flatten plain text and phrases into discreet SpanDefinitions, handling potential range overlaps 
   const spanDefinitions: SplitTextSpanBubbleDefinition[] = useMemo(() => {
     const isEditIdle = editState === EditState.Idle;
     const ln = line.lineNumber.toString();
-    const thisLinesPhrases = [
-      linePhrases[ln] || [],
-      pendingLinePhrases[ln] || []
-    ].flat();
+    const thisLinesPhrases = linePhrases[ln] || [];
 
     const idxSpanSplitPoints = new Set<number>([0, line.text.length]);
     thisLinesPhrases?.forEach(phrase => {
@@ -63,32 +60,28 @@ export const SplitTextCell: React.FC<SplitTextCellProps> = props => {
       });
 
       // determine this span's view state based on the collective view states of the phrases
-      // associated with it. also identify any pending phrases that apply to this span
-      //
+      // associated with it  --  also identify any pending phrases that apply to this span
       let isEmphasized = false;
       let isDeemphasized = true;
-      let pendingLinkInfo: PhraseLinkInfo | null = null;
+      let isRepetitionUnderEdit = false;
+      let isSourceUnderEdit = false;
 
       spanPhrases.forEach(phrase => {
-        isEmphasized ||= phraseViewStates[phrase.id]?.isEmphasized || false;       // some
-        isDeemphasized &&= phraseViewStates[phrase.id]?.isDeemphasized || false;   // every
-
-        // there can only be 1 pending phrase for a given span, since source and repetition can't overlap
-        const info = pendingPhraseLinks[phrase.id];
-        if (info) {
-          pendingLinkInfo = info;
-        }
+        isEmphasized ||= phraseViewStates[phrase.id]?.isEmphasized;            // some
+        isDeemphasized &&= phraseViewStates[phrase.id]?.isDeemphasized;        // every
+        isRepetitionUnderEdit ||= editInfo.repetitionToShow?.id === phrase.id; // some
+        isSourceUnderEdit ||= editInfo.sourceToShow?.id === phrase.id;         // some
       });
-
+      
       // determine span type
       let spanType = SpanType.Text;
+      const isUnderEdit = !isEditIdle && (isRepetitionUnderEdit || isSourceUnderEdit);
 
       // note: 0 span phrases means it's just plan text
       
-      if (!isEditIdle && pendingLinkInfo) {
-        // if there is a pending phrase here, its role overrides any others
-        spanType = (pendingLinkInfo as PhraseLinkInfo).overallRole === OverallPhraseRole.Source
-          ? SpanType.Source : SpanType.Repetition;
+      if (isUnderEdit) {
+        // if phrase is under edit, its role overrides any others
+        spanType = isRepetitionUnderEdit ? SpanType.Repetition : SpanType.Source;
       } else if (spanPhrases.length === 1) {
         const linkInfo: PhraseLinkInfo = phraseLinks[spanPhrases[0].id];
 
@@ -110,7 +103,6 @@ export const SplitTextCell: React.FC<SplitTextCellProps> = props => {
         end,
         spanPhraseIds: spanPhrases.map(p => p.id),
         spanType,
-        isPending: !!pendingLinkInfo,
         isHoverable: isNotTextType && isEditIdle,
         isClickable: isNotTextType && isEditIdle,
         isContextable: isNotTextType && isEditIdle,
@@ -118,8 +110,9 @@ export const SplitTextCell: React.FC<SplitTextCellProps> = props => {
         isDeemphasized: isNotTextType && isDeemphasized,
         isLeftmostSpan: false,
         isRightmostSpan: false,
-        isPreviousSpanPending: false,
-        isNextSpanPending: false
+        isUnderEdit,
+        isPreviousSpanUnderEdit: false,
+        isNextSpanUnderEdit: false
       });
     }
 
@@ -128,11 +121,11 @@ export const SplitTextCell: React.FC<SplitTextCellProps> = props => {
       const spanType = defs[i].spanType;
       defs[i].isLeftmostSpan = spanType !== SpanType.Text && (i === 0 || defs[i - 1].spanType === SpanType.Text);
       defs[i].isRightmostSpan = spanType !== SpanType.Text && (i === (defs.length - 1) || defs[i + 1].spanType === SpanType.Text);
-      defs[i].isPreviousSpanPending = i > 0 && defs[i - 1].isPending;
-      defs[i].isNextSpanPending = i < (defs.length - 1) && defs[i + 1].isPending;
+      defs[i].isPreviousSpanUnderEdit = i > 0 && defs[i - 1].isUnderEdit;
+      defs[i].isNextSpanUnderEdit = i < (defs.length - 1) && defs[i + 1].isUnderEdit;
     }
     return defs;
-  }, [line, phraseViewStates, editState, pendingPhraseLinks, pendingLinePhrases]);
+  }, [line, phraseViewStates, editState, editInfo]);
 
   const spanBubbles = useMemo(() => spanDefinitions.map(span => (
     <SplitTextSpanBubble key={`${span.start}:${span.end}`} span={span}>

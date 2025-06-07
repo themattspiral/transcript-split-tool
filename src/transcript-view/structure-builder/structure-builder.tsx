@@ -1,13 +1,14 @@
 import { CSSProperties } from 'react';
 import classNames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faX, faTrash, faCaretDown } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faX, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 import { getPhraseText, PoeticStructureRelationshipType, SpanType } from '../../shared/data';
 import { useUserData } from '../../context/user-data-context';
 import { EditState, useStructureEdit } from '../../context/structure-edit-context';
 import { SimpleSpanBubble } from '../../shared/components/simple-span-bubble';
 import { Badge } from '../../shared/components/badge';
+import { Dropdown } from '../../shared/components/dropdown';
 
 interface StructureBuilderProps {
   className?: string | undefined;
@@ -17,11 +18,10 @@ interface StructureBuilderProps {
 const CONTAINER_CLASSES = 'pl-3 pr-4 pt-6 pb-6 flex flex-col justify-center items-center overflow-x-hidden overflow-y-auto';
 
 export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, style }) => {
-  const { transcriptLines } = useUserData();
+  const { transcriptLines, topsMap } = useUserData();
   const {
     editState, editInfo,
-    clearAllPending, savePendingStructureEdit,
-    deleteStructureUnderEdit
+    clearAllPending, savePendingStructureEdit, deleteStructureUnderEdit, setPendingTops
   } = useStructureEdit();
   
   const repetitionText = getPhraseText(editInfo.repetitionToShow, transcriptLines) || '<selection pending>';
@@ -35,7 +35,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
   
   let submitEnabled = false;
   if (editState === EditState.EditingExisting) {
-    submitEnabled = !hasOrderingError && (editInfo.repetitionModified || editInfo.sourceModified);
+    submitEnabled = !hasOrderingError && (editInfo.repetitionModified || editInfo.sourceModified || editInfo.topsModified);
   } else if (editState === EditState.CreatingNew) {
     submitEnabled = !hasOrderingError && !!editInfo.repetitionToShow && !!editInfo.sourceToShow;
   }
@@ -62,7 +62,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
       </section>
 
       {/* middle content container */}
-      <section className="grow-1 w-full flex flex-col justify-center">
+      <section className="grow-1 w-full flex flex-col">
 
         {/* error message */}
         <div className="flex items-center justify-center mb-4" style={{ visibility: hasOrderingError ? 'visible' : 'hidden' }}>
@@ -73,10 +73,13 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
         
         <h2 className="w-full text-gray-600 text-md font-bold flex items-center">
           <span className="mr-4">ToPS:</span>
-          <span className="grow-1 flex items-center justify-end">
-            <Badge size="large">{editInfo.topsToShow?.displayName}</Badge>
-            <FontAwesomeIcon icon={faCaretDown} size="sm" className="ml-2" />
-          </span>
+          <div className="grow-1 flex justify-end">
+            <Dropdown
+              options={Object.values(topsMap).map(t => ({ id: t.id, label: t.displayName, selectable: t.selectable }))}
+              selectedId={editInfo.topsToShow?.id || ''}
+              onChange={(id: string) => setPendingTops(topsMap[id])}
+            />
+          </div>
         </h2>
         <div
           className="w-full flex justify-end text-red-500 text-xs font-semibold mt-1 mb-4"

@@ -1,24 +1,13 @@
 
-import { useCallback, useMemo, useState } from 'react';
+import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { ViewStateContext } from './view-state-context';
 import { TabId } from '../shared/data';
 import { CONFIRM_MODAL_ID } from '../modal/confirm-modal';
+import { CustomCSSVariables, ViewStateContext } from './view-state-context';
 
-export enum CustomCSSVariables {
-  ColorRepetition = '--color-repetition',
-  ColorRepetitionLite = '--color-repetition-lite',
-  ColorRepetitionHeavy = '--color-repetition-heavy',
-  ColorSource = '--color-source',
-  ColorSourceLite = '--color-source-lite',
-  ColorSourceHeavy = '--color-source-heavy',
-  ColorOverlapping = '--color-overlapping',
-  ColorOverlappingLite = '--color-overlapping-lite',
-  ColorOverlappingHeavy = '--color-overlapping-heavy',
-  ColorSpanBorder = '--color-span-border',
-  ColorStructureArrows = '--color-structure-arrows',
-  ColorBadge = '--color-badge',
-  MenuActiveBgColor = '--contexify-activeItem-bgColor'
+interface OutsideClickContext {
+  outsideElementRef: RefObject<HTMLElement | null>,
+  handler: () => void;
 }
 
 export const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -27,6 +16,7 @@ export const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const isModalShowing = !!displayedModalId;
   const [modalMessage, setModalMessage] = useState<string | null>(null);
   const [modalOnConfirm, setModalOnConfirm] = useState<(() => void) | null>(null);
+  const outsideClickContextsRef = useRef<Set<OutsideClickContext>>(new Set());
 
   // fetch custom CSS variables that we may want to use programatically
   const cssVariables = useMemo(() => {
@@ -52,15 +42,41 @@ export const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setModalOnConfirm(null);
   }, [setDisplayedModalId, setModalMessage, setModalOnConfirm]);
 
+  const registerOutsideClick = useCallback((outsideElementRef: RefObject<HTMLElement | null>, handler: () => void) => {
+    outsideClickContextsRef.current.add({ outsideElementRef, handler });
+  }, []);
+
+  const unregisterOutsideClick = useCallback((outsideElementRef: RefObject<HTMLElement | null>, handler: () => void) => {
+    outsideClickContextsRef.current.delete({ outsideElementRef, handler });
+  }, []);
+
+  const handleOutsideClick = useCallback((event: MouseEvent) => {
+
+    for (const ctx of outsideClickContextsRef.current) {
+      if (ctx.outsideElementRef.current && !ctx.outsideElementRef.current.contains(event.target as Node)) {
+        console.log('outside click!');
+        ctx.handler();
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('click', handleOutsideClick);
+
+    return () => {
+      window.removeEventListener('click', handleOutsideClick);
+    };
+  }, [handleOutsideClick]);
+
   const value = useMemo(() => ({
     activeTabId, setActiveTabId,
     displayedModalId, isModalShowing, showConfirmationModal, hideModals,
-    modalMessage, modalOnConfirm,
+    modalMessage, modalOnConfirm, registerOutsideClick, unregisterOutsideClick,
     cssVariables
   }), [
     activeTabId, setActiveTabId,
     displayedModalId, isModalShowing, showConfirmationModal, hideModals,
-    modalMessage, modalOnConfirm,
+    modalMessage, modalOnConfirm, registerOutsideClick, unregisterOutsideClick,
     cssVariables
   ]);
 

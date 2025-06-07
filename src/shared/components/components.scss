@@ -93,7 +93,7 @@
 
   /* SpanType.Text */
   &.text {
-    /* plaintext spans sit on top of slightly-overlapping phrase & pending bubbles */
+    /* plaintext spans sit on top of slightly-overlapping phrase & under-edit bubbles */
     z-index: 2;
   }
 
@@ -101,11 +101,11 @@
     cursor: pointer;
   }
 
-  &.pending {
+  &.under-edit {
     border: 2px dashed var(--color-span-border);
     font-weight: 600;
 
-    /* pending bubble spans sit on top of phrase bubbles, but not over plaintext */
+    /* under-edit bubble spans sit on top of phrase bubbles, but not over plaintext */
     z-index: 1;
   }
 
@@ -133,9 +133,9 @@
     }
 
     /* draw a dashed border between immediatly adjacent span bubbles as long as:
-         span is NOT pending and NOT leftmost (i.e. it is a plain, non-interacted-with span),
-        AND does NOT have a pending span immediately previous/left (so that we don't get 2 borders) */
-    &:not(.pending):not(.leftmost):not(.previous-pending) {
+         span is NOT under-edit and NOT leftmost (i.e. it is a plain, non-interacted-with span),
+        AND does NOT have an under-edit span immediately previous/left (so that we don't get 2 borders) */
+    &:not(.under-edit):not(.leftmost):not(.previous-under-edit) {
       border-left: 1px dashed var(--color-span-border);
 
       /* so that text inside is not right against the dashed border */
@@ -147,11 +147,11 @@
       padding-right: 1px;
     }
 
-    /* remove internal borders in pending blocks */
-    &.pending.previous-pending:not(.leftmost) {
+    /* remove internal borders in under-edit blocks */
+    &.under-edit.previous-under-edit:not(.leftmost) {
       border-left: 0;
     }
-    &.pending.next-pending:not(.rightmost) {
+    &.under-edit.next-under-edit:not(.rightmost) {
       border-right: 0;
     }
   }
@@ -175,5 +175,37 @@
     /* when used in a react-contexify menu, make sure the text in the span bubble does
        not change colors when hovered and the menu item background changes color */
     color: var(--contexify-item-color) !important;
+  }
+}
+
+.dropdown {
+  .dropdown-button .caret {
+    transition: transform 0.15s ease-in;
+
+    &.closed {
+      transform: rotate(0deg);
+    }
+
+    &.open {
+      transform: rotate(180deg);
+    }
+  }
+
+  .dropdown-menu {
+    transition: max-height 0.1s ease-in-out;
+
+    .dropdown-menu-option:not(.selectable) {
+      color: var(--color-gray-700);
+    }
+
+    .dropdown-menu-option.selectable {
+      color: black;
+    
+      &:hover {
+        cursor: pointer;
+        color: #fff;
+        background-color: var(--contexify-activeItem-bgColor);
+      }
+    }
   }
 }

@@ -5,7 +5,7 @@ import { getPhraseText, MenuAction, Phrase, PhraseRole, SpanType } from '../../.
 import { useUserData } from '../../../context/user-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
 import { useViewState } from '../../../context/view-state-context';
-import { CustomCSSVariables } from '../../../context/view-state-provider';
+import { CustomCSSVariables } from '../../../context/view-state-context';
 import { SimpleSpanBubble } from '../../../shared/components/simple-span-bubble';
 
 interface MultiLinkHeaderItemProps {

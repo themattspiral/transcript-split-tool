@@ -1,7 +1,22 @@
-import { createContext, useContext } from 'react';
+import { createContext, RefObject, useContext } from 'react';
 
 import { TabId } from '../shared/data';
-import { CustomCSSVariables } from './view-state-provider';
+
+export enum CustomCSSVariables {
+  ColorRepetition = '--color-repetition',
+  ColorRepetitionLite = '--color-repetition-lite',
+  ColorRepetitionHeavy = '--color-repetition-heavy',
+  ColorSource = '--color-source',
+  ColorSourceLite = '--color-source-lite',
+  ColorSourceHeavy = '--color-source-heavy',
+  ColorOverlapping = '--color-overlapping',
+  ColorOverlappingLite = '--color-overlapping-lite',
+  ColorOverlappingHeavy = '--color-overlapping-heavy',
+  ColorSpanBorder = '--color-span-border',
+  ColorStructureArrows = '--color-structure-arrows',
+  ColorBadge = '--color-badge',
+  MenuActiveBgColor = '--contexify-activeItem-bgColor'
+}
 
 interface ViewStateContextProps {
   activeTabId: TabId;
@@ -12,6 +27,8 @@ interface ViewStateContextProps {
   hideModals: () => void;
   modalMessage: string | null;
   modalOnConfirm: (() => void) | null;
+  registerOutsideClick: (outsideElementRef: RefObject<HTMLElement | null>, handler: () => void) => void;
+  unregisterOutsideClick: (outsideElementRef: RefObject<HTMLElement | null>, handler: () => void) => void;
   cssVariables: { [key in CustomCSSVariables]: string };
 }
 
@@ -24,6 +41,8 @@ export const ViewStateContext = createContext<ViewStateContextProps>({
   hideModals: () => {},
   modalMessage: null,
   modalOnConfirm: null,
+  registerOutsideClick: () => {},
+  unregisterOutsideClick: () => {},
   cssVariables: {} as { [key in CustomCSSVariables]: string }
 });
 
