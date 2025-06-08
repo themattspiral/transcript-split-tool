@@ -81,6 +81,7 @@ export interface DropdownOption {
   label?: ReactNode;
   textLabel: string;
   selectable?: boolean;
+  level?: number;
 }
 
 export enum PhraseAction {

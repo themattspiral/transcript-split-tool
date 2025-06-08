@@ -54,12 +54,13 @@ export const Dropdown: React.FC<DropdownProps> = ({ options, selectedId, onChang
         {options.map(op => (
           <div
             key={op.id} 
-            className={classNames('dropdown-menu-option py-1 px-2 select-none', { selectable: op.selectable !== false })}
+            className={classNames('dropdown-menu-option py-1 px-2 select-none flex', { selectable: op.selectable !== false })}
             onClick={ op.selectable === false ? undefined : () => {
               onChange(op.id);
               setIsOpen(false)
             } }
           >
+            <span className="inline-block shrink-0" style={{ width: `${(op.level || 0) * 15}px` }} />
             { op.label || op.textLabel }
           </div>
         ))}
