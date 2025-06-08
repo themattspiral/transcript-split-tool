@@ -31,7 +31,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ options, selectedId, onChang
   return (
     <div
       ref={containerRef}
-      className="dropdown relative p-1 rounded-sm border-1 border-transparent hover:border-gray-600 hover:bg-gray-100"
+      className="dropdown relative p-1 rounded-sm border-1 border-transparent hover:border-gray-600"
     > 
 
       <button

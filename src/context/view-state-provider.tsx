@@ -54,7 +54,6 @@ export const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     for (const ctx of outsideClickContextsRef.current) {
       if (ctx.outsideElementRef.current && !ctx.outsideElementRef.current.contains(event.target as Node)) {
-        console.log('outside click!');
         ctx.handler();
       }
     }
