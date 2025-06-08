@@ -36,7 +36,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
           <span className="inline-block shrink-0" style={{ width: `${t.level * 15}px` }}></span>
           <span className="grow-1">{ t.type.displayName }</span>
           { t.type.relationshipType === PoeticStructureRelationshipType.MultipleSource &&
-            <ManyToOneIcon className="ml-2" />
+            <ManyToOneIcon className="ml-4" />
           }
         </div>
       )
