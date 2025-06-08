@@ -39,13 +39,16 @@ export const ManyToOneIcon: React.FC<ManyToOneIconProps> = ({ className, style, 
             .block {
               fill: currentColor;
             }
+            .line {
+              stroke: currentColor;
+            }
           }
           `}</style>
       </defs>
 
-      <line x1="17.5" y1="20" x2="38" y2="41" strokeWidth="3" stroke="currentColor" markerEnd="url(#arrow)" />
-      <line x1="50" y1="20" x2="50" y2="40" strokeWidth="3" stroke="currentColor" markerEnd="url(#arrow)" />
-      <line x1="80.5" y1="20" x2="62" y2="41" strokeWidth="3" stroke="currentColor" markerEnd="url(#arrow)" />
+      <line x1="17.5" y1="20" x2="38" y2="41" className="line" strokeWidth="3" stroke="black" markerEnd="url(#arrow)" />
+      <line x1="50" y1="20" x2="50" y2="40" className="line" strokeWidth="3" stroke="black" markerEnd="url(#arrow)" />
+      <line x1="80.5" y1="20" x2="62" y2="41" className="line" strokeWidth="3" stroke="black" markerEnd="url(#arrow)" />
 
       <rect x="3.5" y="2" width="28" height="15" rx="7" className="block" fill={srcColor} stroke="none" filter="url(#enhanceColor)" />
       <rect x="35" y="2" width="28" height="15" rx="7" className="block" fill={srcColor} stroke="none" filter="url(#enhanceColor)" />
