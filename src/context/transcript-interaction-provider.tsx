@@ -10,7 +10,6 @@ import { TranscriptMenuId } from '../transcript-view/menus/transcript-menus';
 interface TranscriptHoverState {
   phraseIds: string[];
   menuStructureId: string | null;
-  menuPhraseId: string | null;
 }
 
 export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -23,16 +22,11 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
 
   // highlighted phrase when it is right-clicked
   const [highlightedPhrase, setHighlightedPhrase] = useState<Phrase | null>(null);
-
-  // when a multilink menu item is hovered in the structure select menu, it sets this key for it's header item
-  // inside the menu, which is used by the header to style itself as 'hovered' to pair with the link hovered
-  const [menuMultiLinkHoveredHeaderKey, setMenuMultiLinkHoveredHeaderKey] = useState<string | null>(null);
   
   // user interactions are tracked here and used to calculate phraseViewStates
   const [hoverState, setHoverState] = useState<TranscriptHoverState>({
     phraseIds: [],
-    menuStructureId: null,
-    menuPhraseId: null
+    menuStructureId: null
   });
   
   const [transcriptMenuVisibility, setTranscriptMenuVisibility] = useState<{ [key in TranscriptMenuId]: boolean }>({
@@ -58,8 +52,6 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     if (editState === EditState.Idle) {
       if (hoverState.menuStructureId) {
         phraseIdsToEmphasize =  getAllStructurePhraseIds(hoverState.menuStructureId);
-      } else if (hoverState.menuPhraseId) {
-        phraseIdsToEmphasize = [hoverState.menuPhraseId];
       } else if (hoverState.phraseIds.length > 0) {
         phraseIdsToEmphasize = getAllLinkedPhraseIds(hoverState.phraseIds);
       }
@@ -92,12 +84,12 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     switch (action) {
       case PhraseAction.Hover:
         if (allTranscriptMenusClosed) {
-          setHoverState({ phraseIds, menuStructureId: null, menuPhraseId: null });
+          setHoverState({ phraseIds, menuStructureId: null });
         }
         break;
       case PhraseAction.Unhover:
         if (allTranscriptMenusClosed) {
-          setHoverState({ phraseIds: [], menuStructureId: null, menuPhraseId: null });
+          setHoverState({ phraseIds: [], menuStructureId: null });
         }
         break;
       case PhraseAction.Context:
@@ -106,7 +98,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
 
         // hovered ids are set so that all the spans related to this menu stay emphasized
         // while it's open (unless hovering on something specific inside the menu)
-        setHoverState({ phraseIds, menuStructureId: null, menuPhraseId: null });
+        setHoverState({ phraseIds, menuStructureId: null });
 
         // TODO - remove when no longer needed
         setLme(event);
@@ -129,14 +121,10 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
         beginStructureEdit(structureOrPhraseId);
         break;
       case MenuAction.HoverStructure:
-        setHoverState({ phraseIds: [], menuStructureId: structureOrPhraseId, menuPhraseId: null });
-        break;
-      case MenuAction.HoverPhrase:
-        setHoverState({ phraseIds: [], menuStructureId: null, menuPhraseId: structureOrPhraseId });
-
+        setHoverState({ phraseIds: [], menuStructureId: structureOrPhraseId });
         break;
       case MenuAction.Unhover:
-        setHoverState({ phraseIds: contextPhraseIds, menuStructureId: null, menuPhraseId: null });
+        setHoverState({ phraseIds: contextPhraseIds, menuStructureId: null });
         break;
     }
   }, [
@@ -160,8 +148,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
   useEffect(() => {
     if (allTranscriptMenusClosed) {
       // clear all the possible hovered menu items because onMouseOut won't fire when menu closes
-      setHoverState({ phraseIds: [], menuStructureId: null, menuPhraseId: null });
-      setMenuMultiLinkHoveredHeaderKey(null);
+      setHoverState({ phraseIds: [], menuStructureId: null });
 
       // clear context phrase ids for good housekeeping (no context ids should be set when menus are closed)
       //
@@ -172,19 +159,17 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
       // TODO remove after done debugging
       // uncomment to keep menu open
       // if (lme) {
-      //   showContextMenu({ event: lme, id: TranscriptMenuId.HighlightMenu });
+      //   showContextMenu({ event: lme, id: TranscriptMenuId.StructureSelectMenu });
       // }
     }
-  }, [allTranscriptMenusClosed, setHoverState, setMenuMultiLinkHoveredHeaderKey, setContextPhraseIds, lme]);
+  }, [allTranscriptMenusClosed, setHoverState, setContextPhraseIds, lme]);
 
   const value = useMemo(() => ({
     phraseViewStates, handlePhraseAction, handleStructureSelectMenuAction, updateMenuVisibility,
-    contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending,
-    menuMultiLinkHoveredHeaderKey, setMenuMultiLinkHoveredHeaderKey
+    contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending
   }), [
     phraseViewStates, handlePhraseAction, handleStructureSelectMenuAction, updateMenuVisibility,
-    contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending,
-    menuMultiLinkHoveredHeaderKey, setMenuMultiLinkHoveredHeaderKey
+    contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending
   ]);
 
   return (

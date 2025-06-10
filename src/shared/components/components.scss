@@ -47,6 +47,14 @@
     margin-left: 10px;
     margin-right: 3px;
   }
+
+  &.mirror-x {
+    transform: scaleX(-1);
+  }
+
+  &.mirror-y {
+    transform: scaleY(-1);
+  }
 }
 
 .span-bubble {

@@ -93,7 +93,6 @@ export enum PhraseAction {
 
 export enum MenuAction {
   HoverStructure,
-  HoverPhrase,
   Unhover,
   Click
 }

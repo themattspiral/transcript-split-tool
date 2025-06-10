@@ -109,34 +109,6 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
           Modified
         </div>
 
-        <h2 className="w-full text-gray-600 text-md font-bold mb-2">
-          Repetition:
-        </h2>
-
-        <div className="flex items-center w-full">
-          <Badge mode="line-number" size="large" className="shrink-0">
-            { editInfo.repetitionToShow?.lineNumber || '--' }
-          </Badge>
-          
-          <SimpleSpanBubble
-            spanType={SpanType.Repetition}
-            mode="general"
-            className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
-            style={{ padding: '10px 20px', color: !editInfo.repetitionToShow ? 'gray' : undefined }}
-            showEmphasized={!!editInfo.repetitionToShow}
-            showDeemphasized={!editInfo.repetitionToShow}
-          >
-            { repetitionText }
-          </SimpleSpanBubble>
-        </div>
-
-        <div
-          className="w-full flex justify-end text-red-500 text-xs font-semibold mt-1 mb-4"
-          style={{ visibility: editInfo.repetitionModified ? 'visible' : 'hidden' }}
-        >
-          Modified
-        </div>
-    
         { editInfo.topsToShow?.relationshipType !== PoeticStructureRelationshipType.Unary &&
           <>
           <h2 className="w-full text-gray-600 text-md font-bold mb-2">
@@ -168,6 +140,34 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
           </div>
           </>
         }
+        
+        <h2 className="w-full text-gray-600 text-md font-bold mb-2">
+          Repetition:
+        </h2>
+
+        <div className="flex items-center w-full">
+          <Badge mode="line-number" size="large" className="shrink-0">
+            { editInfo.repetitionToShow?.lineNumber || '--' }
+          </Badge>
+          
+          <SimpleSpanBubble
+            spanType={SpanType.Repetition}
+            mode="general"
+            className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
+            style={{ padding: '10px 20px', color: !editInfo.repetitionToShow ? 'gray' : undefined }}
+            showEmphasized={!!editInfo.repetitionToShow}
+            showDeemphasized={!editInfo.repetitionToShow}
+          >
+            { repetitionText }
+          </SimpleSpanBubble>
+        </div>
+
+        <div
+          className="w-full flex justify-end text-red-500 text-xs font-semibold mt-1 mb-4"
+          style={{ visibility: editInfo.repetitionModified ? 'visible' : 'hidden' }}
+        >
+          Modified
+        </div>
 
       </section>
 
