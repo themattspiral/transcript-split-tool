@@ -1,7 +1,7 @@
 import { CSSProperties, useMemo } from 'react';
 import classNames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faX, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faX, faTrash, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 
 import { getPhraseText, PoeticStructureRelationshipType, SpanType } from '../../shared/data';
 import { useUserData } from '../../context/user-data-context';
@@ -25,7 +25,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
   const { showConfirmationModal } = useViewState();
   const { transcriptLines, topsMap } = useUserData();
   const {
-    editState, editInfo,
+    editState, editInfo, removeSourceFromStructureUnderEdit,
     clearAllPending, savePendingStructureEdit, deleteStructureUnderEdit, setPendingTops
   } = useStructureEdit();
 
@@ -156,6 +156,15 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
                   >
                   { getPhraseText(source, transcriptLines) }
                 </SimpleSpanBubble>
+
+                { isMultiSource &&
+                  <button
+                    className="w-[20px] text-red-500 hover:text-red-600 cursor-pointer ml-1"
+                    onClick={() => removeSourceFromStructureUnderEdit(source.id)}
+                  >
+                    <FontAwesomeIcon icon={faCircleXmark} size="lg" />
+                  </button>
+                }
               </div>
             
           )) }

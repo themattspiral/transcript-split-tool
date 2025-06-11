@@ -25,6 +25,7 @@ interface StructureEditContextProps {
   beginStructureEdit: (structureId: string) => void;
   savePendingStructureEdit: () => void;
   deleteStructureUnderEdit: () => void;
+  removeSourceFromStructureUnderEdit: (phraseId: string) => void;
   clearAllPending: () => void;
   pendingLinePhrases: { [lineNumber: string]: Phrase[] };
 }
@@ -37,6 +38,7 @@ export const StructureEditContext = createContext<StructureEditContextProps>({
   beginStructureEdit: () => {},
   savePendingStructureEdit: () => {},
   deleteStructureUnderEdit: () => {},
+  removeSourceFromStructureUnderEdit: () => {},
   clearAllPending: () => {},
   pendingLinePhrases: {}
 });

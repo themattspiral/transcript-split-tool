@@ -93,14 +93,19 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (role === PhraseRole.Repetition) {
       setPendingRepetition(phrase);
-    } else {
-      if (!pendingTops || pendingTops?.relationshipType === PoeticStructureRelationshipType.Paired) {
+    } else if (role === PhraseRole.Source) {
+      if (!editInfo.topsToShow || editInfo.topsToShow?.relationshipType === PoeticStructureRelationshipType.Paired) {
         setPendingSources(phrase === null ? null : [phrase]);
-      } else if (pendingTops?.relationshipType === PoeticStructureRelationshipType.MultipleSource) {
-        setPendingSources(phrase === null ? null : srcs => (srcs || []).concat(phrase));
+      } else if (editInfo.topsToShow?.relationshipType === PoeticStructureRelationshipType.MultipleSource) {
+        let sources = pendingSources || [];
+
+        if (editState === EditState.EditingExisting && editingStructureId && pendingSources === null) {
+          sources = [ ...poeticStructures[editingStructureId].sources ];
+        }
+        setPendingSources(phrase === null ? null : sources.concat(phrase));
       }
     }
-  }, [editState, setEditState, setPendingRepetition, setPendingSources, pendingTops, setPendingTops]);
+  }, [editState, editInfo, editingStructureId, pendingSources, setEditState, setPendingRepetition, setPendingSources, setPendingTops]);
   
   const clearAllPending = useCallback(() => {
     setPendingRepetition(null);
@@ -156,12 +161,24 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
     clearAllPending();
   }, [editingStructureId, removePoeticStructure, clearAllPending]);
 
+  const removeSourceFromStructureUnderEdit = useCallback((phraseId: string) => {
+    if (editInfo.topsToShow?.relationshipType === PoeticStructureRelationshipType.MultipleSource) {
+      let sources = pendingSources || [];
+
+      if (editState === EditState.EditingExisting && editingStructureId && pendingSources === null) {
+        sources = [ ...poeticStructures[editingStructureId].sources ];
+      }
+
+      setPendingSources(sources.filter(s => s.id !== phraseId));
+    }
+  }, [editState, editInfo, poeticStructures, editingStructureId, pendingSources, setPendingSources]);
+
   const value = useMemo(() => ({
     editState, editInfo, setPendingPhrase, setPendingTops, clearAllPending, beginStructureEdit,
-    savePendingStructureEdit, deleteStructureUnderEdit, pendingLinePhrases
+    savePendingStructureEdit, deleteStructureUnderEdit, pendingLinePhrases, removeSourceFromStructureUnderEdit
   }), [
     editState, editInfo, setPendingPhrase, setPendingTops, clearAllPending, beginStructureEdit,
-    savePendingStructureEdit, deleteStructureUnderEdit, pendingLinePhrases
+    savePendingStructureEdit, deleteStructureUnderEdit, pendingLinePhrases, removeSourceFromStructureUnderEdit
   ]);
 
   return (
