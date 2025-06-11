@@ -5,12 +5,15 @@ import { faCheck, faX, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 import { getPhraseText, PoeticStructureRelationshipType, SpanType } from '../../shared/data';
 import { useUserData } from '../../context/user-data-context';
+import { useViewState } from '../../context/view-state-context';
 import { EditState, useStructureEdit } from '../../context/structure-edit-context';
 import { SimpleSpanBubble } from '../../shared/components/simple-span-bubble';
 import { Badge } from '../../shared/components/badge';
 import { Dropdown } from '../../shared/components/dropdown';
 import { ManyToOneIcon } from '../../shared/components/many-to-one-icon';
+import { CONFIRM_DELETE } from '../../modal/modal-messages';
 
+const PENDING_TEXT = '<selection pending>';
 const CONTAINER_CLASSES = 'pl-3 pr-4 pt-6 pb-6 flex flex-col justify-center items-center overflow-x-hidden overflow-y-auto';
 
 interface StructureBuilderProps {
@@ -19,6 +22,7 @@ interface StructureBuilderProps {
 }
 
 export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, style }) => {
+  const { showConfirmationModal } = useViewState();
   const { transcriptLines, topsMap } = useUserData();
   const {
     editState, editInfo,
@@ -42,21 +46,25 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
     }));
   }, [topsMap]);
   
-  const repetitionText = getPhraseText(editInfo.repetitionToShow, transcriptLines) || '<selection pending>';
-  const sourceText = getPhraseText(editInfo.sourceToShow, transcriptLines) || '<selection pending>';
+  const repetitionText = getPhraseText(editInfo.repetitionToShow, transcriptLines) || PENDING_TEXT;
 
-  const isSameLine = editInfo.repetitionToShow?.lineNumber === editInfo.sourceToShow?.lineNumber;
-  const hasOrderingError = editInfo.repetitionToShow && editInfo.sourceToShow && (
-    editInfo.sourceToShow.lineNumber > editInfo.repetitionToShow.lineNumber
-    || (isSameLine && editInfo.repetitionToShow.start < editInfo.sourceToShow.end)
-  );
+  // const isSameLine = editInfo.repetitionToShow?.lineNumber === editInfo.sourceToShow?.lineNumber;
+  // const hasOrderingError = editInfo.repetitionToShow && editInfo.sourceToShow && (
+  //   editInfo.sourceToShow.lineNumber > editInfo.repetitionToShow.lineNumber
+  //   || (isSameLine && editInfo.repetitionToShow.start < editInfo.sourceToShow.end)
+  // );
+  const isSameLine = false;
+  const hasOrderingError = false;
   
   let submitEnabled = false;
   if (editState === EditState.EditingExisting) {
-    submitEnabled = !hasOrderingError && (editInfo.repetitionModified || editInfo.sourceModified || editInfo.topsModified);
+    submitEnabled = !hasOrderingError && (editInfo.repetitionModified || editInfo.sourcesModified || editInfo.topsModified);
   } else if (editState === EditState.CreatingNew) {
-    submitEnabled = !hasOrderingError && !!editInfo.repetitionToShow && !!editInfo.sourceToShow;
+    submitEnabled = !hasOrderingError && !!editInfo.repetitionToShow && !!editInfo.sourcesToShow;
   }
+
+  const isUnary = editInfo.topsToShow?.relationshipType === PoeticStructureRelationshipType.Unary;
+  const isMultiSource = editInfo.topsToShow?.relationshipType === PoeticStructureRelationshipType.MultipleSource;
 
   return editState === EditState.Idle ? (
 
@@ -106,32 +114,57 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
           Modified
         </div>
 
-        { editInfo.topsToShow?.relationshipType !== PoeticStructureRelationshipType.Unary &&
+        { !isUnary &&
           <>
           <h2 className="w-full text-gray-600 text-md font-bold mb-2">
-            Source{editInfo.topsToShow?.relationshipType === PoeticStructureRelationshipType.MultipleSource ? 's' : ''}:
+            Source{isMultiSource ? 's' : ''}:
           </h2>
+          
+          { (!editInfo.sourcesToShow || editInfo.sourcesToShow?.length === 0) &&
+            <div className="flex items-center w-full">
+              <Badge mode="line-number" size="large" className="shrink-0">
+                --
+              </Badge>
 
-          <div className="flex items-center w-full">
-            <Badge mode="line-number" size="large" className="shrink-0">
-              { editInfo.sourceToShow?.lineNumber || '--' }
-            </Badge>
-
-            <SimpleSpanBubble
-              spanType={SpanType.Source}
-              mode="general"
-              className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
-              style={{ padding: '10px 20px', color: !editInfo.sourceToShow ? 'gray' : undefined }}
-              showEmphasized={!!editInfo.sourceToShow}
-              showDeemphasized={!editInfo.sourceToShow}
+              <SimpleSpanBubble
+                spanType={SpanType.Source}
+                mode="general"
+                className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
+                style={{ padding: '10px 20px', color: 'gray' }}
+                showDeemphasized={true}
               >
-              { sourceText }
-            </SimpleSpanBubble>
+                { PENDING_TEXT }
+              </SimpleSpanBubble>
+            </div>
+          }
+          
+          <div className="flex flex-wrap gap-2">
+
+          { editInfo.sourcesToShow?.map(source => (
+
+              <div key={source.id} className={classNames('flex items-center', { ['w-full']: !isMultiSource })}>
+                <Badge mode="line-number" size="large" className="shrink-0">
+                  { source.lineNumber }
+                </Badge>
+
+                <SimpleSpanBubble
+                  spanType={SpanType.Source}
+                  mode="general"
+                  className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
+                  style={{ padding: '10px 20px' }}
+                  showEmphasized={true}
+                  >
+                  { getPhraseText(source, transcriptLines) }
+                </SimpleSpanBubble>
+              </div>
+            
+          )) }
+
           </div>
 
           <div
             className="w-full flex justify-end text-red-500 text-xs font-semibold mt-1"
-            style={{ visibility: editInfo.sourceModified ? 'visible' : 'hidden' }}
+            style={{ visibility: editInfo.sourcesModified ? 'visible' : 'hidden' }}
           >
             Modified
           </div>
@@ -194,7 +227,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
         { editState === EditState.EditingExisting &&
           <button
             className="w-full h-[35px] rounded-lg bg-red-500 hover:bg-red-600 text-white hover:text-red-100 cursor-pointer shadow-md shadow-gray-400 mt-2"
-            onClick={deleteStructureUnderEdit}
+            onClick={() => showConfirmationModal(CONFIRM_DELETE, deleteStructureUnderEdit)}
           >
             <FontAwesomeIcon icon={faTrash} size="lg" />
             <span className="font-semibold ml-2">Delete</span>

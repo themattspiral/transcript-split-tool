@@ -10,10 +10,10 @@ export enum EditState {
 
 export interface EditInfo {
   repetitionToShow: Phrase | null;
-  sourceToShow: Phrase | null;
+  sourcesToShow: Phrase[] | null;
   topsToShow: TypeOfPoeticStructure | null;
   repetitionModified: boolean;
-  sourceModified: boolean;
+  sourcesModified: boolean;
   topsModified: boolean;
 }
 
@@ -26,6 +26,7 @@ interface StructureEditContextProps {
   savePendingStructureEdit: () => void;
   deleteStructureUnderEdit: () => void;
   clearAllPending: () => void;
+  pendingLinePhrases: { [lineNumber: string]: Phrase[] };
 }
 
 export const StructureEditContext = createContext<StructureEditContextProps>({
@@ -36,7 +37,8 @@ export const StructureEditContext = createContext<StructureEditContextProps>({
   beginStructureEdit: () => {},
   savePendingStructureEdit: () => {},
   deleteStructureUnderEdit: () => {},
-  clearAllPending: () => {}
+  clearAllPending: () => {},
+  pendingLinePhrases: {}
 });
 
 export const useStructureEdit = () => {

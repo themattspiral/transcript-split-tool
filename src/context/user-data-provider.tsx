@@ -6,10 +6,7 @@ import {
   TypeOfPoeticStructure
 } from '../shared/data';
 import { UserDataContext } from './user-data-context';
-import { useViewState } from './view-state-context';
 import testStructures from '../shared/test-structures.data.json';
-
-const CONFIRM_DELETE = 'Are you sure you want to delete this poetic structure?';
 
 const flattenTops = (option: TypeOfPoeticStructure, level: number) => {
   let map = { [option.id]: { type: option, level } } as { [topsId: string]: { type: TypeOfPoeticStructure, level: number } };
@@ -23,8 +20,6 @@ const flattenTops = (option: TypeOfPoeticStructure, level: number) => {
 };
 
 export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { showConfirmationModal } = useViewState();
-
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
   const [poeticStructures, setPoeticStructures] = useState<{ [structureId: string]: PoeticStructure }>({});
   const [topsOptions, setTopsOptions] = useState<TypeOfPoeticStructure[]>(DefaultTOPSValues);
@@ -188,14 +183,12 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [setPoeticStructures]);
 
   const removePoeticStructure = useCallback((structureId: string) => {
-    showConfirmationModal(CONFIRM_DELETE, () => {
-      setPoeticStructures(structures => {
-        const newStructures = { ...structures };
-        delete newStructures[structureId];
-        return newStructures;
-      });
+    setPoeticStructures(structures => {
+      const newStructures = { ...structures };
+      delete newStructures[structureId];
+      return newStructures;
     });
-  }, [setPoeticStructures, showConfirmationModal]);
+  }, [setPoeticStructures]);
 
   const topsMap = useMemo(() => {
     let map = {} as { [topsId: string]: { type: TypeOfPoeticStructure, level: number } };

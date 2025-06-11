@@ -21,14 +21,19 @@ export const SplitTextCell: React.FC<SplitTextCellProps> = props => {
   const { line, className, style, attributes } = props;
 
   const { phraseLinks, linePhrases } = useUserData();
-  const { editState, editInfo } = useStructureEdit();
+  const { editState, editInfo, pendingLinePhrases } = useStructureEdit();
   const { phraseViewStates } = useTranscriptInteraction();
 
   // flatten plain text and phrases into discreet SpanDefinitions, handling potential range overlaps 
   const spanDefinitions: SplitTextSpanBubbleDefinition[] = useMemo(() => {
     const isEditIdle = editState === EditState.Idle;
     const ln = line.lineNumber.toString();
-    const thisLinesPhrases = linePhrases[ln] || [];
+    const thisLinesPhrases = [
+      linePhrases[ln] || [],
+      pendingLinePhrases[ln] || []
+    ].flat();
+    const sourcesToShowMap = {} as { [phraseId: string]: boolean };
+    editInfo.sourcesToShow?.forEach(s => sourcesToShowMap[s.id] = true);
 
     const idxSpanSplitPoints = new Set<number>([0, line.text.length]);
     thisLinesPhrases?.forEach(phrase => {
@@ -70,7 +75,7 @@ export const SplitTextCell: React.FC<SplitTextCellProps> = props => {
         isEmphasized ||= phraseViewStates[phrase.id]?.isEmphasized;            // some
         isDeemphasized &&= phraseViewStates[phrase.id]?.isDeemphasized;        // every
         isRepetitionUnderEdit ||= editInfo.repetitionToShow?.id === phrase.id; // some
-        isSourceUnderEdit ||= editInfo.sourceToShow?.id === phrase.id;         // some
+        isSourceUnderEdit ||= sourcesToShowMap[phrase.id];                     // some
       });
       
       // determine span type

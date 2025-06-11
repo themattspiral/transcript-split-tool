@@ -1,6 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { PoeticStructure, Phrase, PhraseRole, TypeOfPoeticStructure, GenericTOPS } from '../shared/data';
+import {
+  PoeticStructure, Phrase, PhraseRole, TypeOfPoeticStructure,
+  GenericTOPS, PoeticStructureRelationshipType, sortPhrases
+} from '../shared/data';
 import { StructureEditContext, EditState, EditInfo } from './structure-edit-context';
 import { useUserData } from './user-data-context';
 
@@ -12,37 +15,37 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const [editState, setEditState] = useState<EditState>(EditState.Idle);
   const [pendingRepetition, setPendingRepetition] = useState<Phrase | null>(null);
-  const [pendingSource, setPendingSource] = useState<Phrase | null>(null);
+  const [pendingSources, setPendingSources] = useState<Phrase[] | null>(null);
   const [pendingTops, setPendingTops] = useState<TypeOfPoeticStructure | null>(null);
   const [editingStructureId, setEditingStructureId] = useState<string | null>(null);
 
   const editInfo: EditInfo = useMemo(() => {
     let repetitionToShow: Phrase | null = null;
-    let sourceToShow: Phrase | null = null;
+    let sourcesToShow: Phrase[] | null = null;
     let topsToShow: TypeOfPoeticStructure | null = null;
     let repetitionModified = false;
-    let sourceModified = false;
+    let sourcesModified = false;
     let topsModified = false;
     
     if (editState === EditState.CreatingNew) {
       repetitionToShow = pendingRepetition;
-      sourceToShow = pendingSource;
+      sourcesToShow = pendingSources ? pendingSources.sort(sortPhrases) : pendingSources;
       topsToShow = pendingTops;
     } else if (editState === EditState.EditingExisting && editingStructureId) {
       const structure = poeticStructures[editingStructureId]
   
-      if (pendingRepetition) {
+      if (pendingRepetition !== null) {
         repetitionToShow = pendingRepetition;
         repetitionModified = true;
       } else {
         repetitionToShow = structure.repetition;
       }
   
-      if (pendingSource) {
-        sourceToShow = pendingSource;
-        sourceModified = true;
+      if (pendingSources !== null) {
+        sourcesToShow = pendingSources;
+        sourcesModified = true;
       } else {
-        sourceToShow = structure.sources[0];
+        sourcesToShow = structure.sources;
       }
   
       if (pendingTops) {
@@ -55,13 +58,32 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
 
     return {
       repetitionToShow,
-      sourceToShow,
+      sourcesToShow,
       topsToShow,
       repetitionModified,
-      sourceModified,
+      sourcesModified,
       topsModified
     };
-  }, [editState, pendingRepetition, pendingSource, pendingTops, editingStructureId, poeticStructures]);
+  }, [editState, pendingRepetition, pendingSources, pendingTops, editingStructureId, poeticStructures]);
+
+  const pendingLinePhrases = useMemo(() => {
+    const lines = {} as { [lineNumber: string]: Phrase[] };
+
+    if (pendingRepetition) {
+      lines[pendingRepetition.lineNumber.toString()] = [pendingRepetition];
+    }
+
+    if (pendingSources) {
+      pendingSources.forEach(s => {
+        if (lines[s.lineNumber.toString()]) {
+          lines[s.lineNumber.toString()] = lines[s.lineNumber.toString()].concat(s);
+        } else {
+          lines[s.lineNumber.toString()] = [s];
+        }
+      });
+    }
+    return lines;
+  }, [pendingRepetition, pendingSources]);
 
   const setPendingPhrase = useCallback((phrase: Phrase | null, role: PhraseRole) => {
     if (editState === EditState.Idle) {
@@ -72,17 +94,21 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
     if (role === PhraseRole.Repetition) {
       setPendingRepetition(phrase);
     } else {
-      setPendingSource(phrase);
+      if (!pendingTops || pendingTops?.relationshipType === PoeticStructureRelationshipType.Paired) {
+        setPendingSources(phrase === null ? null : [phrase]);
+      } else if (pendingTops?.relationshipType === PoeticStructureRelationshipType.MultipleSource) {
+        setPendingSources(phrase === null ? null : srcs => (srcs || []).concat(phrase));
+      }
     }
-  }, [editState, setEditState, setPendingRepetition, setPendingSource, setPendingTops]);
+  }, [editState, setEditState, setPendingRepetition, setPendingSources, pendingTops, setPendingTops]);
   
   const clearAllPending = useCallback(() => {
     setPendingRepetition(null);
-    setPendingSource(null);
+    setPendingSources(null);
     setPendingTops(null);
     setEditingStructureId(null);
     setEditState(EditState.Idle);
-  }, [setPendingRepetition, setPendingSource, setPendingTops, setEditState, setEditingStructureId]);
+  }, [setPendingRepetition, setPendingSources, setPendingTops, setEditState, setEditingStructureId]);
 
   const beginStructureEdit = useCallback((structureId: string) => {
     if (editState === EditState.Idle) {
@@ -94,28 +120,28 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
     } else {
       setEditingStructureId(structureId);
     }
-  }, [editState, poeticStructures, setEditingStructureId, setPendingRepetition, setPendingSource]);
+  }, [editState, poeticStructures, setEditingStructureId]);
   
   const savePendingStructureEdit = useCallback(() => {
     if (
       editState === EditState.CreatingNew
-      && editInfo.repetitionToShow && editInfo.sourceToShow && editInfo.topsToShow
+      && editInfo.repetitionToShow && editInfo.sourcesToShow && editInfo.topsToShow
     ) {
       addPoeticStructure(new PoeticStructure(
         editInfo.repetitionToShow,
-        [editInfo.sourceToShow],
+        editInfo.sourcesToShow,
         editInfo.topsToShow.relationshipType,
         editInfo.topsToShow.id
       ));
       clearAllPending();
     } else if (
       editState === EditState.EditingExisting && editingStructureId
-      && editInfo.repetitionToShow && editInfo.sourceToShow && editInfo.topsToShow
-      && (editInfo.repetitionModified || editInfo.sourceModified || editInfo.topsModified)
+      && editInfo.repetitionToShow && editInfo.sourcesToShow && editInfo.topsToShow
+      && (editInfo.repetitionModified || editInfo.sourcesModified || editInfo.topsModified)
     ) {
       replacePoeticStructure(editingStructureId, new PoeticStructure(
         editInfo.repetitionToShow,
-        [editInfo.sourceToShow],
+        editInfo.sourcesToShow,
         editInfo.topsToShow.relationshipType,
         editInfo.topsToShow.id
       ));
@@ -132,10 +158,10 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const value = useMemo(() => ({
     editState, editInfo, setPendingPhrase, setPendingTops, clearAllPending, beginStructureEdit,
-    savePendingStructureEdit, deleteStructureUnderEdit
+    savePendingStructureEdit, deleteStructureUnderEdit, pendingLinePhrases
   }), [
     editState, editInfo, setPendingPhrase, setPendingTops, clearAllPending, beginStructureEdit,
-    savePendingStructureEdit, deleteStructureUnderEdit
+    savePendingStructureEdit, deleteStructureUnderEdit, pendingLinePhrases
   ]);
 
   return (

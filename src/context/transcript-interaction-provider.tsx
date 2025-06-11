@@ -59,8 +59,8 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
       if (editInfo.repetitionToShow) {
         phraseIdsToEmphasize.push(editInfo.repetitionToShow.id);
       }
-      if (editInfo.sourceToShow) {
-        phraseIdsToEmphasize.push(editInfo.sourceToShow.id);
+      if (editInfo.sourcesToShow) {
+        phraseIdsToEmphasize.push(...editInfo.sourcesToShow.map(s => s.id));
       }
     }
 
