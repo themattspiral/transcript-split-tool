@@ -47,3 +47,16 @@ body {
     color: inherit;
   }
 }
+
+.contexify .contexify_item.destructive .contexify_itemContent {
+  color: var(--color-red-500);
+}
+
+.contexify .contexify_item.destructive:hover .contexify_itemContent {
+  color: white;
+}
+
+.contexify.allow-small,
+.contexify .contexify_item.allow-small .contexify {
+  min-width: 100px;
+}

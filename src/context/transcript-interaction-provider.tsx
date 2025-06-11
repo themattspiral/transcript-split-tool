@@ -13,7 +13,7 @@ interface TranscriptHoverState {
 }
 
 export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { phraseLinks, getAllLinkedPhraseIds, getAllStructurePhraseIds } = useUserData();
+  const { phraseLinks, getAllLinkedPhraseIds, getAllStructurePhraseIds, removePoeticStructure } = useUserData();
   const { editState, editInfo, setPendingPhrase, beginStructureEdit } = useStructureEdit();
   const { show: showContextMenu } = useContextMenu();
 
@@ -115,10 +115,13 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
     }
 
     switch (action) {
-      case MenuAction.Click:
-        // note: hover states are cleared by an effect automatically when the menu closes
-        //       (after clicking something in it)
+      // note: hover states are cleared by an effect automatically when the menu closes
+      //       (after clicking something in it for edit and delete, or outside click)
+      case MenuAction.Edit:
         beginStructureEdit(structureOrPhraseId);
+        break;
+      case MenuAction.Delete:
+        removePoeticStructure(structureOrPhraseId);
         break;
       case MenuAction.HoverStructure:
         setHoverState({ phraseIds: [], menuStructureId: structureOrPhraseId });

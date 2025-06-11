@@ -10,10 +10,8 @@ import { SimpleSpanBubble } from '../../shared/components/simple-span-bubble';
 import { Badge } from '../../shared/components/badge';
 import { Dropdown } from '../../shared/components/dropdown';
 import { ManyToOneIcon } from '../../shared/components/many-to-one-icon';
-import { useViewState } from '../../context/view-state-context';
 
 const CONTAINER_CLASSES = 'pl-3 pr-4 pt-6 pb-6 flex flex-col justify-center items-center overflow-x-hidden overflow-y-auto';
-const CONFIRM_DELETE = 'Are you sure you want to delete this poetic structure?';
 
 interface StructureBuilderProps {
   className?: string | undefined;
@@ -26,7 +24,6 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
     editState, editInfo,
     clearAllPending, savePendingStructureEdit, deleteStructureUnderEdit, setPendingTops
   } = useStructureEdit();
-  const { showConfirmationModal } = useViewState();
 
   const topsDropdownOptions = useMemo(() => {
     return Object.values(topsMap).map(t => ({
@@ -197,7 +194,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
         { editState === EditState.EditingExisting &&
           <button
             className="w-full h-[35px] rounded-lg bg-red-500 hover:bg-red-600 text-white hover:text-red-100 cursor-pointer shadow-md shadow-gray-400 mt-2"
-            onClick={() => showConfirmationModal(CONFIRM_DELETE, deleteStructureUnderEdit)}
+            onClick={deleteStructureUnderEdit}
           >
             <FontAwesomeIcon icon={faTrash} size="lg" />
             <span className="font-semibold ml-2">Delete</span>

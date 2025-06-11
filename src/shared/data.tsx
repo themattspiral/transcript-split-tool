@@ -94,7 +94,8 @@ export enum PhraseAction {
 export enum MenuAction {
   HoverStructure,
   Unhover,
-  Click
+  Edit,
+  Delete
 }
 
 export enum TabId {
