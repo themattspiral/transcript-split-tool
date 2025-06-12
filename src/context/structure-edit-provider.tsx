@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import {
-  PoeticStructure, Phrase, PhraseRole, TypeOfPoeticStructure,
-  GenericTOPS, PoeticStructureRelationshipType, sortPhrases
+  PoeticStructure, Phrase, PhraseRole, TypeOfPoeticStructure, GenericTOPS,
+  PoeticStructureRelationshipType, sortPhrases, ValidationResult
 } from '../shared/data';
 import { StructureEditContext, EditState, EditInfo } from './structure-edit-context';
 import { useUserData } from './user-data-context';
@@ -62,7 +62,8 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
       topsToShow,
       repetitionModified,
       sourcesModified,
-      topsModified
+      topsModified,
+      anyModified: repetitionModified || sourcesModified || topsModified
     };
   }, [editState, pendingRepetition, pendingSources, pendingTops, editingStructureId, poeticStructures]);
 
@@ -84,6 +85,30 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     return lines;
   }, [pendingRepetition, pendingSources]);
+
+  const editValidity = useMemo(() => {
+    let result: ValidationResult = { isCompleteStructure: false, hasOrderingError: false };
+
+    if (editInfo.topsToShow?.relationshipType === PoeticStructureRelationshipType.Unary) {
+      result.isCompleteStructure = !!editInfo.repetitionToShow && !!editInfo.topsToShow;
+    } else {
+      result.isCompleteStructure = !!editInfo.repetitionToShow && !!editInfo.topsToShow
+        && !!editInfo.sourcesToShow && editInfo.sourcesToShow.length >= 1;
+    }
+
+    if (result.isCompleteStructure) {
+      editInfo.sourcesToShow?.forEach(source => {
+        const isSameLine = editInfo.repetitionToShow?.lineNumber === source.lineNumber;
+        const hasOrderingError: boolean = !!editInfo.repetitionToShow && (
+          source.lineNumber > editInfo.repetitionToShow.lineNumber
+          || (isSameLine && editInfo.repetitionToShow.start < source.end)
+        );
+        result.hasOrderingError ||= hasOrderingError;
+      });
+    }
+
+    return result;
+  }, [editInfo]);
 
   const setPendingPhrase = useCallback((phrase: Phrase | null, role: PhraseRole) => {
     if (editState === EditState.Idle) {
@@ -142,7 +167,6 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
     } else if (
       editState === EditState.EditingExisting && editingStructureId
       && editInfo.repetitionToShow && editInfo.sourcesToShow && editInfo.topsToShow
-      && (editInfo.repetitionModified || editInfo.sourcesModified || editInfo.topsModified)
     ) {
       const editingStructure = poeticStructures[editingStructureId];
       replacePoeticStructure(editingStructureId, new PoeticStructure(
@@ -181,11 +205,11 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [editState, editInfo, poeticStructures, editingStructureId, pendingSources, setPendingSources]);
 
   const value = useMemo(() => ({
-    editState, editInfo, setPendingPhrase, setPendingTops, clearAllPending, beginStructureEdit,
-    savePendingStructureEdit, deleteStructureUnderEdit, pendingLinePhrases, removeSourceFromStructureUnderEdit
+    editState, editInfo, editValidity, pendingLinePhrases, setPendingPhrase, setPendingTops, clearAllPending,
+    beginStructureEdit, savePendingStructureEdit, deleteStructureUnderEdit, removeSourceFromStructureUnderEdit
   }), [
-    editState, editInfo, setPendingPhrase, setPendingTops, clearAllPending, beginStructureEdit,
-    savePendingStructureEdit, deleteStructureUnderEdit, pendingLinePhrases, removeSourceFromStructureUnderEdit
+    editState, editInfo, editValidity, pendingLinePhrases, setPendingPhrase, setPendingTops, clearAllPending,
+    beginStructureEdit, savePendingStructureEdit, deleteStructureUnderEdit, removeSourceFromStructureUnderEdit
   ]);
 
   return (

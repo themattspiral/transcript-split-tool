@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseRole, TypeOfPoeticStructure } from '../shared/data';
+import { Phrase, PhraseRole, TypeOfPoeticStructure, ValidationResult } from '../shared/data';
 
 export enum EditState {
   Idle = 'Idle',
@@ -15,11 +15,14 @@ export interface EditInfo {
   repetitionModified: boolean;
   sourcesModified: boolean;
   topsModified: boolean;
+  anyModified: boolean;
 }
 
 interface StructureEditContextProps {
   editState: EditState,
   editInfo: EditInfo,
+  editValidity: ValidationResult;
+  pendingLinePhrases: { [lineNumber: string]: Phrase[] };
   setPendingPhrase: (phrase: Phrase | null, role: PhraseRole) => void;
   setPendingTops: (tops: TypeOfPoeticStructure) => void;
   beginStructureEdit: (structureId: string) => void;
@@ -27,20 +30,20 @@ interface StructureEditContextProps {
   deleteStructureUnderEdit: () => void;
   removeSourceFromStructureUnderEdit: (phraseId: string) => void;
   clearAllPending: () => void;
-  pendingLinePhrases: { [lineNumber: string]: Phrase[] };
 }
 
 export const StructureEditContext = createContext<StructureEditContextProps>({
   editState: EditState.Idle,
   editInfo: { } as EditInfo,
+  editValidity: { isCompleteStructure: false, hasOrderingError: false },
+  pendingLinePhrases: {},
   setPendingPhrase: () => {},
   setPendingTops: () => {},
   beginStructureEdit: () => {},
   savePendingStructureEdit: () => {},
   deleteStructureUnderEdit: () => {},
   removeSourceFromStructureUnderEdit: () => {},
-  clearAllPending: () => {},
-  pendingLinePhrases: {}
+  clearAllPending: () => {}
 });
 
 export const useStructureEdit = () => {

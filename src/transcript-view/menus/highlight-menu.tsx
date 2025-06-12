@@ -47,7 +47,7 @@ export const HighlightMenu: React.FC = () => {
       </Item>
 
       <Item disabled style={{ opacity: 1 }}>
-        <div className="font-bold font-mono whitespace-normal w-full flex justify-end">
+        <div className="font-bold font-mono whitespace-normal w-full">
           { highlightedText }
         </div>
       </Item>

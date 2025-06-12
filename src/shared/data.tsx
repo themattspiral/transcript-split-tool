@@ -144,6 +144,11 @@ export interface SplitTextSpanBubbleDefinition {
   isNextSpanUnderEdit: boolean;
 }
 
+export interface ValidationResult {
+  isCompleteStructure: boolean;
+  hasOrderingError: boolean;
+}
+
 
 /******* CONSTANTS *******/
 /* These are defined here to avoid circular dependency issues */
