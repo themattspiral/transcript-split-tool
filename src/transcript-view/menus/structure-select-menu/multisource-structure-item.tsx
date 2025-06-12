@@ -30,9 +30,9 @@ export const MultisourceStructureItem: React.FC<MultisourceStructureItemProps> =
             </Badge>
           </div>
 
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-y-[2px] gap-x-[4px] mb-[2px]">
             { link.structure.sources.map(source => (
-              <div key={source.id} className="flex items-center mb-[2px]">
+              <div key={source.id} className="flex items-center">
                 <Badge className="shrink-0" mode="line-number">{ source.lineNumber }</Badge>
 
                 <SimpleSpanBubble className="text-ellipsis overflow-hidden" mode="menu" spanType={SpanType.Source}>

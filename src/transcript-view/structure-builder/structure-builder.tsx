@@ -127,7 +127,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
             }
             
             {/* All Sources */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-y-2 gap-x-4">
               { editInfo.sourcesToShow?.map((source, idx) => {
                 return !isMultiSource && idx > 0 ? null : (
                   <div key={source.id} className={classNames('flex items-center relative', { ['w-full']: !isMultiSource })}>

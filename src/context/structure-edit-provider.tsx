@@ -155,23 +155,23 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
   const savePendingStructureEdit = useCallback(() => {
     if (
       editState === EditState.CreatingNew
-      && editInfo.repetitionToShow && editInfo.sourcesToShow && editInfo.topsToShow
+      && editInfo.repetitionToShow && editInfo.topsToShow
     ) {
       addPoeticStructure(new PoeticStructure(
         editInfo.repetitionToShow,
-        editInfo.sourcesToShow,
+        editInfo.sourcesToShow || [],
         editInfo.topsToShow.relationshipType,
         editInfo.topsToShow.id
       ));
       clearAllPending();
     } else if (
       editState === EditState.EditingExisting && editingStructureId
-      && editInfo.repetitionToShow && editInfo.sourcesToShow && editInfo.topsToShow
+      && editInfo.repetitionToShow && editInfo.topsToShow
     ) {
       const editingStructure = poeticStructures[editingStructureId];
       replacePoeticStructure(editingStructureId, new PoeticStructure(
         editInfo.repetitionToShow,
-        editInfo.sourcesToShow,
+        editInfo.sourcesToShow || [],
         editInfo.topsToShow.relationshipType,
         editInfo.topsToShow.id,
         editingStructure.topsNotes,
