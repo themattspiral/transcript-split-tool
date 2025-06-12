@@ -44,10 +44,10 @@ export const MultisourceStructureItem: React.FC<MultisourceStructureItemProps> =
             
           <div className="flex items-center">
             { link.structure.relationshipType !== PoeticStructureRelationshipType.Unary && 
-              <CurvedArrow mode="phrase-link" direction='down-right' />
+              <CurvedArrow mode="phrase-link" direction="down-right" className="shrink-0" />
             }
             
-            <Badge mode="line-number">{ link.structure.repetition.lineNumber }</Badge>
+            <Badge mode="line-number" className="shrink-0">{ link.structure.repetition.lineNumber }</Badge>
             
             <SimpleSpanBubble mode="menu" spanType={SpanType.Repetition}>
               { getPhraseText(link.structure.repetition, transcriptLines) }

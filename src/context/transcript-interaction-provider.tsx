@@ -157,6 +157,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
       //
       //   ** note ** - timing issues with react-contexify occur if this is done in
       //                the event handler invoked when a menu item is clicked (handleStructureSelectMenuAction)
+      //                which prevent the menu from actually closing, for unknown reasons
       setContextPhraseIds([]);
 
       // TODO remove after done debugging
