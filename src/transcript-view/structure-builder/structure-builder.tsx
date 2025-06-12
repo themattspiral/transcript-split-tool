@@ -34,7 +34,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
       id: t.type.id,
       selectable: t.type.selectable,
       level: t.level,
-      textLabel: t.type.displayName,
+      textLabel: t.type.hierarchyDisplayName || t.type.displayName,
       label: (
         <div className="flex items-center">
           <span>{ t.type.displayName }</span>

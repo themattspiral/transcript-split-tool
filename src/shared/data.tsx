@@ -118,6 +118,7 @@ export interface TypeOfPoeticStructure {
   selectable: boolean;
   subtypes: TypeOfPoeticStructure[];
   relationshipType: PoeticStructureRelationshipType;
+  hierarchyDisplayName?: string;
 }
 
 export enum SpanType {

@@ -24,7 +24,7 @@ export const UnaryStructureItem: React.FC<UnaryStructureItemProps> = ({ link }) 
         <div className="w-full pt-[1px] pb-[1px]">
           <div className="flex justify-end w-full mb-[2px]">
             <Badge>
-              { topsMap[link.structure.topsId].type.displayName }
+              { topsMap[link.structure.topsId].type.hierarchyDisplayName }
             </Badge>
           </div>
 

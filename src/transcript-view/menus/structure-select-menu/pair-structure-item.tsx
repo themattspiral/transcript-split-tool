@@ -26,7 +26,7 @@ export const PairStructureItem: React.FC<PairStructureItemProps> = ({ link }) =>
 
           <div className="flex justify-end w-full mb-[2px]">
             <Badge>
-              { topsMap[link.structure.topsId].type.displayName }
+              { topsMap[link.structure.topsId].type.hierarchyDisplayName }
             </Badge>
           </div>
 

@@ -8,12 +8,18 @@ import {
 import { UserDataContext } from './user-data-context';
 import testStructures from '../shared/test-structures.data.json';
 
-const flattenTops = (option: TypeOfPoeticStructure, level: number) => {
+const flattenTops = (option: TypeOfPoeticStructure, level: number, parentHierarchyDisplayName?: string) => {
   let map = { [option.id]: { type: option, level } } as { [topsId: string]: { type: TypeOfPoeticStructure, level: number } };
+
+  if (parentHierarchyDisplayName) {
+    option.hierarchyDisplayName = `${parentHierarchyDisplayName} > ${option.displayName}`;
+  } else {
+    option.hierarchyDisplayName = option.displayName;
+  }
 
   if (option.subtypes.length > 0) {
     option.subtypes.forEach(subtype => {
-      map = { ...map, ...flattenTops(subtype, level + 1) };
+      map = { ...map, ...flattenTops(subtype, level + 1, option.hierarchyDisplayName) };
     });
   }
   return map;
