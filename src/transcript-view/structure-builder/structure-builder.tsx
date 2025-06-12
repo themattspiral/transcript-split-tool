@@ -140,8 +140,8 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
           
           <div className="flex flex-wrap gap-2">
 
-          { editInfo.sourcesToShow?.map(source => (
-
+          { editInfo.sourcesToShow?.map((source, idx) => {
+            return !isMultiSource && idx > 0 ? null : (
               <div key={source.id} className={classNames('flex items-center', { ['w-full']: !isMultiSource })}>
                 <Badge mode="line-number" size="large" className="shrink-0">
                   { source.lineNumber }
@@ -166,8 +166,8 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
                   </button>
                 }
               </div>
-            
-          )) }
+            );
+          }) }
 
           </div>
 

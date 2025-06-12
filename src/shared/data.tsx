@@ -34,7 +34,14 @@ export class PoeticStructure {
     public topsNotes: string = '',
     public syntax: string = '',
     public notes: string = ''
-  ) {}
+  ) {
+    // enforce source limitations based on type
+    if (relationshipType === PoeticStructureRelationshipType.Paired) {
+      this.sources = [ sources[0] ];
+    } else if (relationshipType === PoeticStructureRelationshipType.Unary) {
+      this.sources = [];
+    }
+  }
 
   get id(): string {
     switch (this.relationshipType) {

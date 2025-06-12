@@ -109,6 +109,10 @@
     cursor: pointer;
   }
 
+  &.emphasized {
+    font-weight: 600;
+  }
+
   &.under-edit {
     border: 2px dashed var(--color-span-border);
     font-weight: 600;
