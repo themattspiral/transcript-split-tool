@@ -144,15 +144,22 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
       && editInfo.repetitionToShow && editInfo.sourcesToShow && editInfo.topsToShow
       && (editInfo.repetitionModified || editInfo.sourcesModified || editInfo.topsModified)
     ) {
+      const editingStructure = poeticStructures[editingStructureId];
       replacePoeticStructure(editingStructureId, new PoeticStructure(
         editInfo.repetitionToShow,
         editInfo.sourcesToShow,
         editInfo.topsToShow.relationshipType,
-        editInfo.topsToShow.id
+        editInfo.topsToShow.id,
+        editingStructure.topsNotes,
+        editingStructure.syntax,
+        editingStructure.notes
       ));
       clearAllPending();
     }
-  }, [editState, editingStructureId, editInfo, addPoeticStructure, replacePoeticStructure, clearAllPending]);
+  }, [
+    editState, editingStructureId, editInfo, poeticStructures, 
+    addPoeticStructure, replacePoeticStructure, clearAllPending
+  ]);
 
   const deleteStructureUnderEdit = useCallback(() => {
     if (editingStructureId) {
