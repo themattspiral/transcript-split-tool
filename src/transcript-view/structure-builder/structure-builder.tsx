@@ -142,7 +142,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
 
           { editInfo.sourcesToShow?.map((source, idx) => {
             return !isMultiSource && idx > 0 ? null : (
-              <div key={source.id} className={classNames('flex items-center', { ['w-full']: !isMultiSource })}>
+              <div key={source.id} className={classNames('flex items-center relative', { ['w-full']: !isMultiSource })}>
                 <Badge mode="line-number" size="large" className="shrink-0">
                   { source.lineNumber }
                 </Badge>
@@ -151,7 +151,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
                   spanType={SpanType.Source}
                   mode="general"
                   className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
-                  style={{ padding: '10px 20px' }}
+                  style={{ padding: isMultiSource ? '5px 10px' : '10px 20px' }}
                   showEmphasized={true}
                   >
                   { getPhraseText(source, transcriptLines) }
@@ -159,7 +159,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
 
                 { isMultiSource &&
                   <button
-                    className="w-[20px] text-red-500 hover:text-red-600 cursor-pointer ml-1"
+                    className="self-start w-[20px] text-red-500 hover:text-red-600 cursor-pointer absolute top-[-10px] right-[-10px]"
                     onClick={() => removeSourceFromStructureUnderEdit(source.id)}
                   >
                     <FontAwesomeIcon icon={faCircleXmark} size="lg" />

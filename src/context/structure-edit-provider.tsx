@@ -102,7 +102,7 @@ export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({
         if (editState === EditState.EditingExisting && editingStructureId && pendingSources === null) {
           sources = [ ...poeticStructures[editingStructureId].sources ];
         }
-        setPendingSources(phrase === null ? null : sources.concat(phrase));
+        setPendingSources(phrase === null ? null : sources.concat(phrase).sort(sortPhrases));
       }
     }
   }, [editState, editInfo, editingStructureId, pendingSources, setEditState, setPendingRepetition, setPendingSources, setPendingTops]);

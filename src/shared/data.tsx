@@ -35,8 +35,10 @@ export class PoeticStructure {
     public syntax: string = '',
     public notes: string = ''
   ) {
-    // enforce source limitations based on type
-    if (relationshipType === PoeticStructureRelationshipType.Paired) {
+    // enforce source rules based on type
+    if (relationshipType === PoeticStructureRelationshipType.MultipleSource) {
+      this.sources = sources.sort(sortPhrases);
+    } else if (relationshipType === PoeticStructureRelationshipType.Paired) {
       this.sources = [ sources[0] ];
     } else if (relationshipType === PoeticStructureRelationshipType.Unary) {
       this.sources = [];
