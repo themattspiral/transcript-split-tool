@@ -1,16 +1,19 @@
 import { CSSProperties, useMemo } from 'react';
 import classNames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faX, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faX, faTrash, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 
 import { getPhraseText, PoeticStructureRelationshipType, SpanType } from '../../shared/data';
 import { useUserData } from '../../context/user-data-context';
+import { useViewState } from '../../context/view-state-context';
 import { EditState, useStructureEdit } from '../../context/structure-edit-context';
 import { SimpleSpanBubble } from '../../shared/components/simple-span-bubble';
 import { Badge } from '../../shared/components/badge';
 import { Dropdown } from '../../shared/components/dropdown';
 import { ManyToOneIcon } from '../../shared/components/many-to-one-icon';
+import { CONFIRM_DELETE } from '../../modal/modal-messages';
 
+const PENDING_TEXT = '<selection pending>';
 const CONTAINER_CLASSES = 'pl-3 pr-4 pt-6 pb-6 flex flex-col justify-center items-center overflow-x-hidden overflow-y-auto';
 
 interface StructureBuilderProps {
@@ -19,9 +22,10 @@ interface StructureBuilderProps {
 }
 
 export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, style }) => {
+  const { showConfirmationModal } = useViewState();
   const { transcriptLines, topsMap } = useUserData();
   const {
-    editState, editInfo,
+    editState, editInfo, editValidity, removeSourceFromStructureUnderEdit,
     clearAllPending, savePendingStructureEdit, deleteStructureUnderEdit, setPendingTops
   } = useStructureEdit();
 
@@ -30,7 +34,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
       id: t.type.id,
       selectable: t.type.selectable,
       level: t.level,
-      textLabel: t.type.displayName,
+      textLabel: t.type.hierarchyDisplayName || t.type.displayName,
       label: (
         <div className="flex items-center">
           <span>{ t.type.displayName }</span>
@@ -42,21 +46,15 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
     }));
   }, [topsMap]);
   
-  const repetitionText = getPhraseText(editInfo.repetitionToShow, transcriptLines) || '<selection pending>';
-  const sourceText = getPhraseText(editInfo.sourceToShow, transcriptLines) || '<selection pending>';
-
-  const isSameLine = editInfo.repetitionToShow?.lineNumber === editInfo.sourceToShow?.lineNumber;
-  const hasOrderingError = editInfo.repetitionToShow && editInfo.sourceToShow && (
-    editInfo.sourceToShow.lineNumber > editInfo.repetitionToShow.lineNumber
-    || (isSameLine && editInfo.repetitionToShow.start < editInfo.sourceToShow.end)
-  );
+  const repetitionText = getPhraseText(editInfo.repetitionToShow, transcriptLines) || PENDING_TEXT;
   
-  let submitEnabled = false;
+  let submitEnabled = editValidity.isCompleteStructure && !editValidity.hasOrderingError;
   if (editState === EditState.EditingExisting) {
-    submitEnabled = !hasOrderingError && (editInfo.repetitionModified || editInfo.sourceModified || editInfo.topsModified);
-  } else if (editState === EditState.CreatingNew) {
-    submitEnabled = !hasOrderingError && !!editInfo.repetitionToShow && !!editInfo.sourceToShow;
+    submitEnabled &&= editInfo.anyModified;
   }
+
+  const isUnary = editInfo.topsToShow?.relationshipType === PoeticStructureRelationshipType.Unary;
+  const isMultiSource = editInfo.topsToShow?.relationshipType === PoeticStructureRelationshipType.MultipleSource;
 
   return editState === EditState.Idle ? (
 
@@ -70,106 +68,153 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
       </div>
 
     </div>
+
   ) : (
+
     <div className={classNames(CONTAINER_CLASSES, className)} style={style}>
 
       {/* top content container */}
-      <section className="shrink-0 w-full h-fit flex flex-col items-center justify-center mb-2">
-        { editState === EditState.CreatingNew && 'New Structure' }
-        { editState === EditState.EditingExisting && 'Editing Structure' }
-      </section>
-
-      {/* middle content container */}
       <section className="grow-1 w-full flex flex-col">
 
-        {/* error message */}
-        <div className="flex items-center justify-center mb-4" style={{ visibility: hasOrderingError ? 'visible' : 'hidden' }}>
-          <div className="text-center text-red-500 font-bold text-sm bg-red-100 rounded-xl py-1 px-6 border-1 border-red-300">
-            Repetition must come after Source.
-          </div>
-        </div>
+        <div className="grow-1 shrink-2"></div>
         
-        <h2 className="w-full text-gray-600 text-md font-bold flex items-center">
-          <span className="mr-4">ToPS:</span>
-          <div className="grow-1 flex justify-end">
-            <Dropdown
-              options={topsDropdownOptions}
-              selectedId={editInfo.topsToShow?.id || ''}
-              onChange={(id: string) => setPendingTops(topsMap[id].type)}
-            />
+        {/* ToPS */}
+        <div>
+          <h2 className="w-full text-gray-600 text-md font-bold flex items-center">
+            <span className="mr-4">ToPS:</span>
+            <div className="grow-1 flex justify-end">
+              <Dropdown
+                options={topsDropdownOptions}
+                selectedId={editInfo.topsToShow?.id || ''}
+                onChange={(id: string) => setPendingTops(topsMap[id].type)}
+              />
+            </div>
+          </h2>
+          <div
+            className="w-full flex justify-end text-red-500 text-xs font-semibold mt-1"
+            style={{ visibility: editInfo.topsModified ? 'visible' : 'hidden' }}
+          >
+            Modified
           </div>
-        </h2>
-        <div
-          className="w-full flex justify-end text-red-500 text-xs font-semibold mt-1 mb-4"
-          style={{ visibility: editInfo.topsModified ? 'visible' : 'hidden' }}
-        >
-          Modified
         </div>
 
-        { editInfo.topsToShow?.relationshipType !== PoeticStructureRelationshipType.Unary &&
-          <>
+        <div className="max-h-6 grow-1 shrink-1"></div>
+
+        {/* Sources */}
+        { !isUnary &&
+          <div>
+            <h2 className="w-full text-gray-600 text-md font-bold mb-2">
+              Source{isMultiSource ? 's' : ''}:
+            </h2>
+            
+            {/* Source Pending */}
+            { (!editInfo.sourcesToShow || editInfo.sourcesToShow?.length === 0) &&
+              <div className="flex items-center w-full">
+                <Badge mode="line-number" size="large" className="shrink-0">
+                  --
+                </Badge>
+
+                <SimpleSpanBubble
+                  spanType={SpanType.Source}
+                  mode="general"
+                  className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
+                  style={{ padding: '10px 20px', color: 'gray' }}
+                  showDeemphasized={true}
+                >
+                  { PENDING_TEXT }
+                </SimpleSpanBubble>
+              </div>
+            }
+            
+            {/* All Sources */}
+            <div className="flex flex-wrap gap-y-2 gap-x-4">
+              { editInfo.sourcesToShow?.map((source, idx) => {
+                return !isMultiSource && idx > 0 ? null : (
+                  <div key={source.id} className={classNames('flex items-center relative', { ['w-full']: !isMultiSource })}>
+                    <Badge mode="line-number" size="large" className="shrink-0">
+                      { source.lineNumber }
+                    </Badge>
+
+                    <SimpleSpanBubble
+                      spanType={SpanType.Source}
+                      mode="general"
+                      className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
+                      style={{ padding: isMultiSource ? '5px 10px' : '10px 20px' }}
+                      showEmphasized={true}
+                      >
+                      { getPhraseText(source, transcriptLines) }
+                    </SimpleSpanBubble>
+
+                    { isMultiSource &&
+                      <button
+                        className="self-start w-[20px] text-red-500 hover:text-red-600 cursor-pointer absolute top-[-10px] right-[-10px]"
+                        onClick={() => removeSourceFromStructureUnderEdit(source.id)}
+                      >
+                        <FontAwesomeIcon icon={faCircleXmark} size="lg" />
+                      </button>
+                    }
+                  </div>
+                );
+              }) }
+            </div>
+            <div
+              className="w-full flex justify-end text-red-500 text-xs font-semibold mt-1"
+              style={{ visibility: editInfo.sourcesModified ? 'visible' : 'hidden' }}
+            >
+              Modified
+            </div>
+          </div>
+        }
+        
+        <div className="max-h-6 grow-1 shrink-1"></div>
+
+        {/* Repetition */}
+        <div>
           <h2 className="w-full text-gray-600 text-md font-bold mb-2">
-            Source{editInfo.topsToShow?.relationshipType === PoeticStructureRelationshipType.MultipleSource ? 's' : ''}:
+            Repetition:
           </h2>
 
           <div className="flex items-center w-full">
             <Badge mode="line-number" size="large" className="shrink-0">
-              { editInfo.sourceToShow?.lineNumber || '--' }
+              { editInfo.repetitionToShow?.lineNumber || '--' }
             </Badge>
-
+            
             <SimpleSpanBubble
-              spanType={SpanType.Source}
+              spanType={SpanType.Repetition}
               mode="general"
               className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
-              style={{ padding: '10px 20px', color: !editInfo.sourceToShow ? 'gray' : undefined }}
-              showEmphasized={!!editInfo.sourceToShow}
-              showDeemphasized={!editInfo.sourceToShow}
-              >
-              { sourceText }
+              style={{ padding: '10px 20px', color: !editInfo.repetitionToShow ? 'gray' : undefined }}
+              showEmphasized={!!editInfo.repetitionToShow}
+              showDeemphasized={!editInfo.repetitionToShow}
+            >
+              { repetitionText }
             </SimpleSpanBubble>
           </div>
 
           <div
             className="w-full flex justify-end text-red-500 text-xs font-semibold mt-1"
-            style={{ visibility: editInfo.sourceModified ? 'visible' : 'hidden' }}
+            style={{ visibility: editInfo.repetitionModified ? 'visible' : 'hidden' }}
           >
             Modified
           </div>
-          </>
-        }
-        
-        <h2 className="w-full text-gray-600 text-md font-bold mb-2">
-          Repetition:
-        </h2>
-
-        <div className="flex items-center w-full">
-          <Badge mode="line-number" size="large" className="shrink-0">
-            { editInfo.repetitionToShow?.lineNumber || '--' }
-          </Badge>
-          
-          <SimpleSpanBubble
-            spanType={SpanType.Repetition}
-            mode="general"
-            className="block font-semibold border-2 border-gray-600 border-dashed grow-1 text-center"
-            style={{ padding: '10px 20px', color: !editInfo.repetitionToShow ? 'gray' : undefined }}
-            showEmphasized={!!editInfo.repetitionToShow}
-            showDeemphasized={!editInfo.repetitionToShow}
-          >
-            { repetitionText }
-          </SimpleSpanBubble>
         </div>
 
-        <div
-          className="w-full flex justify-end text-red-500 text-xs font-semibold mt-1 mb-4"
-          style={{ visibility: editInfo.repetitionModified ? 'visible' : 'hidden' }}
-        >
-          Modified
-        </div>
+        <div className="grow-2 shrink-1"></div>
 
       </section>
 
+      {/* error message */}
+      <section
+        className="flex items-center justify-center mt-2 mb-2 w-full"
+        style={editValidity.hasOrderingError ? undefined : { display: 'none' }}
+      >
+        <div className="text-center text-red-500 font-bold text-sm bg-red-100 rounded-xl py-1 px-6 border-1 border-red-300 w-full">
+          { isMultiSource ? 'All sources' : 'Source' } must come before Repetition
+        </div>
+      </section>
+
       {/* bottom button container */}
-      <section className="shrink-0 flex flex-col gap-2 min-w-[50px] max-w-[200px] w-full mt-10">
+      <section className="shrink-0 flex flex-col gap-2 min-w-[50px] max-w-[200px] w-full mt-2">
 
         <button
           disabled={!submitEnabled}
@@ -194,7 +239,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
         { editState === EditState.EditingExisting &&
           <button
             className="w-full h-[35px] rounded-lg bg-red-500 hover:bg-red-600 text-white hover:text-red-100 cursor-pointer shadow-md shadow-gray-400 mt-2"
-            onClick={deleteStructureUnderEdit}
+            onClick={() => showConfirmationModal(CONFIRM_DELETE, deleteStructureUnderEdit)}
           >
             <FontAwesomeIcon icon={faTrash} size="lg" />
             <span className="font-semibold ml-2">Delete</span>

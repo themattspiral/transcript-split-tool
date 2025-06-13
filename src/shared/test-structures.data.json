@@ -1,19 +1,13 @@
 [
     {
         "repetition": {
-            "lineNumber": 7,
-            "start": 30,
-            "end": 46
+            "lineNumber": 3,
+            "start": 43,
+            "end": 116
         },
-        "sources": [
-            {
-                "lineNumber": 7,
-                "start": 17,
-                "end": 22
-            }
-        ],
-        "relationshipType": "Paired",
-        "topsId": "generic",
+        "sources": [],
+        "relationshipType": "Unary",
+        "topsId": "list-single",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
@@ -29,6 +23,25 @@
                 "lineNumber": 4,
                 "start": 26,
                 "end": 35
+            }
+        ],
+        "relationshipType": "Paired",
+        "topsId": "generic",
+        "topsNotes": "",
+        "syntax": "",
+        "notes": ""
+    },
+    {
+        "repetition": {
+            "lineNumber": 7,
+            "start": 30,
+            "end": 46
+        },
+        "sources": [
+            {
+                "lineNumber": 7,
+                "start": 17,
+                "end": 22
             }
         ],
         "relationshipType": "Paired",
@@ -90,6 +103,59 @@
         ],
         "relationshipType": "Paired",
         "topsId": "generic",
+        "topsNotes": "",
+        "syntax": "",
+        "notes": ""
+    },
+    {
+        "repetition": {
+            "lineNumber": 10,
+            "start": 48,
+            "end": 74
+        },
+        "sources": [
+            {
+                "lineNumber": 9,
+                "start": 130,
+                "end": 156
+            }
+        ],
+        "relationshipType": "Paired",
+        "topsId": "generic",
+        "topsNotes": "",
+        "syntax": "",
+        "notes": ""
+    },
+    {
+        "repetition": {
+            "lineNumber": 11,
+            "start": 0,
+            "end": 114
+        },
+        "sources": [
+            {
+                "lineNumber": 1,
+                "start": 2,
+                "end": 34
+            },
+            {
+                "lineNumber": 3,
+                "start": 5,
+                "end": 12
+            },
+            {
+                "lineNumber": 3,
+                "start": 54,
+                "end": 58
+            },
+            {
+                "lineNumber": 9,
+                "start": 50,
+                "end": 97
+            }
+        ],
+        "relationshipType": "MultipleSource",
+        "topsId": "consolidation",
         "topsNotes": "",
         "syntax": "",
         "notes": ""
@@ -200,25 +266,6 @@
                 "lineNumber": 18,
                 "start": 51,
                 "end": 62
-            }
-        ],
-        "relationshipType": "Paired",
-        "topsId": "generic",
-        "topsNotes": "",
-        "syntax": "",
-        "notes": ""
-    },
-    {
-        "repetition": {
-            "lineNumber": 10,
-            "start": 48,
-            "end": 74
-        },
-        "sources": [
-            {
-                "lineNumber": 9,
-                "start": 130,
-                "end": 156
             }
         ],
         "relationshipType": "Paired",

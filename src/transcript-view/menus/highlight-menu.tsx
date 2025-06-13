@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faArrowsRotate, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 import { TranscriptMenuId } from './transcript-menus';
-import { getPhraseText, PhraseRole, SpanType } from '../../shared/data';
+import { getPhraseText, PhraseRole, PoeticStructureRelationshipType, SpanType } from '../../shared/data';
 import { EditState, useStructureEdit } from '../../context/structure-edit-context';
 import { useUserData } from '../../context/user-data-context';
 import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
@@ -18,6 +18,16 @@ export const HighlightMenu: React.FC = () => {
 
   const highlightedText = useMemo(() => getPhraseText(highlightedPhrase, transcriptLines), [highlightedPhrase, transcriptLines]);
   const showEditHeader = editState === EditState.EditingExisting;
+  const isMultiSource = editInfo.topsToShow?.relationshipType === PoeticStructureRelationshipType.MultipleSource;
+  const showReplace = !isMultiSource && editInfo.sourcesToShow;
+
+  let sourceText = 'Set as';
+  if (showReplace) {
+    sourceText = 'Replace';
+  }
+  if (isMultiSource) {
+    sourceText = 'Add to';
+  }
 
   return (
     <Menu
@@ -37,7 +47,7 @@ export const HighlightMenu: React.FC = () => {
       </Item>
 
       <Item disabled style={{ opacity: 1 }}>
-        <div className="font-bold font-mono whitespace-normal w-full flex justify-end">
+        <div className="font-bold font-mono whitespace-normal w-full">
           { highlightedText }
         </div>
       </Item>
@@ -67,15 +77,15 @@ export const HighlightMenu: React.FC = () => {
         clearDocumentTextSelection();
       }}>
         <div className="flex items-center">
-          <FontAwesomeIcon icon={editInfo.sourceToShow ? faArrowsRotate : faPlus} className="mr-1" />
-          { editInfo.sourceToShow ? 'Replace' : 'Set as' }
+          <FontAwesomeIcon icon={showReplace ? faArrowsRotate : faPlus} className="mr-1" />
+          { sourceText }
           
           <SimpleSpanBubble
             spanType={SpanType.Source}
             mode="menu"
             className="ml-1 border-gray-600 border-2 border-dashed"
           >
-            Source
+            Source{ isMultiSource ? 's' : '' }
           </SimpleSpanBubble>
         </div>
       </Item>

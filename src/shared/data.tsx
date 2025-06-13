@@ -34,7 +34,16 @@ export class PoeticStructure {
     public topsNotes: string = '',
     public syntax: string = '',
     public notes: string = ''
-  ) {}
+  ) {
+    // enforce source rules based on type
+    if (relationshipType === PoeticStructureRelationshipType.MultipleSource) {
+      this.sources = sources.sort(sortPhrases);
+    } else if (relationshipType === PoeticStructureRelationshipType.Paired) {
+      this.sources = [ sources[0] ];
+    } else if (relationshipType === PoeticStructureRelationshipType.Unary) {
+      this.sources = [];
+    }
+  }
 
   get id(): string {
     switch (this.relationshipType) {
@@ -109,6 +118,7 @@ export interface TypeOfPoeticStructure {
   selectable: boolean;
   subtypes: TypeOfPoeticStructure[];
   relationshipType: PoeticStructureRelationshipType;
+  hierarchyDisplayName?: string;
 }
 
 export enum SpanType {
@@ -133,6 +143,11 @@ export interface SplitTextSpanBubbleDefinition {
   isRightmostSpan: boolean;
   isPreviousSpanUnderEdit: boolean;
   isNextSpanUnderEdit: boolean;
+}
+
+export interface ValidationResult {
+  isCompleteStructure: boolean;
+  hasOrderingError: boolean;
 }
 
 

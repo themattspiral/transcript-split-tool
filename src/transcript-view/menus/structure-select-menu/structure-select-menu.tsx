@@ -10,6 +10,7 @@ import { useTranscriptInteraction } from '../../../context/transcript-interactio
 import { StructureActionItems } from './structure-action-items';
 import { PairStructureItem } from './pair-structure-item';
 import { UnaryStructureItem } from './unary-structure-item';
+import { MultisourceStructureItem } from './multisource-structure-item';
 
 const HEADER = (
   <Item
@@ -47,8 +48,10 @@ export const StructureSelectMenu: React.FC = () => {
         phraseLinks[contextPhraseId]?.links.forEach(link => {
           if (link.structure.relationshipType === PoeticStructureRelationshipType.Unary) {
             items.push(<UnaryStructureItem key={`${contextPhraseId}-${link.role}-${link.structure.id}`} link={link} />);
-          } else {
+          } else if (link.structure.relationshipType === PoeticStructureRelationshipType.Paired) {
             items.push(<PairStructureItem key={`${contextPhraseId}-${link.role}-${link.structure.id}`} link={link} />);
+          } else if (link.structure.relationshipType === PoeticStructureRelationshipType.MultipleSource) {
+            items.push(<MultisourceStructureItem key={`${contextPhraseId}-${link.role}-${link.structure.id}`} link={link} />);
           }
         });
       });

@@ -109,6 +109,10 @@
     cursor: pointer;
   }
 
+  &.emphasized {
+    font-weight: 600;
+  }
+
   &.under-edit {
     border: 2px dashed var(--color-span-border);
     font-weight: 600;
@@ -169,7 +173,10 @@
       - has rounded corners on both ends
       - has padding on both ends (but NOT negative margins, so that it takes up space) */
   &.simple,
-  &.menu {    
+  &.menu {  
+    line-break: auto;
+    white-space: normal;
+    
     border-top-left-radius: var(--radius-xl);
     border-bottom-left-radius: var(--radius-xl);
     padding-left: 4px;

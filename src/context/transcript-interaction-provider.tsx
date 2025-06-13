@@ -59,8 +59,8 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
       if (editInfo.repetitionToShow) {
         phraseIdsToEmphasize.push(editInfo.repetitionToShow.id);
       }
-      if (editInfo.sourceToShow) {
-        phraseIdsToEmphasize.push(editInfo.sourceToShow.id);
+      if (editInfo.sourcesToShow) {
+        phraseIdsToEmphasize.push(...editInfo.sourcesToShow.map(s => s.id));
       }
     }
 
@@ -157,6 +157,7 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
       //
       //   ** note ** - timing issues with react-contexify occur if this is done in
       //                the event handler invoked when a menu item is clicked (handleStructureSelectMenuAction)
+      //                which prevent the menu from actually closing, for unknown reasons
       setContextPhraseIds([]);
 
       // TODO remove after done debugging

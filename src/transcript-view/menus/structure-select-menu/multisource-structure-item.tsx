@@ -8,11 +8,11 @@ import { Badge } from '../../../shared/components/badge';
 import { SimpleSpanBubble } from '../../../shared/components/simple-span-bubble';
 import { StructureActionItems } from './structure-action-items';
 
-interface PairStructureItemProps {
+interface MultisourceStructureItemProps {
   link: PhraseLink;
 }
 
-export const PairStructureItem: React.FC<PairStructureItemProps> = ({ link }) => {
+export const MultisourceStructureItem: React.FC<MultisourceStructureItemProps> = ({ link }) => {
   const { transcriptLines, topsMap } = useUserData();
   const { handleStructureSelectMenuAction } = useTranscriptInteraction();
 
@@ -30,22 +30,24 @@ export const PairStructureItem: React.FC<PairStructureItemProps> = ({ link }) =>
             </Badge>
           </div>
 
-          { link.structure.relationshipType !== PoeticStructureRelationshipType.Unary &&
-            <div className="flex items-center mb-[2px]">
-              <Badge mode="line-number">{ link.structure.sources[0].lineNumber }</Badge>
+          <div className="flex flex-wrap gap-y-[2px] gap-x-[4px] mb-[2px]">
+            { link.structure.sources.map(source => (
+              <div key={source.id} className="flex items-center">
+                <Badge className="shrink-0" mode="line-number">{ source.lineNumber }</Badge>
 
-              <SimpleSpanBubble mode="menu" spanType={SpanType.Source}>
-                { getPhraseText(link.structure.sources[0], transcriptLines) }
-              </SimpleSpanBubble>
-            </div>
-          }
-
+                <SimpleSpanBubble className="text-ellipsis overflow-hidden" mode="menu" spanType={SpanType.Source}>
+                  { getPhraseText(source, transcriptLines) }
+                </SimpleSpanBubble>
+              </div>
+            )) }
+          </div>
+            
           <div className="flex items-center">
             { link.structure.relationshipType !== PoeticStructureRelationshipType.Unary && 
-              <CurvedArrow mode="phrase-link" direction='down-right' />
+              <CurvedArrow mode="phrase-link" direction="down-right" className="shrink-0" />
             }
             
-            <Badge mode="line-number">{ link.structure.repetition.lineNumber }</Badge>
+            <Badge mode="line-number" className="shrink-0">{ link.structure.repetition.lineNumber }</Badge>
             
             <SimpleSpanBubble mode="menu" spanType={SpanType.Repetition}>
               { getPhraseText(link.structure.repetition, transcriptLines) }
