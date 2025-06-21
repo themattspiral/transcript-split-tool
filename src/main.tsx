@@ -8,9 +8,11 @@ import './shared/components/components.scss';
 
 import { App } from './app';
 import { ViewStateProvider } from './context/view-state-provider';
-import { UserDataProvider } from './context/user-data-provider';
+import { ProjectDataProvider } from './context/project-data-provider';
 import { StructureEditProvider } from './context/structure-edit-provider';
 import { TranscriptInteractionProvider } from './context/transcript-interaction-provider';
+import { ClientSessionProvider } from './context/client-session-provider';
+import { PersistenceProvider } from './context/persistence/persistence-provider';
 
 // reference
 // import reactLogo from './assets/react.svg' // src
@@ -19,13 +21,17 @@ import { TranscriptInteractionProvider } from './context/transcript-interaction-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ViewStateProvider>
-      <UserDataProvider>
+      <ProjectDataProvider>
         <StructureEditProvider>
           <TranscriptInteractionProvider>
-            <App />
+            <PersistenceProvider>
+              <ClientSessionProvider>
+                <App />
+              </ClientSessionProvider>
+            </PersistenceProvider>
           </TranscriptInteractionProvider>
         </StructureEditProvider>
-      </UserDataProvider>
+      </ProjectDataProvider>
     </ViewStateProvider>
-  </StrictMode>,
+  </StrictMode>
 );

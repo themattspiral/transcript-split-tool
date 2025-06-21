@@ -6,13 +6,13 @@ import { faPlus, faArrowsRotate, faPenToSquare } from '@fortawesome/free-solid-s
 import { TranscriptMenuId } from './transcript-menus';
 import { getPhraseText, PhraseRole, PoeticStructureRelationshipType, SpanType } from '../../shared/data';
 import { EditState, useStructureEdit } from '../../context/structure-edit-context';
-import { useUserData } from '../../context/user-data-context';
+import { useProjectData } from '../../context/project-data-context';
 import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
 import { clearDocumentTextSelection } from '../../shared/util';
 import { SimpleSpanBubble } from '../../shared/components/simple-span-bubble';
 
 export const HighlightMenu: React.FC = () => {
-  const { transcriptLines } = useUserData();
+  const { transcriptLines } = useProjectData();
   const { highlightedPhrase, makeHighlightedPhrasePending, updateMenuVisibility } = useTranscriptInteraction();
   const { editState, editInfo } = useStructureEdit();
 

@@ -1,7 +1,7 @@
 import { Submenu } from 'react-contexify';
 
 import { getPhraseText, MenuAction, PhraseLink, SpanType } from '../../../shared/data';
-import { useUserData } from '../../../context/user-data-context';
+import { useProjectData } from '../../../context/project-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
 import { SimpleSpanBubble } from '../../../shared/components/simple-span-bubble';
 import { StructureActionItems } from './structure-action-items';
@@ -12,7 +12,7 @@ interface UnaryStructureItemProps {
 }
 
 export const UnaryStructureItem: React.FC<UnaryStructureItemProps> = ({ link }) => {
-  const { transcriptLines, topsMap } = useUserData();
+  const { transcriptLines, topsMap } = useProjectData();
   const { handleStructureSelectMenuAction } = useTranscriptInteraction();
 
   return (

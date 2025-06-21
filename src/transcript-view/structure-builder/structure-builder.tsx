@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faX, faTrash, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 
 import { getPhraseText, PoeticStructureRelationshipType, SpanType } from '../../shared/data';
-import { useUserData } from '../../context/user-data-context';
+import { useProjectData } from '../../context/project-data-context';
 import { useViewState } from '../../context/view-state-context';
 import { EditState, useStructureEdit } from '../../context/structure-edit-context';
 import { SimpleSpanBubble } from '../../shared/components/simple-span-bubble';
@@ -14,7 +14,7 @@ import { ManyToOneIcon } from '../../shared/components/many-to-one-icon';
 import { CONFIRM_DELETE } from '../../modal/modal-messages';
 
 const PENDING_TEXT = '<selection pending>';
-const CONTAINER_CLASSES = 'pl-3 pr-4 pt-6 pb-6 flex flex-col justify-center items-center overflow-x-hidden overflow-y-auto';
+const CONTAINER_CLASSES = 'pl-5 pr-6 pt-6 pb-6 flex flex-col justify-center items-center overflow-x-hidden overflow-y-auto';
 
 interface StructureBuilderProps {
   className?: string | undefined;
@@ -23,7 +23,7 @@ interface StructureBuilderProps {
 
 export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, style }) => {
   const { showConfirmationModal } = useViewState();
-  const { transcriptLines, topsMap } = useUserData();
+  const { transcriptLines, topsMap } = useProjectData();
   const {
     editState, editInfo, editValidity, removeSourceFromStructureUnderEdit,
     clearAllPending, savePendingStructureEdit, deleteStructureUnderEdit, setPendingTops

@@ -3,7 +3,7 @@ import { useMemo, CSSProperties } from 'react';
 import { HEADER_ROW_ID, PoeticStructureRelationshipType, getPhraseText, sortPoeticStructures } from '../shared/data';
 import { getGridColumnAttributes,  } from '../shared/util';
 import { useViewState } from '../context/view-state-context';
-import { useUserData } from '../context/user-data-context';
+import { useProjectData } from '../context/project-data-context';
 
 interface StructuresGridProps {
   style?: CSSProperties | undefined;
@@ -12,7 +12,7 @@ interface StructuresGridProps {
 const StructuresGrid: React.FC<StructuresGridProps> = props => {
   const { style } = props;
   
-  const { transcriptLines, poeticStructures } = useUserData();
+  const { transcriptLines, poeticStructures } = useProjectData();
   // const { show: showContextMenu } = useContextMenu();
   // const { showConfirmationModal } = useViewState();
 

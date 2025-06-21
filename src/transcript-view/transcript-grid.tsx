@@ -9,7 +9,7 @@ import { HighlightMenu } from './menus/highlight-menu';
 import { ErrorMultipleLinesMenu } from './menus/error-multiple-lines-menu';
 import { SplitTextCell } from './split-text-cell';
 import { EditState, useStructureEdit } from '../context/structure-edit-context';
-import { useUserData } from '../context/user-data-context';
+import { useProjectData } from '../context/project-data-context';
 import { useTranscriptInteraction } from '../context/transcript-interaction-context';
 import { StructureSelectMenu } from './menus/structure-select-menu/structure-select-menu';
 
@@ -26,7 +26,7 @@ interface TranscriptGridProps {
 
 const TranscriptGrid: React.FC<TranscriptGridProps> = ({ className, style }) => {
   const { show: showContextMenu } = useContextMenu();
-  const { transcriptLines } = useUserData();
+  const { transcriptLines } = useProjectData();
   const { editState } = useStructureEdit();
   const { setHighlightedPhrase } = useTranscriptInteraction();
 

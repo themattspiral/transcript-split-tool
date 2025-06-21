@@ -3,15 +3,18 @@ import { extractRawText } from 'mammoth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from '@fortawesome/free-regular-svg-icons';
 
-import { TranscriptLine, TabId } from '../shared/data';
+import { TranscriptLine, TabId, PersistenceStatus } from '../shared/data';
 import { useViewState } from '../context/view-state-context';
-import { useUserData } from '../context/user-data-context';
+import { useProjectData } from '../context/project-data-context';
+import { usePersistence } from '../context/persistence/persistence-context';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
 const ControlBar: React.FC = () => {
   const { activeTabId, setActiveTabId } = useViewState();
-  const { transcriptLines, setNewTranscript, poeticStructures } = useUserData();
+  const { transcriptLines, setNewTranscript, poeticStructures } = useProjectData();
+  const { persistenceStatus, authorizeExternal, revokeAuthorizeExternal } = usePersistence();
+
   const psCount = useMemo(() => Object.keys(poeticStructures).length, [poeticStructures])
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +109,42 @@ const ControlBar: React.FC = () => {
           >
             Export Grid
             <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
+          </button>
+
+          <button
+            disabled={persistenceStatus !== PersistenceStatus.ErrorUnauthorized}
+            onClick={() => {
+              console.log('calling authorize external');
+              authorizeExternal();
+            }}
+            className="bg-yellow-500 disabled:bg-yellow-50 px-4 py-2 rounded hover:bg-yellow-600 cursor-pointer flex items-center"
+          >
+            Authorize Google Drive
+          </button>
+
+          <button
+            // onClick={testDrive}
+            className="bg-purple-300 px-4 py-2 rounded hover:bg-purple-400 cursor-pointer flex items-center"
+          >
+            TEST Drive
+          </button>
+
+                    <button
+            onClick={revokeAuthorizeExternal}
+            className="bg-purple-300 px-4 py-2 rounded hover:bg-purple-400 cursor-pointer flex items-center"
+          >
+            Revoke Drive
+          </button>
+          
+                              <button
+            // onClick={async () => {
+            //   const token: string = localStorage.getItem('googleOauthToken') || '';
+            //   const proj = await getJSONFileContents(token, projectId || '');
+            //   console.log(proj);
+            // }}
+            className="bg-green-300 px-4 py-2 rounded hover:bg-green-400 cursor-pointer flex items-center"
+          >
+            Load From Drive
           </button>
         
       </div>
