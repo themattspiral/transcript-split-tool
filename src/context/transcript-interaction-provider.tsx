@@ -3,7 +3,7 @@ import { useContextMenu } from 'react-contexify';
 
 import { TranscriptInteractionContext } from './transcript-interaction-context';
 import { MenuAction, Phrase, PhraseAction, PhraseRole, PhraseViewState } from '../shared/data';
-import { useUserData } from './user-data-context';
+import { useProjectData } from './project-data-context';
 import { EditState, useStructureEdit } from './structure-edit-context';
 import { TranscriptMenuId } from '../transcript-view/menus/transcript-menus';
 
@@ -13,7 +13,7 @@ interface TranscriptHoverState {
 }
 
 export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { phraseLinks, getAllLinkedPhraseIds, getAllStructurePhraseIds, removePoeticStructure } = useUserData();
+  const { phraseLinks, getAllLinkedPhraseIds, getAllStructurePhraseIds, removePoeticStructure } = useProjectData();
   const { editState, editInfo, setPendingPhrase, beginStructureEdit } = useStructureEdit();
   const { show: showContextMenu } = useContextMenu();
 

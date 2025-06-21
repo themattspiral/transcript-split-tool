@@ -6,7 +6,7 @@ import { MenuAction, PhraseLink } from '../../../shared/data';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
 import { CONFIRM_DELETE } from '../../../modal/modal-messages';
 import { useViewState } from '../../../context/view-state-context';
-import { useUserData } from '../../../context/user-data-context';
+import { useProjectData } from '../../../context/project-data-context';
 
 interface StructureActionItemsProps {
   link: PhraseLink;
@@ -15,7 +15,7 @@ interface StructureActionItemsProps {
 export const StructureActionItems: React.FC<StructureActionItemsProps> = ({ link }) => {
   const { handleStructureSelectMenuAction } = useTranscriptInteraction();
   const { showConfirmationModal } = useViewState();
-  const { removePoeticStructure} = useUserData();
+  const { removePoeticStructure} = useProjectData();
 
   return (
     <>

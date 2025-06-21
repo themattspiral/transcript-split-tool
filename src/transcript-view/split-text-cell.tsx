@@ -7,7 +7,7 @@ import {
 } from '../shared/data';
 import { useTranscriptInteraction } from '../context/transcript-interaction-context';
 import { EditState, useStructureEdit } from '../context/structure-edit-context';
-import { useUserData } from '../context/user-data-context';
+import { useProjectData } from '../context/project-data-context';
 import { SplitTextSpanBubble } from './split-text-span-bubble';
 
 interface SplitTextCellProps {
@@ -20,7 +20,7 @@ interface SplitTextCellProps {
 export const SplitTextCell: React.FC<SplitTextCellProps> = props => {
   const { line, className, style, attributes } = props;
 
-  const { phraseLinks, linePhrases } = useUserData();
+  const { phraseLinks, linePhrases } = useProjectData();
   const { editState, editInfo, pendingLinePhrases } = useStructureEdit();
   const { phraseViewStates } = useTranscriptInteraction();
 

@@ -150,6 +150,35 @@ export interface ValidationResult {
   hasOrderingError: boolean;
 }
 
+export enum PersistenceMethod {
+  SessionOnly = 'SessionOnly',
+  BrowserLocal = 'BrowserLocal',
+  GoogleDrive = 'GoogleDrive'
+}
+
+export enum PersistenceStatus {
+  Initializing = 'Initializing',
+  IdleReady = 'IdleReady',
+  IdleSaved = 'IdleSaved',
+  Paused = 'Paused',
+  Saving = 'Saving',
+  AuthExpired = 'AuthExpired',
+  ErrorUnauthorized = 'ErrorUnauthorized',
+  ErrorConnect = 'ErrorConnect'
+}
+
+export type PersistenceErrorStatus = 
+  PersistenceStatus.AuthExpired
+  | PersistenceStatus.ErrorUnauthorized
+  | PersistenceStatus.ErrorConnect;
+
+export interface Project {
+  projectName: string;
+  transcriptLines: TranscriptLine[];
+  poeticStructures: PoeticStructure[];
+  topsOptions: TypeOfPoeticStructure[];
+}
+
 
 /******* CONSTANTS *******/
 /* These are defined here to avoid circular dependency issues */
@@ -275,6 +304,8 @@ export const DefaultTOPSValues: TypeOfPoeticStructure[] = [
 
 /******* DATA FUNCTIONS *******/
 /* These are defined here to avoid circular dependency issues */
+
+// TODO - move these out ???
 
 export const getPhraseText = (phrase?: Phrase | null, transcriptLines?: TranscriptLine[]): string | null => {
   let text = null;

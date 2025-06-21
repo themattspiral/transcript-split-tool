@@ -5,7 +5,7 @@ import {
   PoeticStructure, PoeticStructureRelationshipType, sortPhrases, TranscriptLine,
   TypeOfPoeticStructure
 } from '../shared/data';
-import { UserDataContext } from './user-data-context';
+import { ProjectDataContext } from './project-data-context';
 import testStructures from '../shared/test-structures.data.json';
 
 const flattenTops = (option: TypeOfPoeticStructure, level: number, parentHierarchyDisplayName?: string) => {
@@ -25,7 +25,8 @@ const flattenTops = (option: TypeOfPoeticStructure, level: number, parentHierarc
   return map;
 };
 
-export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ProjectDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [projectName, setProjectName] = useState<string | null>(null);
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
   const [poeticStructures, setPoeticStructures] = useState<{ [structureId: string]: PoeticStructure }>({});
   const [topsOptions, setTopsOptions] = useState<TypeOfPoeticStructure[]>(DefaultTOPSValues);
@@ -145,6 +146,8 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // TEMP: LOAD TEST DATA
     // TODO - replace with saved data load
 
+    setProjectName(`Matt's Test Project 1`);
+
     Object.entries(testStructures).forEach(([structureId, ps]) => {
       const repetition = new Phrase(
         ps.repetition.lineNumber,
@@ -207,20 +210,22 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [topsOptions]);
   
   const value = useMemo(() => ({
+    projectName, setProjectName,
     transcriptLines, setNewTranscript,
     poeticStructures, addPoeticStructure, replacePoeticStructure, removePoeticStructure,
     phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
-    linePhrases, topsOptions, topsMap
+    linePhrases, topsOptions, setTopsOptions, topsMap
   }), [
+    projectName, setProjectName,
     transcriptLines, setNewTranscript,
     poeticStructures, addPoeticStructure, replacePoeticStructure, removePoeticStructure,
     phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
-    linePhrases, topsOptions, topsMap
+    linePhrases, topsOptions, setTopsOptions, topsMap
   ]);
 
   return (
-    <UserDataContext.Provider value={value}>
+    <ProjectDataContext.Provider value={value}>
       { children }
-    </UserDataContext.Provider>
+    </ProjectDataContext.Provider>
   );
 };

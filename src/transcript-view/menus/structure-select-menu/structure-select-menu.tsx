@@ -5,7 +5,7 @@ import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 import { TranscriptMenuId } from '../transcript-menus';
 import { PoeticStructureRelationshipType } from '../../../shared/data';
-import { useUserData } from '../../../context/user-data-context';
+import { useProjectData } from '../../../context/project-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
 import { StructureActionItems } from './structure-action-items';
 import { PairStructureItem } from './pair-structure-item';
@@ -27,7 +27,7 @@ const HEADER = (
 // allows users to choose which poetic structure to edit,
 // from those associated with the context-clicked span bubble
 export const StructureSelectMenu: React.FC = () => {
-  const { phraseLinks } = useUserData();
+  const { phraseLinks } = useProjectData();
   const { contextPhraseIds, updateMenuVisibility } = useTranscriptInteraction();
 
   const singlePhrase = contextPhraseIds.length === 1;

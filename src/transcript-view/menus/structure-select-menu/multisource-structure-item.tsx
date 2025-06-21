@@ -1,7 +1,7 @@
 import { Submenu } from 'react-contexify';
 
 import { getPhraseText, MenuAction, PhraseLink, PoeticStructureRelationshipType, SpanType } from '../../../shared/data';
-import { useUserData } from '../../../context/user-data-context';
+import { useProjectData } from '../../../context/project-data-context';
 import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
 import { CurvedArrow } from '../../../shared/components/curved-arrow';
 import { Badge } from '../../../shared/components/badge';
@@ -13,7 +13,7 @@ interface MultisourceStructureItemProps {
 }
 
 export const MultisourceStructureItem: React.FC<MultisourceStructureItemProps> = ({ link }) => {
-  const { transcriptLines, topsMap } = useUserData();
+  const { transcriptLines, topsMap } = useProjectData();
   const { handleStructureSelectMenuAction } = useTranscriptInteraction();
 
   return (
