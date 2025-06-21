@@ -181,7 +181,13 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
           }).then(() => {
             return store?.initialize();
           }).then(() => {
-            setPersistenceStatus(PersistenceStatus.IdleReady);
+            const initialProjectName = localStorage.getItem('lastProjectName');
+            if (initialProjectName) {
+              console.log('loading project', initialProjectName);
+              return loadProject(initialProjectName);
+            } else {
+              setPersistenceStatus(PersistenceStatus.IdleReady);
+            }
           })
           .catch((err: PersistenceErrorStatus) => {
             setPersistenceStatus(err);

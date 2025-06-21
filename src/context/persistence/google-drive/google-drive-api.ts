@@ -4,7 +4,6 @@ const API_BASE = import.meta.env.TST_GOOGLE_API_BASE;
 const FOLDER_MIME_TYPE = 'application/vnd.google-apps.folder';
 const JSON_MIME_TYPE = 'application/json';
 
-// TODO add interfaces
 export interface GoogleDriveFolder {
   id: string;
   name: string;
@@ -33,18 +32,17 @@ export const getFolderInfo = async (token: string, folderName: string): Promise<
   });
 
   if (!filesResponse.ok) {
-    return Promise.reject(filesResponse.status);
+    throw filesResponse.status;
   }
 
   const filesBody: { files: GoogleDriveFolder[] } = await filesResponse.json();
 
   let folder: GoogleDriveFolder | null = null;
 
-  if (filesBody.files && filesBody.files.length > 0) {
+  if (filesBody && filesBody.files && filesBody.files.length > 0) {
     folder = filesBody.files.find(f => f.name === folderName) || null;
   }
 
-  // return Promise.resolve(folder);
   return folder;
 };
 
@@ -60,18 +58,18 @@ export const getJSONFileInfo = async (token:string, fileName: string, parentFold
   });
 
   if (!filesResponse.ok) {
-    Promise.reject(filesResponse.status);
+    throw filesResponse.status;
   }
 
   const filesBody: { files: GoogleDriveFile[] } = await filesResponse.json();
   
   let file: GoogleDriveFile | null = null;
 
-  if (filesBody.files && filesBody.files.length > 0) {
+  if (filesBody && filesBody.files && filesBody.files.length > 0) {
     file = filesBody.files.find((f: any) => f.name === fileName) || null;
   }
 
-  return Promise.resolve(file);
+  return file;
 };
 
 export const getJSONFileContents = async (token: string, fileId: string): Promise<any> => {
@@ -82,10 +80,10 @@ export const getJSONFileContents = async (token: string, fileId: string): Promis
   });
 
   if (!filesResponse.ok) {
-    return Promise.reject(filesResponse.status);
+    throw filesResponse.status;
   }
 
-  return filesResponse.json();
+  return await filesResponse.json();
 };
 
 export const createFolder = async (token: string, folderName: string): Promise<GoogleDriveFolder> => {
@@ -104,7 +102,7 @@ export const createFolder = async (token: string, folderName: string): Promise<G
   });
 
   if (!createResponse.ok) {
-    return Promise.reject(createResponse.status);
+   throw createResponse.status;
   }
 
   return await createResponse.json();
@@ -130,7 +128,7 @@ export const createJSONFile = async (token: string, fileName: string, parentFold
   });
 
   if (!createResponse.ok) {
-    return Promise.reject(createResponse.status);
+    throw createResponse.status;
   }
 
   return await createResponse.json();
@@ -150,7 +148,7 @@ export const updateJSONFile = async (token: string, fileId: string, fileContents
   });
 
   if (!updateResponse.ok) {
-    return Promise.reject(updateResponse.status);
+     throw updateResponse.status;
   }
 
   return await updateResponse.json();
