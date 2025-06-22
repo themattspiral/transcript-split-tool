@@ -2,6 +2,7 @@ import { useMemo, useRef } from 'react';
 import { extractRawText } from 'mammoth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from '@fortawesome/free-regular-svg-icons';
+import classNames from 'classnames';
 
 import { TranscriptLine, TabId, PersistenceStatus } from '../shared/data';
 import { useViewState } from '../context/view-state-context';
@@ -75,6 +76,7 @@ const ControlBar: React.FC = () => {
 
   const activeTabClasses = 'bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg text-nowrap';
   const otherTabClasses = 'bg-gray-200 hover:bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg cursor-pointer text-nowrap';
+  const isAuthorized = persistenceStatus !== PersistenceStatus.ErrorUnauthorized;
   
   return (
     <div className="flex gap-4 items-end">
@@ -112,39 +114,19 @@ const ControlBar: React.FC = () => {
           </button>
 
           <button
-            disabled={persistenceStatus !== PersistenceStatus.ErrorUnauthorized}
             onClick={() => {
-              console.log('calling authorize external');
-              authorizeExternal();
+              if (isAuthorized) {
+                revokeAuthorizeExternal();
+              } else {
+                authorizeExternal();
+              }
             }}
-            className="bg-yellow-500 disabled:bg-yellow-50 px-4 py-2 rounded hover:bg-yellow-600 cursor-pointer flex items-center"
+            className={classNames(
+              ' px-4 py-2 rounded cursor-pointer flex items-center',
+              isAuthorized ? 'bg-violet-400 hover:bg-violet-500 text-white' : 'bg-amber-500 hover:bg-amber-600'
+            )}
           >
-            Authorize Google Drive
-          </button>
-
-          <button
-            // onClick={testDrive}
-            className="bg-purple-300 px-4 py-2 rounded hover:bg-purple-400 cursor-pointer flex items-center"
-          >
-            TEST Drive
-          </button>
-
-                    <button
-            onClick={revokeAuthorizeExternal}
-            className="bg-purple-300 px-4 py-2 rounded hover:bg-purple-400 cursor-pointer flex items-center"
-          >
-            Revoke Drive
-          </button>
-          
-                              <button
-            // onClick={async () => {
-            //   const token: string = localStorage.getItem('googleOauthToken') || '';
-            //   const proj = await getJSONFileContents(token, projectId || '');
-            //   console.log(proj);
-            // }}
-            className="bg-green-300 px-4 py-2 rounded hover:bg-green-400 cursor-pointer flex items-center"
-          >
-            Load From Drive
+            { isAuthorized ? 'Revoke Drive' : 'Authorize Drive' }
           </button>
         
       </div>

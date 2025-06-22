@@ -7,6 +7,8 @@ import {
 } from './google-drive-api';
 
 export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
+  isExternal: boolean = true;
+
   #accessToken: string | null = null;
   #folderId: string | null = null;
   #folderName: string;

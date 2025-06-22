@@ -22,13 +22,13 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const lockRef = useRef<boolean>(false);
 
   const authorizeExternal = useCallback(() => {
-    if (store && (store as ExternalPersistenceStore).authorizeExternal) {
+    if (store && store.isExternal) {
       (store as ExternalPersistenceStore).authorizeExternal();
     }
   }, [store]);
   
   const revokeAuthorizeExternal = useCallback(async () => {
-    if (store && (store as ExternalPersistenceStore).revokeAuthorizeExternal) {
+    if (store && store.isExternal) {
       try {
         await (store as ExternalPersistenceStore).revokeAuthorizeExternal();
       } finally {
@@ -82,7 +82,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash, loadDeserializedProjectData]);
 
-  const completeAuthorizeExternalAndInitializeStore = useCallback(async (newStore: ExternalPersistenceStore, lastProjectName?: string | null) => {
+  const completeAuthorizeExternalAndInitializeStore = useCallback(async (newStore: ExternalPersistenceStore, lastProjectName?: string | null): Promise<void> => {
     await newStore.completeAuthorizeExternal();
         
     console.log('auth: cleaning up URL post auth callback');
@@ -110,7 +110,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [loadDeserializedProjectData, loadProject, setPersistenceStatus]);
 
-  const initializeStore = useCallback(async (newStore: PersistenceStore, lastProjectName?: string | null) => {
+  const initializeStore = useCallback(async (newStore: PersistenceStore, lastProjectName?: string | null): Promise<void> => {
     await newStore.initialize();
     
     if (lastProjectName) {
@@ -121,7 +121,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [loadProject, setPersistenceStatus]);
 
-  const setPersistenceMethodContext = useCallback(async (method: PersistenceMethod, lastProjectName?: string | null) => {
+  const setPersistenceMethodContext = useCallback(async (method: PersistenceMethod, lastProjectName?: string | null): Promise<void> => {
     if (lockRef.current === true) {
       console.log('already locked - not setting persistence method again');
       return;
@@ -200,7 +200,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     console.log('persistenceStatus changed:', persistenceStatus);
   }, [persistenceStatus]);
 
-  // save (update existing) project when any changes occur
+  // save project when any changes occur
   useEffect(() => {
     if (projectName) {
       saveUpdate({

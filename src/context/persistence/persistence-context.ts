@@ -44,6 +44,7 @@ export const usePersistence = () => {
 };
 
 export interface PersistenceStore {
+  readonly isExternal: boolean;
   isInitialized: boolean;
   initialize: () => Promise<void>;
   fetchProject: (projectName: string) => Promise<{ project: Project, hash: string} | null>;
