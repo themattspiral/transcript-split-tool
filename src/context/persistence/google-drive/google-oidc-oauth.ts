@@ -14,7 +14,7 @@ const GoogleUserManager: UserManager = new UserManager({
 
   authority: import.meta.env.TST_OAUTH_GOOGLE_AUTHORITY_URI,
   metadataUrl: import.meta.env.TST_OAUTH_GOOGLE_METADATA_URI,
-  redirect_uri: import.meta.env.TST_OAUTH_GOOGLE_REDIRECT_URI,
+  redirect_uri: `${import.meta.env.TST_OAUTH_GOOGLE_REDIRECT_ORIGIN}${import.meta.env.TST_OAUTH_GOOGLE_REDIRECT_PATH}`,
   client_id: import.meta.env.TST_OAUTH_GOOGLE_CLIENT_ID,
   
   // TODO - remove secret (recreate app as Desktop)

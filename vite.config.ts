@@ -21,7 +21,7 @@ if (process.argv?.includes('--ssl')) {
 
   const dotEnvVars: { [varKey: string]: string} = {};
   dotenv.config({ processEnv: dotEnvVars, path: ['.env.development'] });
-  define['import.meta.env.TST_OAUTH_GOOGLE_REDIRECT_URI'] = JSON.stringify(dotEnvVars.TST_OAUTH_GOOGLE_REDIRECT_URI.replace('http', 'https'));
+  define['import.meta.env.TST_OAUTH_GOOGLE_REDIRECT_ORIGIN'] = JSON.stringify(dotEnvVars.TST_OAUTH_GOOGLE_REDIRECT_ORIGIN.replace('http', 'https'));
 
   console.log('Local SSL Enabled');
 }

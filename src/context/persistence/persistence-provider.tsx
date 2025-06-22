@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { PersistenceErrorStatus, PersistenceMethod, PersistenceStatus, Phrase, PoeticStructure, PoeticStructureRelationshipType, Project } from '../../shared/data';
+import { PersistenceErrorStatus, PersistenceMethod, PersistenceStatus, Project } from '../../shared/data';
 import { ExternalPersistenceStore, PersistenceContext, PersistenceStore } from './persistence-context';
 import { useProjectData } from '../project-data-context';
 import { GoogleDrivePersistenceStore } from './google-drive/google-drive-persistence-store';
@@ -10,7 +10,7 @@ const GOOGLE_DRIVE_FOLDER_NAME = 'TST Projects';
 export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
     projectName, transcriptLines, poeticStructures, topsOptions,
-    setProjectName, setNewTranscript, addPoeticStructure, setTopsOptions
+    loadDeserializedProjectData
   } = useProjectData();
 
   const [persistenceMethod, setPersistenceMethod] = useState<PersistenceMethod | null>(null);
@@ -55,36 +55,6 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash]);
   
-  const loadDeserializedProjectData = useCallback((deserializedProject: Project) => {
-    // TODO - SCRUB POTENTIALLY DANGEROUS INPUT
-
-    setProjectName(deserializedProject.projectName);
-    setNewTranscript(deserializedProject.transcriptLines);
-    setTopsOptions(deserializedProject.topsOptions);
-
-    deserializedProject.poeticStructures.forEach(nonClassStructure => {
-      const repetition = new Phrase(
-        nonClassStructure.repetition.lineNumber,
-        nonClassStructure.repetition.start,
-        nonClassStructure.repetition.end
-      );
-      const sources = nonClassStructure.sources.map(source => {
-        return new Phrase(
-          source.lineNumber,
-          source.start,
-          source.end
-        );
-      });
-      
-      const structure = new PoeticStructure(
-        repetition, sources, nonClassStructure.relationshipType as PoeticStructureRelationshipType,
-        nonClassStructure.topsId, nonClassStructure.topsNotes, nonClassStructure.syntax, nonClassStructure.notes
-      );
-      
-      addPoeticStructure(structure);
-    });
-  }, [setProjectName, setNewTranscript, setTopsOptions, addPoeticStructure]);
-
   const loadProject = useCallback(async (projectName: string, storeOverride?: PersistenceStore | null): Promise<void> => {
     const storeToUse = storeOverride || store;
     if (storeToUse) {
@@ -110,7 +80,93 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         throw(err);
       }
     }
-  }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash]);
+  }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash, loadDeserializedProjectData]);
+
+  const completeAuthorizeExternalAndInitializeStore = useCallback(async (newStore: ExternalPersistenceStore, lastProjectName?: string | null) => {
+    await newStore.completeAuthorizeExternal();
+        
+    console.log('auth: cleaning up URL post auth callback');
+    window.history.replaceState({}, '', window.location.origin);
+
+    console.log('auth: complete. now calling store.initialize()');
+    await newStore.initialize();
+
+    console.log('init complete. now determining load operation....');
+    const persistenceRecovery = sessionStorage.getItem('persistenceRecovery');
+    const recoveredProject: Project = JSON.parse(persistenceRecovery || '{}');
+
+    if (persistenceRecovery && lastProjectName && recoveredProject.projectName === lastProjectName) {
+      // todo - give user a choice via modal
+      console.log('load: recovering from persistenceRecovery');
+      loadDeserializedProjectData(recoveredProject);
+      sessionStorage.removeItem('persistenceRecovery');
+      setPersistenceStatus(PersistenceStatus.IdleReady);
+    } else if (lastProjectName) {
+      console.log('load: loading last project from store', lastProjectName);
+      await loadProject(lastProjectName, newStore);
+    } else {
+      console.log('load: no recovery or last project. persistence ready.');
+      setPersistenceStatus(PersistenceStatus.IdleReady);
+    }
+  }, [loadDeserializedProjectData, loadProject, setPersistenceStatus]);
+
+  const initializeStore = useCallback(async (newStore: PersistenceStore, lastProjectName?: string | null) => {
+    await newStore.initialize();
+    
+    if (lastProjectName) {
+      console.log('load: loading last project:', lastProjectName);
+      await loadProject(lastProjectName, newStore);
+    } else {
+      setPersistenceStatus(PersistenceStatus.IdleReady);
+    }
+  }, [loadProject, setPersistenceStatus]);
+
+  const setPersistenceMethodContext = useCallback(async (method: PersistenceMethod, lastProjectName?: string | null) => {
+    if (lockRef.current === true) {
+      console.log('already locked - not setting persistence method again');
+      return;
+    } else if (persistenceMethod === method) {
+      console.log('persistence method already set (not setting again):', method);
+      return;
+    } else {
+      lockRef.current = true;
+      console.log('locked. setting new persistence method', method);
+    }
+
+    setPersistenceMethod(method);
+    setPersistenceStatus(PersistenceStatus.Initializing);
+
+    let newStore: PersistenceStore | null = null;
+    if (method === PersistenceMethod.SessionOnly) {
+      // todo
+    } else if (method === PersistenceMethod.BrowserLocal) {
+      // todo
+    } else if (method === PersistenceMethod.GoogleDrive) {
+      newStore = new GoogleDrivePersistenceStore(GOOGLE_DRIVE_FOLDER_NAME);
+    }
+
+    setStore(newStore);
+
+    const idx = window.location.pathname.indexOf(import.meta.env.TST_OAUTH_GOOGLE_REDIRECT_PATH);
+    const codeIdx = window.location.search.indexOf('code=');
+
+    try {
+      if (idx >= 0 && codeIdx >= 0 && method === PersistenceMethod.GoogleDrive) {
+        console.log('auth: completing Google Drive auth before init');
+        await completeAuthorizeExternalAndInitializeStore(newStore as ExternalPersistenceStore, lastProjectName);
+      } else {
+        await initializeStore(newStore as PersistenceStore, lastProjectName);
+      }
+    } catch (err) {
+      setPersistenceStatus(err as PersistenceErrorStatus);
+    } finally {
+      lockRef.current = false;
+      console.log('unlocked.');
+    }
+  }, [
+    lockRef, persistenceMethod, setPersistenceMethod, setPersistenceStatus, setStore,
+    completeAuthorizeExternalAndInitializeStore, initializeStore
+  ]);
 
   const saveUpdate = useCallback(async (project: Project): Promise<void> => {
     if (store && (
@@ -140,105 +196,8 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash]);
 
-  const setPersistenceMethodExternal = useCallback(async (method: PersistenceMethod, initialProjectName?: string | null) => {
-    if (lockRef.current === true) {
-      console.log('already locked - not setting persistence method again');
-      return;
-    } else {
-      lockRef.current = true;
-      console.log('locked.');
-    }
-
-    if (persistenceMethod === method) {
-      console.log('persistence method already set:', method);
-
-      lockRef.current = false;
-      console.log('unlocked.');
-
-      return;
-    }
-
-    console.log('setting new persistence method', method);
-    setPersistenceMethod(method);
-    setPersistenceStatus(PersistenceStatus.Initializing);
-
-    let newStore: PersistenceStore | null = null;
-    if (method === PersistenceMethod.SessionOnly) {
-      // todo
-    } else if (method === PersistenceMethod.BrowserLocal) {
-      // todo
-    } else if (method === PersistenceMethod.GoogleDrive) {
-      newStore = new GoogleDrivePersistenceStore(GOOGLE_DRIVE_FOLDER_NAME);
-    }
-
-    setStore(newStore);
-
-    const idx = window.location.pathname.indexOf('/google-oauth2-callback');
-    const codeIdx = window.location.search.indexOf('code=');
-
-    if (idx >= 0 && codeIdx >= 0 && newStore) {
-      console.log('completing auth');
-      (newStore as ExternalPersistenceStore).completeAuthorizeExternal()
-        .then(() => {
-          console.log('cleaning up URL post auth callback');
-          window.history.replaceState({}, '', window.location.origin);
-
-          console.log('calling store.initialize()');
-          return newStore.initialize();
-        }).then(() => {
-          console.log('determining load operation....');
-          const lastProjectName = localStorage.getItem('lastProjectName');
-          const persistenceRecovery = sessionStorage.getItem('persistenceRecovery');
-          const recoveredProject: Project = JSON.parse(persistenceRecovery || '{}');
-
-          if (persistenceRecovery && lastProjectName && recoveredProject.projectName === lastProjectName) {
-            // todo - give user a choice via modal
-            console.log('load: recovering from persistenceRecovery');
-            loadDeserializedProjectData(recoveredProject);
-            sessionStorage.removeItem('persistenceRecovery');
-            setPersistenceStatus(PersistenceStatus.IdleReady);
-          } else if (lastProjectName) {
-            console.log('load: loading last project from store', lastProjectName);
-            return loadProject(lastProjectName, newStore);
-          } else {
-            console.log('load: no recovery or last project. persistence ready.');
-            setPersistenceStatus(PersistenceStatus.IdleReady);
-          }
-        })
-        .catch((err) => {
-          setPersistenceStatus(err);
-        }).finally(() => {
-          lockRef.current = false;
-          console.log('unlocked.');
-        });
-    } else {
-      try {
-        await newStore?.initialize();
-        
-        if (initialProjectName) {
-          console.log('loading project', initialProjectName);
-          await loadProject(initialProjectName, newStore);
-        } else {
-          setPersistenceStatus(PersistenceStatus.IdleReady);
-        }
-      } catch (err) {
-        setPersistenceStatus(err as PersistenceErrorStatus);
-      } finally {
-        lockRef.current = false;
-        console.log('unlocked.');
-      };
-    }
-  }, [
-    lockRef, persistenceMethod,
-    setPersistenceMethod, setPersistenceStatus, loadDeserializedProjectData, loadProject
-  ]);
-
   useEffect(() => {
     console.log('persistenceStatus changed:', persistenceStatus);
-    
-    if (persistenceStatus === PersistenceStatus.ErrorUnauthorized) {
-      // show modal error
-    }
   }, [persistenceStatus]);
 
   // save (update existing) project when any changes occur
@@ -257,10 +216,10 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   ]);
 
   const value = useMemo(() => ({
-    persistenceMethod, setPersistenceMethod: setPersistenceMethodExternal, lastPersistenceHash, persistenceStatus,
+    persistenceMethod, setPersistenceMethod: setPersistenceMethodContext, lastPersistenceHash, persistenceStatus,
     authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
   }), [
-    persistenceMethod, setPersistenceMethodExternal, lastPersistenceHash, persistenceStatus,
+    persistenceMethod, setPersistenceMethodContext, lastPersistenceHash, persistenceStatus,
     authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
   ]);
 

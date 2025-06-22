@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseLink, PhraseLinkInfo, PoeticStructure, TranscriptLine, TypeOfPoeticStructure } from '../shared/data';
+import { Phrase, PhraseLink, PhraseLinkInfo, PoeticStructure, Project, TranscriptLine, TypeOfPoeticStructure } from '../shared/data';
 
 interface ProjectDataContextProps {
   projectName: string | null;
@@ -19,6 +19,7 @@ interface ProjectDataContextProps {
   topsOptions: TypeOfPoeticStructure[];
   setTopsOptions: (options: TypeOfPoeticStructure[]) => void;
   topsMap: { [topsId: string]: { type: TypeOfPoeticStructure, level: number } };
+  loadDeserializedProjectData: (deserializedProject: Project) => void;
 }
 
 export const ProjectDataContext = createContext<ProjectDataContextProps>({
@@ -37,7 +38,8 @@ export const ProjectDataContext = createContext<ProjectDataContextProps>({
   linePhrases: {},
   topsOptions: [],
   setTopsOptions: () => {},
-  topsMap: {}
+  topsMap: {},
+  loadDeserializedProjectData: () => {}
 });
 
 export const useProjectData = () => {
