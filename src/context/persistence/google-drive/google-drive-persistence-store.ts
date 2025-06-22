@@ -11,6 +11,17 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
   #folderId: string | null = null;
   #folderName: string;
 
+  #handleApiError(statusCode: number) {
+  if (statusCode === 401 || statusCode === 403) {
+      this.#accessToken = null;
+      // temp
+      localStorage.removeItem('googleOauthToken');
+      throw PersistenceStatus.ErrorUnauthorized;
+    } else {
+      throw PersistenceStatus.ErrorConnect;
+    }
+  }
+
   constructor(folderName: string) {
     this.#folderName = folderName;
 
@@ -37,11 +48,7 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
 
       this.#folderId = folder.id;
     } catch (statusCode) {
-      if (statusCode === 401 || statusCode === 403) {
-        throw PersistenceStatus.ErrorUnauthorized;
-      } else {
-        throw PersistenceStatus.ErrorConnect;
-      }
+      this.#handleApiError(statusCode as number);
     }
   }
   
@@ -66,11 +73,7 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
         return null;
       }
     } catch (statusCode) {
-      if (statusCode === 401 || statusCode === 403) {
-        throw PersistenceStatus.ErrorUnauthorized;
-      } else {
-        throw PersistenceStatus.ErrorConnect;
-      }
+      this.#handleApiError(statusCode as number);
     }
 
     return {} as { project: Project, hash: string};
@@ -89,11 +92,10 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
 
       return projectFile.sha256Checksum;
     } catch (statusCode) {
-      if (statusCode === 401 || statusCode === 403) {
-        throw PersistenceStatus.ErrorUnauthorized;
-      } else {
-        throw PersistenceStatus.ErrorConnect;
-      }
+      this.#handleApiError(statusCode as number);
+      
+      // never called
+      return '';
     }
   }
   
@@ -107,7 +109,6 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
       let projectFile = await getJSONFileInfo(this.#accessToken, `${project.projectName}.json`, this.#folderId || '');
       if (projectFile) {
         console.log('project file exists, update it:', projectFile.id);
-        // setProjectId(projectFile.id);
 
         projectFile = await updateJSONFile(this.#accessToken, projectFile.id, project);
         console.log('updated.', projectFile);
@@ -120,11 +121,10 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
 
       return projectFile.sha256Checksum;
     } catch (statusCode) {
-      if (statusCode === 401 || statusCode === 403) {
-        throw PersistenceStatus.ErrorUnauthorized;
-      } else {
-        throw PersistenceStatus.ErrorConnect;
-      }
+      this.#handleApiError(statusCode as number);
+      
+      // never called
+      return '';
     }
   }
 
@@ -133,11 +133,18 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
   }
 
   async completeAuthorizeExternal() {
-    this.#accessToken = await completeAuthorize();
+    try {
+      console.log('store running completeAuthorize()');
+      this.#accessToken = await completeAuthorize();
+      console.log('store finished completeAuthorize()');
 
-    // TEMP!!
-    if (this.#accessToken) {
-      localStorage.setItem('googleOauthToken', this.#accessToken);
+
+      // TEMP!!
+      if (this.#accessToken) {
+        localStorage.setItem('googleOauthToken', this.#accessToken);
+      }
+    } catch (err) {
+      throw PersistenceStatus.ErrorUnauthorized;
     }
   }
 

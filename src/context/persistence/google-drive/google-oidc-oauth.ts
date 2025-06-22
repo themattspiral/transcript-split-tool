@@ -52,6 +52,10 @@ export const completeAuthorize = async (): Promise<string | null> => {
   if (s) {
     // const so = JSON.parse(s);
     // console.log('cv:', so?.code_verifier);
+    console.log('Google OIDC oauth completion: State present - continuing with signinCallback');
+  } else {
+    console.log('Google OIDC oauth completion: No state, not calling signinCallback');
+    return null;
   }
 
   // cleanup PKCE flow state entry - cloud function will complete the PKCE flow from here
@@ -79,9 +83,6 @@ export const completeAuthorize = async (): Promise<string | null> => {
     console.log('Callback processed - User logged in:', user);
 
     const accessToken = user.access_token;
-
-    // TODO - update this if necessary when adding react-router
-    window.history.replaceState({}, '', window.location.origin);
 
     // cleanup the user object - token is extracted so this is not needed
     await GoogleUserManager.removeUser();

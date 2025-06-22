@@ -9,7 +9,7 @@ interface PersistenceContextProps {
   persistenceStatus: PersistenceStatus;
 
   // fetch and put into project data, etc.  Make sure it doesn't update again right after
-  loadProject: (projectName: string) => Promise<void>;
+  loadProject: (projectName: string, storeOverride?: PersistenceStore | null) => Promise<void>;
 
   // create. Make sure it doesn't update again right after
   createProject: (project: Project) => Promise<void>;
