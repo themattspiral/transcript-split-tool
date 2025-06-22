@@ -69,8 +69,6 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [store, setPersistenceStatus]);
 
   const createProject = useCallback(async (project: Project): Promise<void> => {
-    // pause, create file, set hash, unpause, resolve
-
     if (store && (
       persistenceStatus === PersistenceStatus.IdleReady
       || persistenceStatus === PersistenceStatus.IdleSaved
@@ -82,22 +80,45 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setLastPersistenceHash(hash);
         setPersistenceStatus(PersistenceStatus.IdleSaved);
       } catch (err) {
-        // todo - check err?
         setPersistenceStatus(err as PersistenceErrorStatus);
         throw(err);
       }
     }
   }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash]);
   
-  const loadProject = useCallback(async (projectName: string, storeOverride?: PersistenceStore | null): Promise<void> => {
-    // pause, find file, fetch file & metadata, set hash, set project data etc, unpause, resolve
+  const loadDeserializedProjectData = useCallback((deserializedProject: Project) => {
+    // TODO - SCRUB POTENTIALLY DANGEROUS INPUT
 
+    setProjectName(deserializedProject.projectName);
+    setNewTranscript(deserializedProject.transcriptLines);
+    setTopsOptions(deserializedProject.topsOptions);
+
+    deserializedProject.poeticStructures.forEach(nonClassStructure => {
+      const repetition = new Phrase(
+        nonClassStructure.repetition.lineNumber,
+        nonClassStructure.repetition.start,
+        nonClassStructure.repetition.end
+      );
+      const sources = nonClassStructure.sources.map(source => {
+        return new Phrase(
+          source.lineNumber,
+          source.start,
+          source.end
+        );
+      });
+      
+      const structure = new PoeticStructure(
+        repetition, sources, nonClassStructure.relationshipType as PoeticStructureRelationshipType,
+        nonClassStructure.topsId, nonClassStructure.topsNotes, nonClassStructure.syntax, nonClassStructure.notes
+      );
+      
+      addPoeticStructure(structure);
+    });
+  }, [setProjectName, setNewTranscript, setTopsOptions, addPoeticStructure]);
+
+  const loadProject = useCallback(async (projectName: string, storeOverride?: PersistenceStore | null): Promise<void> => {
     const storeToUse = storeOverride || store;
-    if (storeToUse
-    //   persistenceStatus === PersistenceStatus.Initializing
-    //   || persistenceStatus === PersistenceStatus.IdleReady
-    //   || persistenceStatus === PersistenceStatus.IdleSaved
-    ) {
+    if (storeToUse) {
       setPersistenceStatus(PersistenceStatus.Paused);
 
       try {
@@ -109,32 +130,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
         const { project, hash } = projectResponse;
         setLastPersistenceHash(hash);
-
-        setProjectName(project.projectName);
-        setNewTranscript(project.transcriptLines);
-        setTopsOptions(project.topsOptions);
-
-        project.poeticStructures.forEach(nonClassStructure => {
-          const repetition = new Phrase(
-            nonClassStructure.repetition.lineNumber,
-            nonClassStructure.repetition.start,
-            nonClassStructure.repetition.end
-          );
-          const sources = nonClassStructure.sources.map(source => {
-            return new Phrase(
-              source.lineNumber,
-              source.start,
-              source.end
-            );
-          });
-          
-          const structure = new PoeticStructure(
-            repetition, sources, nonClassStructure.relationshipType as PoeticStructureRelationshipType,
-            nonClassStructure.topsId, nonClassStructure.topsNotes, nonClassStructure.syntax, nonClassStructure.notes
-          );
-          
-          addPoeticStructure(structure);
-        });
+        loadDeserializedProjectData(project);
         
         setTimeout(() => {
           setPersistenceStatus(PersistenceStatus.IdleReady);
@@ -146,10 +142,6 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
     }
   }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash]);
-
-
-
-
 
   const saveUpdate = useCallback(async (project: Project): Promise<void> => {
     if (store && (
@@ -164,6 +156,17 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setPersistenceStatus(PersistenceStatus.IdleSaved);
       } catch (err) {
         setPersistenceStatus(err as PersistenceErrorStatus);
+        
+        if (err === PersistenceStatus.ErrorUnauthorized) {
+          console.log('saving to persistenceRecovery');
+          sessionStorage.setItem('persistenceRecovery', JSON.stringify(project));
+        }
+      }
+    } else {
+      console.log('skipping persistence update - status:', persistenceStatus);
+      if (persistenceStatus === PersistenceStatus.ErrorUnauthorized) {
+        console.log('saving to persistenceRecovery');
+        sessionStorage.setItem('persistenceRecovery', JSON.stringify(project));
       }
     }
   }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash]);
@@ -181,10 +184,19 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
           }).then(() => {
             return store?.initialize();
           }).then(() => {
-            const initialProjectName = localStorage.getItem('lastProjectName');
-            if (initialProjectName) {
-              console.log('loading project', initialProjectName);
-              return loadProject(initialProjectName);
+            const lastProjectName = localStorage.getItem('lastProjectName');
+            const persistenceRecovery = sessionStorage.getItem('persistenceRecovery');
+            const recoveredProject: Project = JSON.parse(persistenceRecovery || '{}');
+
+            if (persistenceRecovery && lastProjectName && recoveredProject.projectName === lastProjectName) {
+              // todo - give user a choice via modal
+              console.log('recovering from persistenceRecovery');
+              loadDeserializedProjectData(recoveredProject);
+              sessionStorage.removeItem('persistenceRecovery');
+              setPersistenceStatus(PersistenceStatus.IdleReady);
+            } else if (lastProjectName) {
+              console.log('loading last project', lastProjectName);
+              return loadProject(lastProjectName);
             } else {
               setPersistenceStatus(PersistenceStatus.IdleReady);
             }
@@ -194,7 +206,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
           });
       }
     }
-  }, [store, setPersistenceStatus]);
+  }, [store, setPersistenceStatus, loadDeserializedProjectData, loadProject]);
 
   useEffect(() => {
     console.log('persistenceStatus:', persistenceStatus);

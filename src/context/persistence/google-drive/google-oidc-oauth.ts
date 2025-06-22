@@ -1,16 +1,16 @@
 import { User, UserManager, WebStorageStateStore } from 'oidc-client-ts';
 
-// TODO - remove secret (recreate app as Desktop)
 const GoogleUserManager: UserManager = new UserManager({
-  // let UserManager store state in sessionStorage so that we can grab the code verifier upon redirect/return
-  stateStore: new WebStorageStateStore({ store: window.sessionStorage, prefix: 'oidc-google.' }),
+  // allow UserManager to store oauth request state in sessionStorage, so that we can 
+  // grab the code verifier upon redirect/return from oauth endpoint
+  stateStore: new WebStorageStateStore({ store: sessionStorage, prefix: 'oidc-google.' }),
 
-  // TODO, either comment this or raise it or test cleanup without it
   // allows us to immediately cleanup state upon return after grabbing the code verifier (doesn't impact oauth)
   staleStateAgeInSeconds: 0,
 
-  // TEMP using localstorage while in early dev stages - won't use any user storage with token-exchange via cloud functions
-  userStore: new WebStorageStateStore({ store: window.localStorage }),
+  // TEMP - need this to extract the token for now.
+  // won't use any client side user storage except in memory with token-exchange via cloud functions
+  userStore: new WebStorageStateStore({ store: sessionStorage }),
 
   authority: import.meta.env.TST_OAUTH_GOOGLE_AUTHORITY_URI,
   metadataUrl: import.meta.env.TST_OAUTH_GOOGLE_METADATA_URI,
@@ -28,6 +28,7 @@ const GoogleUserManager: UserManager = new UserManager({
   // https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-pkce
   response_type: 'code',
   // PKCE is enabled by default in oidc-client-ts
+  // disablePKCE: false,
 
   // re-add this to get refresh_token once we have token-exchange & refresh via cloud functions in place
   // extraQueryParams: {
@@ -52,14 +53,14 @@ export const completeAuthorize = async (): Promise<string | null> => {
     // const so = JSON.parse(s);
     // console.log('cv:', so?.code_verifier);
   }
-  
-  // TODO - exchange for token
 
   // cleanup PKCE flow state entry - cloud function will complete the PKCE flow from here
   // googleOidc.clearStaleState();
 
-  // Clean up URL: remove code and state
-  // TODO - change this when adding router
+  // TODO - exchange for token with clound function
+
+  // Clean up URL/history (remove code and state query params)
+  // TODO - update this if necessary when adding react-router
   // window.history.replaceState({}, '', window.location.origin);
 
   // TEMP - complete auth on frontend
@@ -77,13 +78,15 @@ export const completeAuthorize = async (): Promise<string | null> => {
   if (user && user.access_token) {
     console.log('Callback processed - User logged in:', user);
 
-    const token = user.access_token;
+    const accessToken = user.access_token;
 
+    // TODO - update this if necessary when adding react-router
     window.history.replaceState({}, '', window.location.origin);
 
+    // cleanup the user object - token is extracted so this is not needed
     await GoogleUserManager.removeUser();
 
-    return token;
+    return accessToken;
   } else {
     console.log('Callback couldnt process User:', user);
     return null;
@@ -93,8 +96,6 @@ export const completeAuthorize = async (): Promise<string | null> => {
 export const revoke = async (token: string | null) => {
   if (!token) {
     console.log('no token to revoke');
-    GoogleUserManager.removeUser();
-    GoogleUserManager.clearStaleState();
     return;
   }
   
@@ -110,7 +111,4 @@ export const revoke = async (token: string | null) => {
   } catch (err) {
     console.log('Error revoking token');
   }
-  
-  GoogleUserManager.removeUser();
-  GoogleUserManager.clearStaleState();
 };
