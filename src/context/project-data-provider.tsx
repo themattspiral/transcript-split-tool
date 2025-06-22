@@ -6,7 +6,6 @@ import {
   TypeOfPoeticStructure
 } from '../shared/data';
 import { ProjectDataContext } from './project-data-context';
-import testStructures from '../shared/test-structures.data.json';
 
 const flattenTops = (option: TypeOfPoeticStructure, level: number, parentHierarchyDisplayName?: string) => {
   let map = { [option.id]: { type: option, level } } as { [topsId: string]: { type: TypeOfPoeticStructure, level: number } };
@@ -142,36 +141,6 @@ export const ProjectDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const setNewTranscript = useCallback((lines: TranscriptLine[]) => {
     setTranscriptLines(lines);
-    
-    // TEMP: LOAD TEST DATA
-    // TODO - replace with saved data load
-
-    setProjectName(`Matt's Test Project 1`);
-
-    Object.entries(testStructures).forEach(([structureId, ps]) => {
-      const repetition = new Phrase(
-        ps.repetition.lineNumber,
-        ps.repetition.start,
-        ps.repetition.end
-      );
-      const sources = ps.sources.map(source => {
-        return new Phrase(
-          source.lineNumber,
-          source.start,
-          source.end
-        );
-      });
-      
-      const structure = new PoeticStructure(
-        repetition, sources, ps.relationshipType as PoeticStructureRelationshipType, ps.topsId, ps.topsNotes, ps.syntax, ps.notes
-      );
-      
-      delete (testStructures as { [id: string]: any })[structureId];
-
-      (testStructures as { [id: string]: any })[structure.id] = structure;
-    })
-    
-    setPoeticStructures(testStructures as { [id: string]: any });
   }, [setTranscriptLines, setPoeticStructures]);
 
   const addPoeticStructure = useCallback((newStructure: PoeticStructure) => {
