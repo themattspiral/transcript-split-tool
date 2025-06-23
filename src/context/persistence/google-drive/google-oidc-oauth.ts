@@ -110,6 +110,6 @@ export const revoke = async (token: string | null) => {
       body: `token=${encodeURIComponent(token)}&client_id=${encodeURIComponent(GoogleUserManager.settings.client_id)}`
     });
   } catch (err) {
-    console.log('Error revoking token');
+    console.log('Error revoking token', err);
   }
 };

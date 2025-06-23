@@ -162,15 +162,15 @@ export enum PersistenceStatus {
   IdleSaved = 'IdleSaved',
   Paused = 'Paused',
   Saving = 'Saving',
-  AuthExpired = 'AuthExpired',
   ErrorUnauthorized = 'ErrorUnauthorized',
-  ErrorConnect = 'ErrorConnect'
+  ErrorConnect = 'ErrorConnect',
+  ErrorData = 'ErrorData'
 }
 
 export type PersistenceErrorStatus = 
-  PersistenceStatus.AuthExpired
   | PersistenceStatus.ErrorUnauthorized
-  | PersistenceStatus.ErrorConnect;
+  | PersistenceStatus.ErrorConnect
+  | PersistenceStatus.ErrorData;
 
 export interface Project {
   projectName: string;

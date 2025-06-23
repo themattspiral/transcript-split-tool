@@ -14,7 +14,7 @@ const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 const ControlBar: React.FC = () => {
   const { activeTabId, setActiveTabId } = useViewState();
   const { transcriptLines, setNewTranscript, poeticStructures } = useProjectData();
-  const { persistenceStatus, authorizeExternal, revokeAuthorizeExternal } = usePersistence();
+  const { persistenceStatus, authorizeExternal, revokeAuthorizeExternal, isPersistenceMethodExternal } = usePersistence();
 
   const psCount = useMemo(() => Object.keys(poeticStructures).length, [poeticStructures])
 
@@ -112,22 +112,24 @@ const ControlBar: React.FC = () => {
             Export Grid
             <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
           </button>
-
-          <button
-            onClick={() => {
-              if (isAuthorized) {
-                revokeAuthorizeExternal();
-              } else {
-                authorizeExternal();
-              }
-            }}
-            className={classNames(
-              ' px-4 py-2 rounded cursor-pointer flex items-center',
-              isAuthorized ? 'bg-violet-400 hover:bg-violet-500 text-white' : 'bg-amber-500 hover:bg-amber-600'
-            )}
-          >
-            { isAuthorized ? 'Revoke Drive' : 'Authorize Drive' }
-          </button>
+          
+          { isPersistenceMethodExternal &&
+            <button
+              onClick={() => {
+                if (isAuthorized) {
+                  revokeAuthorizeExternal();
+                } else {
+                  authorizeExternal();
+                }
+              }}
+              className={classNames(
+                ' px-4 py-2 rounded cursor-pointer flex items-center',
+                isAuthorized ? 'bg-violet-400 hover:bg-violet-500 text-white' : 'bg-amber-500 hover:bg-amber-600'
+              )}
+            >
+              { isAuthorized ? 'Revoke Drive' : 'Authorize Drive' }
+            </button>
+          }
         
       </div>
 

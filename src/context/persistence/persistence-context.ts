@@ -5,6 +5,7 @@ import { PersistenceMethod, PersistenceStatus, Project } from '../../shared/data
 interface PersistenceContextProps {
   persistenceMethod: PersistenceMethod | null;
   setPersistenceMethod: (persistenceMethod: PersistenceMethod, initialProjectName?: string | null) => Promise<void>;
+  isPersistenceMethodExternal: boolean;
   lastPersistenceHash: string | null;
   persistenceStatus: PersistenceStatus;
 
@@ -26,6 +27,7 @@ interface PersistenceContextProps {
 export const PersistenceContext = createContext<PersistenceContextProps>({
   persistenceMethod: null,
   setPersistenceMethod: () => Promise.reject(),
+  isPersistenceMethodExternal: false,
   lastPersistenceHash: null,
   persistenceStatus: PersistenceStatus.Initializing,
   loadProject: () => Promise.reject(),

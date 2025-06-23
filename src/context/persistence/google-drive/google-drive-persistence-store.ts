@@ -3,7 +3,7 @@ import { PersistenceStatus, Project } from '../../../shared/data';
 import { authorize, completeAuthorize, revoke } from './google-oidc-oauth';
 import {
   getFolderInfo, getJSONFileInfo, getJSONFileContents,
-  createFolder, createJSONFile, updateJSONFile
+  createFolder, createJSONFile, updateJSONFile, PARSE_ERROR
 } from './google-drive-api';
 
 export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
@@ -13,8 +13,10 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
   #folderId: string | null = null;
   #folderName: string;
 
-  #handleApiError(statusCode: number) {
-  if (statusCode === 401 || statusCode === 403) {
+  #handleApiError(error: number | string) {
+    if (error === PARSE_ERROR) {
+      throw PersistenceStatus.ErrorData;
+    } else if (error === 401 || error === 403) {
       this.#accessToken = null;
       // temp
       localStorage.removeItem('googleOauthToken');
@@ -70,15 +72,16 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
         const projectFileContents = await getJSONFileContents(this.#accessToken, projectFileInfo?.id || 'unknown');
         console.log('fetched project file contents:', projectFileContents);
 
-        return { project: projectFileContents, hash: projectFileInfo.sha256Checksum };
+        return { project: projectFileContents as Project, hash: projectFileInfo.sha256Checksum };
       } else {
         return null;
       }
     } catch (statusCode) {
       this.#handleApiError(statusCode as number);
-    }
 
-    return {} as { project: Project, hash: string};
+      // never called (#handleApiError throws)
+      return {} as { project: Project, hash: string};
+    }
   }
   
   async createProject(project: Project): Promise<string> {
@@ -96,7 +99,7 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     } catch (statusCode) {
       this.#handleApiError(statusCode as number);
       
-      // never called
+      // never called (#handleApiError throws)
       return '';
     }
   }
@@ -125,7 +128,7 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     } catch (statusCode) {
       this.#handleApiError(statusCode as number);
       
-      // never called
+      // never called (#handleApiError throws)
       return '';
     }
   }
@@ -151,10 +154,13 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
   }
 
   async revokeAuthorizeExternal() {
+    // temp
+    // await revoke(this.#accessToken);
+    
+    this.#accessToken = null;
+
     // TEMP!!
     localStorage.removeItem('googleOauthToken');
-
-    await revoke(this.#accessToken);
   }
 
   get isAuthorized(): boolean {

@@ -1,8 +1,12 @@
 // https://developers.google.com/workspace/drive/api/reference/rest/v3/files
 
+import { persistenceSerialize } from '../persistence-utils';
+
 const API_BASE = import.meta.env.TST_GOOGLE_API_BASE;
 const FOLDER_MIME_TYPE = 'application/vnd.google-apps.folder';
 const JSON_MIME_TYPE = 'application/json';
+
+export const PARSE_ERROR = 'PARSE_ERROR';
 
 export interface GoogleDriveFolder {
   id: string;
@@ -83,7 +87,12 @@ export const getJSONFileContents = async (token: string, fileId: string): Promis
     throw filesResponse.status;
   }
 
-  return await filesResponse.json();
+  try {
+    return await filesResponse.json();
+  } catch (err) {
+    console.error(`Error parsing JSON from file [${fileId}]:`, err);
+    throw PARSE_ERROR;
+  }
 };
 
 export const createFolder = async (token: string, folderName: string): Promise<GoogleDriveFolder> => {
@@ -119,7 +128,7 @@ export const createJSONFile = async (token: string, fileName: string, parentFold
   };
   const formData = new FormData();
   formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: JSON_MIME_TYPE }));
-  formData.append('file', new Blob([JSON.stringify(fileContents, null, 2)], { type: JSON_MIME_TYPE }));
+  formData.append('file', new Blob([persistenceSerialize(fileContents)], { type: JSON_MIME_TYPE }));
 
   const createResponse = await fetch(url, {
     method: 'POST',
@@ -144,7 +153,7 @@ export const updateJSONFile = async (token: string, fileId: string, fileContents
       'Authorization': `Bearer ${token}`,
       'Content-Type': JSON_MIME_TYPE
     },
-    body: new Blob([JSON.stringify(fileContents, null, 2)], { type: JSON_MIME_TYPE })
+    body: new Blob([persistenceSerialize(fileContents)], { type: JSON_MIME_TYPE })
   });
 
   if (!updateResponse.ok) {

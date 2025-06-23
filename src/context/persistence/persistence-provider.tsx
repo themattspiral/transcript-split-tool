@@ -4,6 +4,8 @@ import { PersistenceErrorStatus, PersistenceMethod, PersistenceStatus, Project }
 import { ExternalPersistenceStore, PersistenceContext, PersistenceStore } from './persistence-context';
 import { useProjectData } from '../project-data-context';
 import { GoogleDrivePersistenceStore } from './google-drive/google-drive-persistence-store';
+import { LocalStoragePersistenceStore } from './local-storage-persistence-store';
+import { persistenceSerialize } from './persistence-utils';
 
 const GOOGLE_DRIVE_FOLDER_NAME = 'TST Projects';
 
@@ -20,6 +22,8 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [store, setStore] = useState<PersistenceStore | null>(null);
 
   const lockRef = useRef<boolean>(false);
+
+  const isPersistenceMethodExternal = store?.isExternal || false;
 
   const authorizeExternal = useCallback(() => {
     if (store && store.isExternal) {
@@ -64,6 +68,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         const projectResponse = await storeToUse.fetchProject(projectName);
         if (projectResponse === null) {
           console.log('no existing project found with name', projectName);
+          setPersistenceStatus(PersistenceStatus.IdleReady);
           return;
         }
 
@@ -140,7 +145,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (method === PersistenceMethod.SessionOnly) {
       // todo
     } else if (method === PersistenceMethod.BrowserLocal) {
-      // todo
+      newStore = new LocalStoragePersistenceStore();
     } else if (method === PersistenceMethod.GoogleDrive) {
       newStore = new GoogleDrivePersistenceStore(GOOGLE_DRIVE_FOLDER_NAME);
     }
@@ -184,14 +189,14 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         
         if (err === PersistenceStatus.ErrorUnauthorized) {
           console.log('saving to persistenceRecovery');
-          sessionStorage.setItem('persistenceRecovery', JSON.stringify(project));
+          sessionStorage.setItem('persistenceRecovery', persistenceSerialize(project));
         }
       }
     } else {
       console.log('skipping persistence update - status:', persistenceStatus);
       if (persistenceStatus === PersistenceStatus.ErrorUnauthorized) {
         console.log('saving to persistenceRecovery');
-        sessionStorage.setItem('persistenceRecovery', JSON.stringify(project));
+        sessionStorage.setItem('persistenceRecovery', persistenceSerialize(project));
       }
     }
   }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash]);
@@ -216,10 +221,12 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   ]);
 
   const value = useMemo(() => ({
-    persistenceMethod, setPersistenceMethod: setPersistenceMethodContext, lastPersistenceHash, persistenceStatus,
+    persistenceMethod, setPersistenceMethod: setPersistenceMethodContext, 
+    isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus,
     authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
   }), [
-    persistenceMethod, setPersistenceMethodContext, lastPersistenceHash, persistenceStatus,
+    persistenceMethod, setPersistenceMethodContext,
+    isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus,
     authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
   ]);
 
