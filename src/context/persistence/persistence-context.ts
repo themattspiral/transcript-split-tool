@@ -1,11 +1,12 @@
 import { createContext, useContext } from 'react';
 
-import { PersistenceMethod, PersistenceStatus, Project } from '../../shared/data';
+import { PersistenceEvent, PersistenceMethod, PersistenceStatus, Project } from '../../shared/data';
 
 interface PersistenceContextProps {
   persistenceMethod: PersistenceMethod | null;
   setPersistenceMethod: (persistenceMethod: PersistenceMethod, initialProjectName?: string | null) => Promise<void>;
   isPersistenceMethodExternal: boolean;
+  lastPersistenceEvent: PersistenceEvent | null;
   lastPersistenceHash: string | null;
   persistenceStatus: PersistenceStatus;
 
@@ -28,6 +29,7 @@ export const PersistenceContext = createContext<PersistenceContextProps>({
   persistenceMethod: null,
   setPersistenceMethod: () => Promise.reject(),
   isPersistenceMethodExternal: false,
+  lastPersistenceEvent: null,
   lastPersistenceHash: null,
   persistenceStatus: PersistenceStatus.Initializing,
   loadProject: () => Promise.reject(),

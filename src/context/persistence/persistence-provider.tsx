@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { PersistenceErrorStatus, PersistenceMethod, PersistenceStatus, Project } from '../../shared/data';
+import { PersistenceErrorStatus, PersistenceEvent, PersistenceMethod, PersistenceStatus, Project } from '../../shared/data';
 import { ExternalPersistenceStore, PersistenceContext, PersistenceStore } from './persistence-context';
 import { useProjectData } from '../project-data-context';
 import { GoogleDrivePersistenceStore } from './google-drive/google-drive-persistence-store';
@@ -17,6 +17,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const [persistenceMethod, setPersistenceMethod] = useState<PersistenceMethod | null>(null);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(PersistenceStatus.Initializing);
+  const [lastPersistenceEvent, setLastPersistenceEvent] = useState<PersistenceEvent | null>(null);
   const [lastPersistenceHash, setLastPersistenceHash] = useState<string | null>(null);
 
   const [store, setStore] = useState<PersistenceStore | null>(null);
@@ -37,23 +38,23 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         await (store as ExternalPersistenceStore).revokeAuthorizeExternal();
       } finally {
         setPersistenceStatus(PersistenceStatus.ErrorUnauthorized);
+        setLastPersistenceEvent(PersistenceEvent.Error);
       }
     }
   }, [store, setPersistenceStatus]);
 
   const createProject = useCallback(async (project: Project): Promise<void> => {
-    if (store && (
-      persistenceStatus === PersistenceStatus.IdleReady
-      || persistenceStatus === PersistenceStatus.IdleSaved
-    )) {
+    if (store && persistenceStatus === PersistenceStatus.Idle) {
       setPersistenceStatus(PersistenceStatus.Paused);
 
       try {
         const hash = await store.createProject(project);
         setLastPersistenceHash(hash);
-        setPersistenceStatus(PersistenceStatus.IdleSaved);
+        setPersistenceStatus(PersistenceStatus.Idle);
+        setLastPersistenceEvent(PersistenceEvent.Saved);
       } catch (err) {
         setPersistenceStatus(err as PersistenceErrorStatus);
+        setLastPersistenceEvent(PersistenceEvent.Error);
         throw(err);
       }
     }
@@ -68,7 +69,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         const projectResponse = await storeToUse.fetchProject(projectName);
         if (projectResponse === null) {
           console.log('no existing project found with name', projectName);
-          setPersistenceStatus(PersistenceStatus.IdleReady);
+          setPersistenceStatus(PersistenceStatus.Idle);
           return;
         }
 
@@ -77,15 +78,17 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         loadDeserializedProjectData(project);
         
         setTimeout(() => {
-          setPersistenceStatus(PersistenceStatus.IdleReady);
+          setPersistenceStatus(PersistenceStatus.Idle);
+          setLastPersistenceEvent(PersistenceEvent.Loaded);
         }, 1000);
         
       } catch (err) {
         setPersistenceStatus(err as PersistenceErrorStatus);
+        setLastPersistenceEvent(PersistenceEvent.Error);
         throw(err);
       }
     }
-  }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash, loadDeserializedProjectData]);
+  }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash, loadDeserializedProjectData, setLastPersistenceEvent]);
 
   const completeAuthorizeExternalAndInitializeStore = useCallback(async (newStore: ExternalPersistenceStore, lastProjectName?: string | null): Promise<void> => {
     await newStore.completeAuthorizeExternal();
@@ -98,22 +101,31 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     console.log('init complete. now determining load operation....');
     const persistenceRecovery = sessionStorage.getItem('persistenceRecovery');
-    const recoveredProject: Project = JSON.parse(persistenceRecovery || '{}');
 
-    if (persistenceRecovery && lastProjectName && recoveredProject.projectName === lastProjectName) {
+    let recoveredProject: Project | null = null;
+    try {
+      recoveredProject = JSON.parse(persistenceRecovery || '{}');
+    } catch (err) {
+      console.error(`Error parsing JSON from persistenceRecovery:`, err);
+      setLastPersistenceEvent(PersistenceEvent.Error);
+      throw PersistenceStatus.ErrorData;
+    }
+
+    if (persistenceRecovery && lastProjectName && recoveredProject?.projectName === lastProjectName) {
       // todo - give user a choice via modal
       console.log('load: recovering from persistenceRecovery');
       loadDeserializedProjectData(recoveredProject);
       sessionStorage.removeItem('persistenceRecovery');
-      setPersistenceStatus(PersistenceStatus.IdleReady);
+      setPersistenceStatus(PersistenceStatus.Idle);
+      setLastPersistenceEvent(PersistenceEvent.Recovered);
     } else if (lastProjectName) {
       console.log('load: loading last project from store', lastProjectName);
       await loadProject(lastProjectName, newStore);
     } else {
       console.log('load: no recovery or last project. persistence ready.');
-      setPersistenceStatus(PersistenceStatus.IdleReady);
+      setPersistenceStatus(PersistenceStatus.Idle);
     }
-  }, [loadDeserializedProjectData, loadProject, setPersistenceStatus]);
+  }, [loadDeserializedProjectData, loadProject, setPersistenceStatus, setLastPersistenceEvent]);
 
   const initializeStore = useCallback(async (newStore: PersistenceStore, lastProjectName?: string | null): Promise<void> => {
     await newStore.initialize();
@@ -122,9 +134,9 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.log('load: loading last project:', lastProjectName);
       await loadProject(lastProjectName, newStore);
     } else {
-      setPersistenceStatus(PersistenceStatus.IdleReady);
+      setPersistenceStatus(PersistenceStatus.Idle);
     }
-  }, [loadProject, setPersistenceStatus]);
+  }, [loadProject, setPersistenceStatus, setLastPersistenceEvent]);
 
   const setPersistenceMethodContext = useCallback(async (method: PersistenceMethod, lastProjectName?: string | null): Promise<void> => {
     if (lockRef.current === true) {
@@ -164,32 +176,35 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
     } catch (err) {
       setPersistenceStatus(err as PersistenceErrorStatus);
+      setLastPersistenceEvent(PersistenceEvent.Error);
     } finally {
       lockRef.current = false;
       console.log('unlocked.');
     }
   }, [
     lockRef, persistenceMethod, setPersistenceMethod, setPersistenceStatus, setStore,
-    completeAuthorizeExternalAndInitializeStore, initializeStore
+    completeAuthorizeExternalAndInitializeStore, initializeStore, setLastPersistenceEvent
   ]);
 
   const saveUpdate = useCallback(async (project: Project): Promise<void> => {
-    if (store && (
-      persistenceStatus === PersistenceStatus.IdleReady
-      || persistenceStatus === PersistenceStatus.IdleSaved
-    )) {
+    if (store && persistenceStatus === PersistenceStatus.Idle) {
       setPersistenceStatus(PersistenceStatus.Saving);
 
       try {
         const hash = await store.updateProject(project);
         setLastPersistenceHash(hash);
-        setPersistenceStatus(PersistenceStatus.IdleSaved);
+        setPersistenceStatus(PersistenceStatus.Idle);
+        setLastPersistenceEvent(s => {
+          return s === PersistenceEvent.Recovered ? PersistenceEvent.RecoveredAndSaved : PersistenceEvent.Saved;
+        });
       } catch (err) {
         setPersistenceStatus(err as PersistenceErrorStatus);
+        setLastPersistenceEvent(PersistenceEvent.Error);
         
         if (err === PersistenceStatus.ErrorUnauthorized) {
           console.log('saving to persistenceRecovery');
           sessionStorage.setItem('persistenceRecovery', persistenceSerialize(project));
+          setLastPersistenceEvent(PersistenceEvent.RecoveryTempStored);
         }
       }
     } else {
@@ -197,9 +212,10 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       if (persistenceStatus === PersistenceStatus.ErrorUnauthorized) {
         console.log('saving to persistenceRecovery');
         sessionStorage.setItem('persistenceRecovery', persistenceSerialize(project));
+        setLastPersistenceEvent(PersistenceEvent.RecoveryTempStored);
       }
     }
-  }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash]);
+  }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash, setLastPersistenceEvent]);
 
   useEffect(() => {
     console.log('persistenceStatus changed:', persistenceStatus);
@@ -222,11 +238,11 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const value = useMemo(() => ({
     persistenceMethod, setPersistenceMethod: setPersistenceMethodContext, 
-    isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus,
+    isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
     authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
   }), [
     persistenceMethod, setPersistenceMethodContext,
-    isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus,
+    isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
     authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
   ]);
 

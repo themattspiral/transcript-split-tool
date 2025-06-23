@@ -14,7 +14,10 @@ const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 const ControlBar: React.FC = () => {
   const { activeTabId, setActiveTabId } = useViewState();
   const { transcriptLines, setNewTranscript, poeticStructures } = useProjectData();
-  const { persistenceStatus, authorizeExternal, revokeAuthorizeExternal, isPersistenceMethodExternal } = usePersistence();
+  const {
+    persistenceStatus, isPersistenceMethodExternal, persistenceMethod, lastPersistenceEvent,
+    authorizeExternal, revokeAuthorizeExternal
+} = usePersistence();
 
   const psCount = useMemo(() => Object.keys(poeticStructures).length, [poeticStructures])
 
@@ -130,6 +133,11 @@ const ControlBar: React.FC = () => {
               { isAuthorized ? 'Revoke Drive' : 'Authorize Drive' }
             </button>
           }
+
+          <div className='flex flex-col'>
+            <span>Persistence Status: { persistenceStatus }</span>
+            <span>Last Persistence Event: { lastPersistenceEvent }</span>
+          </div>
         
       </div>
 

@@ -158,8 +158,7 @@ export enum PersistenceMethod {
 
 export enum PersistenceStatus {
   Initializing = 'Initializing',
-  IdleReady = 'IdleReady',
-  IdleSaved = 'IdleSaved',
+  Idle = 'Idle',
   Paused = 'Paused',
   Saving = 'Saving',
   ErrorUnauthorized = 'ErrorUnauthorized',
@@ -171,6 +170,15 @@ export type PersistenceErrorStatus =
   | PersistenceStatus.ErrorUnauthorized
   | PersistenceStatus.ErrorConnect
   | PersistenceStatus.ErrorData;
+
+export enum PersistenceEvent {
+  Loaded = 'Loaded',
+  Saved = 'Saved',
+  RecoveryTempStored = 'RecoveryTempStored',
+  Recovered = 'Recovered',
+  RecoveredAndSaved = 'RecoveredAndSaved',
+  Error = 'Error'
+}
 
 export interface Project {
   projectName: string;
