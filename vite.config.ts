@@ -28,22 +28,6 @@ if (process.argv?.includes('--ssl')) {
 
 // https://vite.dev/config/
 export default defineConfig({
-  server: {
-    proxy: {
-      '/google-accounts': {
-        target: 'https://accounts.google.com',
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path: string) => path.replace(/^\/google-accounts/, '')
-      },
-      '/google-api': {
-        target: 'https://www.googleapis.com',
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path: string) => path.replace(/^\/google-api/, '')
-      }
-    }
-  },
   plugins,
   define,
   envPrefix: 'TST_'
