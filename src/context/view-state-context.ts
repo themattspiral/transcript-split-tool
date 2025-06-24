@@ -23,10 +23,10 @@ interface ViewStateContextProps {
   setActiveTabId: (tab: TabId) => void;
   displayedModalId: string | null;
   isModalShowing: boolean;
-  showConfirmationModal: (message: string, onConfirm: () => void) => void;
-  hideModals: () => void;
+  confirmWithModal: (message: string) => Promise<void>;
+  handleModalConfirm: () => void;
+  handleModalCancel: () => void;
   modalMessage: string | null;
-  modalOnConfirm: (() => void) | null;
   registerOutsideClick: (outsideElementRef: RefObject<HTMLElement | null>, handler: () => void) => void;
   unregisterOutsideClick: (outsideElementRef: RefObject<HTMLElement | null>, handler: () => void) => void;
   cssVariables: { [key in CustomCSSVariables]: string };
@@ -37,10 +37,10 @@ export const ViewStateContext = createContext<ViewStateContextProps>({
   setActiveTabId: () => {},
   displayedModalId: null,
   isModalShowing: false,
-  showConfirmationModal: () => {},
-  hideModals: () => {},
+  confirmWithModal: () => Promise.reject(),
+  handleModalConfirm: () => {},
+  handleModalCancel: () => {},
   modalMessage: null,
-  modalOnConfirm: null,
   registerOutsideClick: () => {},
   unregisterOutsideClick: () => {},
   cssVariables: {} as { [key in CustomCSSVariables]: string }

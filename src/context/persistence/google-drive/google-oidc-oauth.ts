@@ -1,9 +1,11 @@
 import { User, UserManager, WebStorageStateStore } from 'oidc-client-ts';
 
+const STATE_KEY_PREFIX = 'oidc-google.';
+
 const GoogleUserManager: UserManager = new UserManager({
   // allow UserManager to store oauth request state in sessionStorage, so that we can 
   // grab the code verifier upon redirect/return from oauth endpoint
-  stateStore: new WebStorageStateStore({ store: sessionStorage, prefix: 'oidc-google.' }),
+  stateStore: new WebStorageStateStore({ store: sessionStorage, prefix: STATE_KEY_PREFIX }),
 
   // allows us to immediately cleanup state upon return after grabbing the code verifier (doesn't impact oauth)
   staleStateAgeInSeconds: 0,
@@ -48,7 +50,7 @@ export const completeAuthorize = async (): Promise<string | null> => {
   // console.log('code', code);
   // console.log('state', state);
 
-  const s = sessionStorage.getItem(`oidc-google.${state}`);
+  const s = sessionStorage.getItem(`${STATE_KEY_PREFIX}${state}`);
   if (s) {
     // const so = JSON.parse(s);
     // console.log('cv:', so?.code_verifier);

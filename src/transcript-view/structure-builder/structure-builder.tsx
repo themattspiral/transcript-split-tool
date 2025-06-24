@@ -22,7 +22,7 @@ interface StructureBuilderProps {
 }
 
 export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, style }) => {
-  const { showConfirmationModal } = useViewState();
+  const { confirmWithModal } = useViewState();
   const { transcriptLines, topsMap } = useProjectData();
   const {
     editState, editInfo, editValidity, removeSourceFromStructureUnderEdit,
@@ -239,7 +239,9 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
         { editState === EditState.EditingExisting &&
           <button
             className="w-full h-[35px] rounded-lg bg-red-500 hover:bg-red-600 text-white hover:text-red-100 cursor-pointer shadow-md shadow-gray-400 mt-2"
-            onClick={() => showConfirmationModal(CONFIRM_DELETE, deleteStructureUnderEdit)}
+            onClick={() => {
+              confirmWithModal(CONFIRM_DELETE).then(() => deleteStructureUnderEdit).catch(() => {});
+            }}
           >
             <FontAwesomeIcon icon={faTrash} size="lg" />
             <span className="font-semibold ml-2">Delete</span>

@@ -7,7 +7,7 @@ const PROJECT_KEY_PREFIX = 'project.';
 export class LocalStoragePersistenceStore implements PersistenceStore {
   isExternal: boolean = false;
 
-  async #digestMessage(message: string): Promise<string> {
+  async #sha256Hash(message: string): Promise<string> {
     if (!window.crypto) {
       return 'local';
     }
@@ -33,7 +33,7 @@ export class LocalStoragePersistenceStore implements PersistenceStore {
 
       if (projectStr) {
         const projectContents = JSON.parse(projectStr);
-        const hash = await this.#digestMessage(projectStr);
+        const hash = await this.#sha256Hash(projectStr);
 
         return { project: projectContents, hash };
       } else {
@@ -50,7 +50,7 @@ export class LocalStoragePersistenceStore implements PersistenceStore {
     localStorage.setItem(this.#projectKey(project.projectName), projectStr);
 
     try {
-      return await this.#digestMessage(projectStr);
+      return await this.#sha256Hash(projectStr);
     } catch (error) {
       return '--';
     }

@@ -14,7 +14,7 @@ interface StructureActionItemsProps {
 
 export const StructureActionItems: React.FC<StructureActionItemsProps> = ({ link }) => {
   const { handleStructureSelectMenuAction } = useTranscriptInteraction();
-  const { showConfirmationModal } = useViewState();
+  const { confirmWithModal } = useViewState();
   const { removePoeticStructure} = useProjectData();
 
   return (
@@ -36,7 +36,9 @@ export const StructureActionItems: React.FC<StructureActionItemsProps> = ({ link
         className="text-sm font-medium destructive"
         onMouseOver={() => handleStructureSelectMenuAction(link.structure.id, MenuAction.HoverStructure)}
         onMouseOut={() => handleStructureSelectMenuAction('', MenuAction.Unhover)}
-        onClick={() => showConfirmationModal(CONFIRM_DELETE, () => removePoeticStructure(link.structure.id))}
+        onClick={() => {
+          confirmWithModal(CONFIRM_DELETE).then(() => removePoeticStructure(link.structure.id)).catch(() => {});
+        }}
       >
         <div className="flex items-center">
           <FontAwesomeIcon icon={faTrash} className="mr-1 w-[20px]" size="lg" />

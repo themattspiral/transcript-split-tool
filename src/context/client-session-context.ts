@@ -4,13 +4,11 @@ import { PersistenceMethod } from '../shared/data';
 
 interface ClientSessionContextProps {
   persistenceMethod: PersistenceMethod | null;
-  lastPersistenceHash: string | null;
   lastProjectName: string | null;
 }
 
 export const ClientSessionContext = createContext<ClientSessionContextProps>({
   persistenceMethod: null,
-  lastPersistenceHash: null,
   lastProjectName: null
 });
 
