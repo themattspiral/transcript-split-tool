@@ -2,16 +2,23 @@ import { useMemo, useRef } from 'react';
 import { extractRawText } from 'mammoth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from '@fortawesome/free-regular-svg-icons';
+import classNames from 'classnames';
 
-import { TranscriptLine, TabId } from '../shared/data';
+import { TranscriptLine, TabId, PersistenceStatus } from '../shared/data';
 import { useViewState } from '../context/view-state-context';
-import { useUserData } from '../context/user-data-context';
+import { useProjectData } from '../context/project-data-context';
+import { usePersistence } from '../context/persistence/persistence-context';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
 const ControlBar: React.FC = () => {
   const { activeTabId, setActiveTabId } = useViewState();
-  const { transcriptLines, setNewTranscript, poeticStructures } = useUserData();
+  const { transcriptLines, setNewTranscript, poeticStructures } = useProjectData();
+  const {
+    persistenceStatus, isPersistenceMethodExternal, persistenceMethod, lastPersistenceEvent,
+    authorizeExternal, revokeAuthorizeExternal
+} = usePersistence();
+
   const psCount = useMemo(() => Object.keys(poeticStructures).length, [poeticStructures])
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -72,6 +79,7 @@ const ControlBar: React.FC = () => {
 
   const activeTabClasses = 'bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg text-nowrap';
   const otherTabClasses = 'bg-gray-200 hover:bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg cursor-pointer text-nowrap';
+  const isAuthorized = persistenceStatus !== PersistenceStatus.ErrorUnauthorized;
   
   return (
     <div className="flex gap-4 items-end">
@@ -107,6 +115,29 @@ const ControlBar: React.FC = () => {
             Export Grid
             <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
           </button>
+          
+          { isPersistenceMethodExternal &&
+            <button
+              onClick={() => {
+                if (isAuthorized) {
+                  revokeAuthorizeExternal();
+                } else {
+                  authorizeExternal();
+                }
+              }}
+              className={classNames(
+                ' px-4 py-2 rounded cursor-pointer flex items-center',
+                isAuthorized ? 'bg-violet-400 hover:bg-violet-500 text-white' : 'bg-amber-500 hover:bg-amber-600'
+              )}
+            >
+              { isAuthorized ? 'Revoke Drive' : 'Authorize Drive' }
+            </button>
+          }
+
+          <div className='flex flex-col'>
+            <span>Persistence Status: { persistenceStatus }</span>
+            <span>Last Persistence Event: { lastPersistenceEvent }</span>
+          </div>
         
       </div>
 

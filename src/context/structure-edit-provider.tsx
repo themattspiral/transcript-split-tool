@@ -5,13 +5,13 @@ import {
   PoeticStructureRelationshipType, sortPhrases, ValidationResult
 } from '../shared/data';
 import { StructureEditContext, EditState, EditInfo } from './structure-edit-context';
-import { useUserData } from './user-data-context';
+import { useProjectData } from './project-data-context';
 
 export const StructureEditProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
     poeticStructures, topsMap,
     addPoeticStructure, replacePoeticStructure, removePoeticStructure
-  } = useUserData();
+  } = useProjectData();
 
   const [editState, setEditState] = useState<EditState>(EditState.Idle);
   const [pendingRepetition, setPendingRepetition] = useState<Phrase | null>(null);

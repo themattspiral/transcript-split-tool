@@ -1,8 +1,10 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseLink, PhraseLinkInfo, PoeticStructure, TranscriptLine, TypeOfPoeticStructure } from '../shared/data';
+import { Phrase, PhraseLink, PhraseLinkInfo, PoeticStructure, Project, TranscriptLine, TypeOfPoeticStructure } from '../shared/data';
 
-interface UserDataContextProps {
+interface ProjectDataContextProps {
+  projectName: string | null;
+  setProjectName: (name: string | null) => void;
   transcriptLines: TranscriptLine[];
   setNewTranscript: (lines: TranscriptLine[]) => void;
   poeticStructures: { [structureId: string]: PoeticStructure };
@@ -15,10 +17,14 @@ interface UserDataContextProps {
   getAllStructurePhraseIds: (structureId: string) => string[];
   linePhrases: { [lineNumber: string]: Phrase[] };
   topsOptions: TypeOfPoeticStructure[];
+  setTopsOptions: (options: TypeOfPoeticStructure[]) => void;
   topsMap: { [topsId: string]: { type: TypeOfPoeticStructure, level: number } };
+  loadDeserializedProjectData: (deserializedProject: Project) => void;
 }
 
-export const UserDataContext = createContext<UserDataContextProps>({
+export const ProjectDataContext = createContext<ProjectDataContextProps>({
+  projectName: null,
+  setProjectName: () => {},
   transcriptLines: [],
   setNewTranscript: () => {},
   poeticStructures: {},
@@ -31,13 +37,15 @@ export const UserDataContext = createContext<UserDataContextProps>({
   getAllStructurePhraseIds: () => [],
   linePhrases: {},
   topsOptions: [],
-  topsMap: {}
+  setTopsOptions: () => {},
+  topsMap: {},
+  loadDeserializedProjectData: () => {}
 });
 
-export const useUserData = () => {
-  const context = useContext(UserDataContext);
+export const useProjectData = () => {
+  const context = useContext(ProjectDataContext);
   if (!context) {
-    throw new Error(`useUserData must be used within a UserDataProvider`);
+    throw new Error(`useProjectData must be used within a ProjectDataProvider`);
   }
   return context;
 };

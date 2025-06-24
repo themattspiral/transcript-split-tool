@@ -2,11 +2,10 @@ import { useCallback, useMemo, useState } from 'react';
 
 import {
   DefaultTOPSValues, OverallPhraseRole, Phrase, PhraseLink, PhraseLinkInfo, PhraseRole, 
-  PoeticStructure, PoeticStructureRelationshipType, sortPhrases, TranscriptLine,
+  PoeticStructure, PoeticStructureRelationshipType, Project, sortPhrases, TranscriptLine,
   TypeOfPoeticStructure
 } from '../shared/data';
-import { UserDataContext } from './user-data-context';
-import testStructures from '../shared/test-structures.data.json';
+import { ProjectDataContext } from './project-data-context';
 
 const flattenTops = (option: TypeOfPoeticStructure, level: number, parentHierarchyDisplayName?: string) => {
   let map = { [option.id]: { type: option, level } } as { [topsId: string]: { type: TypeOfPoeticStructure, level: number } };
@@ -25,7 +24,8 @@ const flattenTops = (option: TypeOfPoeticStructure, level: number, parentHierarc
   return map;
 };
 
-export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ProjectDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [projectName, setProjectName] = useState<string | null>(null);
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
   const [poeticStructures, setPoeticStructures] = useState<{ [structureId: string]: PoeticStructure }>({});
   const [topsOptions, setTopsOptions] = useState<TypeOfPoeticStructure[]>(DefaultTOPSValues);
@@ -141,34 +141,6 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const setNewTranscript = useCallback((lines: TranscriptLine[]) => {
     setTranscriptLines(lines);
-    
-    // TEMP: LOAD TEST DATA
-    // TODO - replace with saved data load
-
-    Object.entries(testStructures).forEach(([structureId, ps]) => {
-      const repetition = new Phrase(
-        ps.repetition.lineNumber,
-        ps.repetition.start,
-        ps.repetition.end
-      );
-      const sources = ps.sources.map(source => {
-        return new Phrase(
-          source.lineNumber,
-          source.start,
-          source.end
-        );
-      });
-      
-      const structure = new PoeticStructure(
-        repetition, sources, ps.relationshipType as PoeticStructureRelationshipType, ps.topsId, ps.topsNotes, ps.syntax, ps.notes
-      );
-      
-      delete (testStructures as { [id: string]: any })[structureId];
-
-      (testStructures as { [id: string]: any })[structure.id] = structure;
-    })
-    
-    setPoeticStructures(testStructures as { [id: string]: any });
   }, [setTranscriptLines, setPoeticStructures]);
 
   const addPoeticStructure = useCallback((newStructure: PoeticStructure) => {
@@ -205,22 +177,56 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     return map;
   }, [topsOptions]);
+
+  const loadDeserializedProjectData = useCallback((deserializedProject: Project) => {
+    // TODO - SCRUB POTENTIALLY DANGEROUS INPUT
+
+    setProjectName(deserializedProject.projectName);
+    setNewTranscript(deserializedProject.transcriptLines);
+    setTopsOptions(deserializedProject.topsOptions);
+
+    deserializedProject.poeticStructures.forEach(nonClassStructure => {
+      const repetition = new Phrase(
+        nonClassStructure.repetition.lineNumber,
+        nonClassStructure.repetition.start,
+        nonClassStructure.repetition.end
+      );
+      const sources = nonClassStructure.sources.map(source => {
+        return new Phrase(
+          source.lineNumber,
+          source.start,
+          source.end
+        );
+      });
+      
+      const structure = new PoeticStructure(
+        repetition, sources, nonClassStructure.relationshipType as PoeticStructureRelationshipType,
+        nonClassStructure.topsId, nonClassStructure.topsNotes, nonClassStructure.syntax, nonClassStructure.notes
+      );
+      
+      addPoeticStructure(structure);
+    });
+  }, [setProjectName, setNewTranscript, setTopsOptions, addPoeticStructure]);
   
   const value = useMemo(() => ({
+    projectName, setProjectName,
     transcriptLines, setNewTranscript,
     poeticStructures, addPoeticStructure, replacePoeticStructure, removePoeticStructure,
     phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
-    linePhrases, topsOptions, topsMap
+    linePhrases, topsOptions, setTopsOptions, topsMap,
+    loadDeserializedProjectData
   }), [
+    projectName, setProjectName,
     transcriptLines, setNewTranscript,
     poeticStructures, addPoeticStructure, replacePoeticStructure, removePoeticStructure,
     phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
-    linePhrases, topsOptions, topsMap
+    linePhrases, topsOptions, setTopsOptions, topsMap,
+    loadDeserializedProjectData
   ]);
 
   return (
-    <UserDataContext.Provider value={value}>
+    <ProjectDataContext.Provider value={value}>
       { children }
-    </UserDataContext.Provider>
+    </ProjectDataContext.Provider>
   );
 };
