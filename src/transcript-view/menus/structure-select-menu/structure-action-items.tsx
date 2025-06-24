@@ -14,7 +14,7 @@ interface StructureActionItemsProps {
 
 export const StructureActionItems: React.FC<StructureActionItemsProps> = ({ link }) => {
   const { handleStructureSelectMenuAction } = useTranscriptInteraction();
-  const { confirmWithModal } = useViewState();
+  const { confirmModal } = useViewState();
   const { removePoeticStructure} = useProjectData();
 
   return (
@@ -37,7 +37,7 @@ export const StructureActionItems: React.FC<StructureActionItemsProps> = ({ link
         onMouseOver={() => handleStructureSelectMenuAction(link.structure.id, MenuAction.HoverStructure)}
         onMouseOut={() => handleStructureSelectMenuAction('', MenuAction.Unhover)}
         onClick={() => {
-          confirmWithModal(CONFIRM_DELETE).then(() => removePoeticStructure(link.structure.id)).catch(() => {});
+          confirmModal(CONFIRM_DELETE).then(() => removePoeticStructure(link.structure.id)).catch(() => {});
         }}
       >
         <div className="flex items-center">

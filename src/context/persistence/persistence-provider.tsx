@@ -21,7 +21,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     projectName, transcriptLines, poeticStructures, topsOptions,
     loadDeserializedProjectData
   } = useProjectData();
-  const { confirmWithModal } = useViewState();
+  const { confirmModal, busyModal, hideModals } = useViewState();
 
   const [persistenceMethod, setPersistenceMethod] = useState<PersistenceMethod | null>(null);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(PersistenceStatus.Initializing);
@@ -72,6 +72,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const storeToUse = storeOverride || store;
     if (storeToUse) {
       setPersistenceStatus(PersistenceStatus.Paused);
+      busyModal(`Loading Project "${projectName}"...`);
 
       try {
         const projectResponse = await storeToUse.fetchProject(projectName);
@@ -94,6 +95,8 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setPersistenceStatus(err as PersistenceErrorStatus);
         setLastPersistenceEvent(PersistenceEvent.Error);
         throw(err);
+      } finally {
+        hideModals();
       }
     }
   }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash, loadDeserializedProjectData, setLastPersistenceEvent]);
@@ -121,7 +124,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     if (persistenceRecoveryStr && lastProjectName && recoveredData?.project?.projectName === lastProjectName) {
       try {
-        await confirmWithModal(`Do you want to restore your locally saved recovery backup from ${new Date(recoveredData?.ts).toLocaleString()}?`);
+        await confirmModal(`Do you want to restore your locally saved recovery backup from ${new Date(recoveredData?.ts).toLocaleString()}?`);
         
         console.log('load: recovering from persistence recovery');
         loadDeserializedProjectData(recoveredData.project);

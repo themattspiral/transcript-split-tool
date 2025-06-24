@@ -1,9 +1,9 @@
 import { useViewState } from '../context/view-state-context';
 
-export const CONFIRM_MODAL_ID = 'confirm-modal';
+export const INFO_MODAL_ID = 'info-modal';
 
-export const ConfirmModal: React.FC = () => {
-  const { modalContent, handleModalConfirm, handleModalCancel } = useViewState();
+export const InfoModal: React.FC = () => {
+  const { modalContent, handleModalConfirm } = useViewState();
 
   return (
     <div
@@ -16,17 +16,10 @@ export const ConfirmModal: React.FC = () => {
 
       <div className="flex gap-4 justify-end">
         <button
-          className="px-4 py-2 rounded bg-gray-400 hover:bg-gray-500 text-white cursor-pointer"
-          onClick={handleModalCancel}
-        >
-          Cancel
-        </button>
-        
-        <button
           className="px-4 py-2 rounded bg-red-500 hover:bg-red-600 text-white cursor-pointer"
           onClick={handleModalConfirm}
         >
-          Confirm
+          OK
         </button>
       </div>
     </div>

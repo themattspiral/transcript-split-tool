@@ -14,7 +14,7 @@ const StructuresGrid: React.FC<StructuresGridProps> = props => {
   
   const { transcriptLines, poeticStructures } = useProjectData();
   // const { show: showContextMenu } = useContextMenu();
-  // const { confirmWithModal } = useViewState();
+  // const { confirmModal } = useViewState();
 
   const sortedPoeticStructures = useMemo(() => {
     const structures = Object.values(poeticStructures);

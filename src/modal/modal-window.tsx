@@ -1,5 +1,7 @@
 import { useViewState } from '../context/view-state-context';
-import { ConfirmModal, CONFIRM_MODAL_ID } from './confirm-modal';
+import { CONFIRM_MODAL_ID, ConfirmModal } from './confirm-modal';
+import { INFO_MODAL_ID, InfoModal } from './info-modal';
+import { BUSY_MODAL_ID, BusyModal } from './busy-modal';
 
 const ModalWindow: React.FC = () => {
   const { displayedModalId, isModalShowing } = useViewState();
@@ -10,6 +12,8 @@ const ModalWindow: React.FC = () => {
       style={isModalShowing ? { display: 'flex', backgroundColor: 'rgba(0, 0, 0, 0.4)' } : { display: 'none' }}
     >
       { displayedModalId === CONFIRM_MODAL_ID && <ConfirmModal /> }
+      { displayedModalId === INFO_MODAL_ID && <InfoModal /> }
+      { displayedModalId === BUSY_MODAL_ID && <BusyModal /> }
     </div>
   );
 };

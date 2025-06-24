@@ -1,4 +1,4 @@
-import { createContext, RefObject, useContext } from 'react';
+import { createContext, ReactNode, RefObject, useContext } from 'react';
 
 import { TabId } from '../shared/data';
 
@@ -23,10 +23,13 @@ interface ViewStateContextProps {
   setActiveTabId: (tab: TabId) => void;
   displayedModalId: string | null;
   isModalShowing: boolean;
-  confirmWithModal: (message: string) => Promise<void>;
+  confirmModal: (content: ReactNode) => Promise<void>;
+  infoModal: (content: ReactNode) => Promise<void>;
+  busyModal: (content: ReactNode) => void;
   handleModalConfirm: () => void;
   handleModalCancel: () => void;
-  modalMessage: string | null;
+  hideModals: () => void;
+  modalContent: ReactNode | null;
   registerOutsideClick: (outsideElementRef: RefObject<HTMLElement | null>, handler: () => void) => void;
   unregisterOutsideClick: (outsideElementRef: RefObject<HTMLElement | null>, handler: () => void) => void;
   cssVariables: { [key in CustomCSSVariables]: string };
@@ -37,10 +40,13 @@ export const ViewStateContext = createContext<ViewStateContextProps>({
   setActiveTabId: () => {},
   displayedModalId: null,
   isModalShowing: false,
-  confirmWithModal: () => Promise.reject(),
+  confirmModal: () => Promise.reject(),
+  infoModal: () => Promise.reject(),
+  busyModal: () => {},
   handleModalConfirm: () => {},
   handleModalCancel: () => {},
-  modalMessage: null,
+  hideModals: () => {},
+  modalContent: null,
   registerOutsideClick: () => {},
   unregisterOutsideClick: () => {},
   cssVariables: {} as { [key in CustomCSSVariables]: string }
