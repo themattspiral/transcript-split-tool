@@ -49,7 +49,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setLastPersistenceEvent(PersistenceEvent.Error);
       }
     }
-  }, [store, setPersistenceStatus]);
+  }, [store, setPersistenceStatus, setLastPersistenceEvent]);
 
   const createProject = useCallback(async (project: Project): Promise<void> => {
     if (store && persistenceStatus === PersistenceStatus.Idle) {
@@ -102,10 +102,12 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash, loadDeserializedProjectData, setLastPersistenceEvent]);
 
   const completeAuthorizeExternalAndInitializeStore = useCallback(async (newStore: ExternalPersistenceStore, lastProjectName?: string | null): Promise<void> => {
-    await newStore.completeAuthorizeExternal();
-        
-    console.log('auth: cleaning up URL post auth callback');
-    window.history.replaceState({}, '', window.location.origin);
+    try {
+      await newStore.completeAuthorizeExternal();
+    } finally {
+      console.log('auth: cleaning up URL post auth callback');
+      window.history.replaceState({}, '', window.location.origin);
+    }
 
     console.log('auth: complete. now calling store.initialize()');
     await newStore.initialize();
@@ -119,7 +121,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } catch (err) {
       console.error(`Error parsing JSON from persistenceRecovery:`, err);
       setLastPersistenceEvent(PersistenceEvent.Error);
-      throw PersistenceStatus.ErrorData;
+      recoveredData = null;
     }
 
     if (persistenceRecoveryStr && lastProjectName && recoveredData?.project?.projectName === lastProjectName) {
@@ -158,7 +160,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [loadProject, setPersistenceStatus, setLastPersistenceEvent]);
 
-  const setPersistenceMethodContext = useCallback(async (method: PersistenceMethod, lastProjectName?: string | null): Promise<void> => {
+  const setPersistenceMethodPublic = useCallback(async (method: PersistenceMethod, lastProjectName?: string | null): Promise<void> => {
     if (lockRef.current === true) {
       console.log('already locked - not setting persistence method again');
       return;
@@ -190,6 +192,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       if (idx >= 0 && codeIdx >= 0 && method === PersistenceMethod.GoogleDrive) {
         console.log('auth: completing Google Drive auth before init');
+        busyModal(`Finishing Google Drive Setup...`);
         await completeAuthorizeExternalAndInitializeStore(newStore as ExternalPersistenceStore, lastProjectName);
       } else {
         await initializeStore(newStore as PersistenceStore, lastProjectName);
@@ -200,6 +203,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } finally {
       lockRef.current = false;
       console.log('unlocked.');
+      hideModals();
     }
   }, [
     lockRef, persistenceMethod, setPersistenceMethod, setPersistenceStatus, setStore,
@@ -259,11 +263,11 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   ]);
 
   const value = useMemo(() => ({
-    persistenceMethod, setPersistenceMethod: setPersistenceMethodContext, 
+    persistenceMethod, setPersistenceMethod: setPersistenceMethodPublic, 
     isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
     authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
   }), [
-    persistenceMethod, setPersistenceMethodContext,
+    persistenceMethod, setPersistenceMethodPublic,
     isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
     authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
   ]);

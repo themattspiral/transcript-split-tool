@@ -25,7 +25,11 @@ const escapeFilename = (name: string): string | null => {
   return name.replace('\\', '\\\\').replace("'", "\\'");
 }
 
-export const getFolderInfo = async (token: string, folderName: string): Promise<GoogleDriveFolder | null> => {
+export const getFolderInfo = async (token: string | null, folderName: string): Promise<GoogleDriveFolder | null> => {
+  if (!token) {
+    throw 401;
+  }
+  
   const searchQuery = encodeURIComponent(
     `mimeType='${FOLDER_MIME_TYPE}' and trashed=false and name='${escapeFilename(folderName)}'`
   );
@@ -50,7 +54,11 @@ export const getFolderInfo = async (token: string, folderName: string): Promise<
   return folder;
 };
 
-export const getJSONFileInfo = async (token:string, fileName: string, parentFolderId: string): Promise<GoogleDriveFile | null> => {
+export const getJSONFileInfo = async (token: string| null, fileName: string, parentFolderId: string): Promise<GoogleDriveFile | null> => {
+  if (!token) {
+    throw 401;
+  }
+
   const searchQuery = encodeURIComponent(
     `mimeType='${JSON_MIME_TYPE}' and trashed=false and name='${escapeFilename(fileName)}' and '${parentFolderId}' in parents`
   );
@@ -76,7 +84,11 @@ export const getJSONFileInfo = async (token:string, fileName: string, parentFold
   return file;
 };
 
-export const getJSONFileContents = async (token: string, fileId: string): Promise<any> => {
+export const getJSONFileContents = async (token: string | null, fileId: string): Promise<any> => {
+  if (!token) {
+    throw 401;
+  }
+  
   const url = `${API_BASE}/drive/v3/files/${fileId}?alt=media`;
 
   const filesResponse = await fetch(url, {
@@ -95,7 +107,11 @@ export const getJSONFileContents = async (token: string, fileId: string): Promis
   }
 };
 
-export const createFolder = async (token: string, folderName: string): Promise<GoogleDriveFolder> => {
+export const createFolder = async (token: string | null, folderName: string): Promise<GoogleDriveFolder> => {
+  if (!token) {
+    throw 401;
+  }
+  
   const url = `${API_BASE}/drive/v3/files`;
 
   const createResponse = await fetch(url, {
@@ -117,7 +133,11 @@ export const createFolder = async (token: string, folderName: string): Promise<G
   return await createResponse.json();
 };
 
-export const createJSONFile = async (token: string, fileName: string, parentFolderId: string, fileContents: any): Promise<GoogleDriveFile> => {
+export const createJSONFile = async (token: string | null, fileName: string, parentFolderId: string, fileContents: any): Promise<GoogleDriveFile> => {
+  if (!token) {
+    throw 401;
+  }
+  
   const fields = encodeURIComponent('id,name,mimeType,sha256Checksum');
   const url = `${API_BASE}/upload/drive/v3/files?uploadType=multipart&fields=${fields}`;
 
@@ -143,7 +163,11 @@ export const createJSONFile = async (token: string, fileName: string, parentFold
   return await createResponse.json();
 };
 
-export const updateJSONFile = async (token: string, fileId: string, fileContents: any): Promise<GoogleDriveFile> => {
+export const updateJSONFile = async (token: string | null, fileId: string, fileContents: any): Promise<GoogleDriveFile> => {
+  if (!token) {
+    throw 401;
+  }
+  
   const fields = encodeURIComponent('id,name,mimeType,sha256Checksum');
   const url = `${API_BASE}/upload/drive/v3/files/${fileId}?uploadType=media&fields=${fields}`;
 
