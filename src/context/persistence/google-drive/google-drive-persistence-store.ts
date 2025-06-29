@@ -14,14 +14,14 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
   #folderId: string | null = null;
   #folderName: string;
 
-  async #handleApiError(error: number | string, retryOnReauth: () => Promise<any>): Promise<any> {
+  async #handleApiError(error: number | string, retryOnReauth?: () => Promise<any>): Promise<any> {
     if (error === PARSE_ERROR) {
       throw PersistenceStatus.ErrorData;
     } else if (error === 401 || error === 403) {
       this.#accessToken = null;
       
-      if (this.#authError) {
-        // don't try refresh auth again if we're already in auth error state
+      if (this.#authError || !retryOnReauth) {
+        // don't try refresh auth again if we're already in auth error state (or no retry function provided)
         console.log('Got 401 from API - Internal authError True - Not Refreshing Auth again');
         throw PersistenceStatus.ErrorUnauthorized;
       } else {
@@ -49,7 +49,28 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
 
   // check for project folder, create if needed, and cache id
   async initialize(): Promise<void> {
-    const init = async () => {
+    try {
+      if (this.#accessToken) {
+        console.log('init: skipping token refresh, we got it from completing auth already');
+      } else {
+        console.log('init: beginning with token refresh');
+        try {
+          this.#accessToken = await refreshAuthorize();
+          this.#authError = false;
+          console.log('init: got new token');
+        } catch (statusCode) {
+          console.log('init: Error getting token:', statusCode);
+
+          if ((statusCode as number) === 401 || (statusCode as number) === 403) {
+            this.#authError = true;
+            throw PersistenceStatus.ErrorUnauthorized;
+          } else {
+            this.#authError = true;
+            throw PersistenceStatus.ErrorConnect;
+          }
+        }
+      }
+
       console.log('init: getting project folder info...');
       let folder = await getFolderInfo(this.#accessToken, this.#folderName);
       if (folder) {
@@ -61,14 +82,8 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
       }
 
       this.#folderId = folder.id;
-    };
-
-    try {
-      return await init();
     } catch (statusCode) {
-      // will either return the result of the retry after reauth if successful,
-      // or throw the appropriate PersistenceStatus for the error
-      return await this.#handleApiError(statusCode as number, init);
+      return await this.#handleApiError(statusCode as number);
     }
   }
   
