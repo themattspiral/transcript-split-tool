@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
 import {
-  AccessTokenResponse, createSessionOrRotateRefreshToken, generateSessionId,
+  AccessTokenResponse, createSession, generateSessionId,
   getDotEnvVars, getNowSec, getTokenParams, setSessionCookie
 } from './mock-util';
 
@@ -16,12 +16,14 @@ const oauthExchange = async (req: Request, res: Response) => {
       return;
     }
 
-    const { code, codeVerifier, redirectUri, oauthProvider } = req.body;
+    const { code, codeVerifier, redirectUri, oauthProvider, rememberMe: rememberMeVal } = req.body;
 
     if (!code || !codeVerifier || !redirectUri || !oauthProvider) {
       res.status(400).json({ message: 'Missing required params' }).end();
       return;
     }
+    
+    const rememberMe = rememberMeVal === true;
 
     const { tokenUrl, clientId, clientSecret } = getTokenParams(oauthProvider);
 
@@ -74,8 +76,6 @@ const oauthExchange = async (req: Request, res: Response) => {
       console.warn('No refresh token received. Ensure "offline_access" scope is requested.');
       res.status(401).json({ message: 'No refresh token provided. Please reauthorize.' });
 
-      // TODO - decide if i want to just pass the access token through anyway...?
-
       if (access_token) {
         try {
           console.log('revoking access token in attempt to force refresh token to be issued on next auth');
@@ -98,11 +98,13 @@ const oauthExchange = async (req: Request, res: Response) => {
       return;
     }
 
-    const expiresAtSec: number = getNowSec() + refresh_token_expires_in;
+    const tokenExpiresAtSec: number | null = refresh_token_expires_in
+      ? getNowSec() + refresh_token_expires_in
+      : null;
     const sessionId = generateSessionId();
 
-    createSessionOrRotateRefreshToken(sessionId, refresh_token, expiresAtSec);
-    setSessionCookie(res, sessionId, refresh_token_expires_in, expiresAtSec);
+    createSession(sessionId, refresh_token, tokenExpiresAtSec, rememberMe);
+    setSessionCookie(res, sessionId, rememberMe, refresh_token_expires_in);
 
     const response: AccessTokenResponse = {
       accessToken: access_token,

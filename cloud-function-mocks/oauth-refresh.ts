@@ -2,9 +2,9 @@ import cookie from 'cookie';
 import { Request, Response } from 'express';
 
 import {
-  AccessTokenResponse, createSessionOrRotateRefreshToken, deleteSession, deleteSessionCookie, 
-  getNowSec, getSession, getTokenParams, incrementUsedCount,
-  SESSION_COOKIE_NAME, setSessionCookie
+  AccessTokenResponse, deleteSession, deleteSessionCookie, 
+  getNowSec, getSession, getTokenParams, sessionRefresh,
+  sessionRefreshWithTokenRotation, SESSION_COOKIE_NAME, setSessionCookie
 } from './mock-util';
 
 const oauthRefresh = async (req: Request, res: Response) => {
@@ -24,7 +24,7 @@ const oauthRefresh = async (req: Request, res: Response) => {
     if (!session) {
       res.status(401).json({ message: 'Invalid session. Please reauthorize.' }).end();
       return;
-    } else if (session.expiresAt && session.expiresAt < getNowSec()) {
+    } else if (session.tokenExpiresAt && session.tokenExpiresAt < getNowSec()) {
       deleteSession(sessionId);
       deleteSessionCookie(res);
       res.status(401).json({ message: 'Expired session. Please reauthorize.' }).end();
@@ -88,22 +88,22 @@ const oauthRefresh = async (req: Request, res: Response) => {
     }
 
     const { access_token, expires_in, refresh_token, refresh_token_expires_in } = tokens;
-
+    
     const nowSec = getNowSec();
     const expiresAtSec: number = nowSec + refresh_token_expires_in;
 
     // handle refresh token rotation
     if (refresh_token && refresh_token !== session.refreshToken) {
       console.log('ROTATION - refresh token rotated for session:', sessionId);
-      console.log('  old expiration:', session.expiresAt);
+      console.log('  old expiration:', session.tokenExpiresAt);
       console.log('  new expiration:', expiresAtSec);
     
-      createSessionOrRotateRefreshToken(sessionId, refresh_token, expiresAtSec);
-      setSessionCookie(res, sessionId, refresh_token_expires_in, expiresAtSec);
+      sessionRefreshWithTokenRotation(sessionId, refresh_token, expiresAtSec);
+      setSessionCookie(res, sessionId, session.rememberMe, refresh_token_expires_in);
     } else {
-      const usedCount = incrementUsedCount(sessionId, nowSec);
-      console.log('No refresh token rotation. Incremented usedCount for session:', sessionId, ` - usedCount: ${usedCount}`);
-      // todo - update cookie expiration
+      console.log('No refresh token rotation');
+      sessionRefresh(sessionId, nowSec);
+      setSessionCookie(res, sessionId, session.rememberMe, refresh_token_expires_in);
     }
 
     const response: AccessTokenResponse = {

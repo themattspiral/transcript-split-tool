@@ -13,14 +13,18 @@ export const getDotEnvVars = () => {
 
 const dotEnvVars = getDotEnvVars();
 const MOCK_STORE_FILE = './mock-session-store.json';
+const MIN_SESSION_AGE_SEC = 60 * 60 * 24;  // 1 day
+const MAX_SESSION_AGE_SEC = 60 * 60 * 24 * 90;  // 90 days
 
 export interface Session {
   refreshToken: string;
   createdAt: number;
   updatedAt: number;
-  expiresAt: number | null;
   lastUsedAt: number | null;
   usedCount: number;
+  tokenExpiresAt: number | null;
+  rememberMe: boolean;
+  sessionExpiresAt: number;
 }
 
 export interface AccessTokenResponse {
@@ -48,24 +52,36 @@ export const getSession = (sessionId: string): Session | null => {
   }
 };
 
-export const incrementUsedCount = (sessionId: string, lastUsedAt: number): number => {
-  let count = -1;
-
+export const createSession = (sessionId: string, refreshToken: string, tokenExpiresAt: number | null, rememberMe: boolean) => {
+  let storeStr = '{}';
   if (fs.existsSync(MOCK_STORE_FILE)) {
-    const storeStr = fs.readFileSync(MOCK_STORE_FILE, 'utf8');
-    const store = JSON.parse(storeStr);
-    if (store[sessionId]) {
-      store[sessionId].usedCount++;
-      store[sessionId].lastUsedAt = lastUsedAt;
-      count = store[sessionId].usedCount;
-    }
-    fs.writeFileSync(MOCK_STORE_FILE, JSON.stringify(store, null, 2), 'utf-8');
+    storeStr = fs.readFileSync(MOCK_STORE_FILE, 'utf8');
   }
+  const store = JSON.parse(storeStr);
+  const now = getNowSec();
 
-  return count;
+  let sessionExpiresAt = now + MIN_SESSION_AGE_SEC;
+  if (rememberMe) {
+    sessionExpiresAt = tokenExpiresAt ? Math.min(now + MAX_SESSION_AGE_SEC, tokenExpiresAt) : now + MAX_SESSION_AGE_SEC;
+  }
+  
+  console.log('creating new session in store', sessionId);
+  const session: Session = {
+    refreshToken,
+    createdAt: now,
+    updatedAt: now,
+    lastUsedAt: null,
+    usedCount: 0,
+    tokenExpiresAt: tokenExpiresAt,
+    rememberMe,
+    sessionExpiresAt
+  };
+  store[sessionId] = session;
+
+  fs.writeFileSync(MOCK_STORE_FILE, JSON.stringify(store, null, 2), 'utf-8');
 };
 
-export const createSessionOrRotateRefreshToken = (sessionId: string, refreshToken: string, tokenExpiresAt: number | null) => {
+export const sessionRefreshWithTokenRotation = (sessionId: string, refreshToken: string, tokenExpiresAt: number | null) => {
   let storeStr = '{}';
   if (fs.existsSync(MOCK_STORE_FILE)) {
     storeStr = fs.readFileSync(MOCK_STORE_FILE, 'utf8');
@@ -74,29 +90,49 @@ export const createSessionOrRotateRefreshToken = (sessionId: string, refreshToke
   const now = getNowSec();
   
   if (store[sessionId]) {
-    console.log('updating existing session in store:', sessionId);
+    console.log('updating existing session in store with new refresh token:', sessionId);
     const session: Session = store[sessionId];
+
+    let sessionExpiresAt = now + MIN_SESSION_AGE_SEC;
+    if (session.rememberMe) {
+      sessionExpiresAt = tokenExpiresAt ? Math.min(now + MAX_SESSION_AGE_SEC, tokenExpiresAt) : now + MAX_SESSION_AGE_SEC;
+    }
+
     session.refreshToken = refreshToken;
     session.updatedAt = now;
-    session.expiresAt = tokenExpiresAt;
+    session.tokenExpiresAt = tokenExpiresAt;
+    session.sessionExpiresAt = sessionExpiresAt;
     
     // reset refresh stats
     session.lastUsedAt = null;
     session.usedCount = 0;
-  } else {
-    console.log('creating new session in store', sessionId);
-    const session: Session = {
-      refreshToken,
-      createdAt: now,
-      updatedAt: now,
-      expiresAt: tokenExpiresAt,
-      lastUsedAt: null,
-      usedCount: 0
-    };
-    store[sessionId] = session;
-  };
 
-  fs.writeFileSync(MOCK_STORE_FILE, JSON.stringify(store, null, 2), 'utf-8');
+    fs.writeFileSync(MOCK_STORE_FILE, JSON.stringify(store, null, 2), 'utf-8');
+  } else {
+    console.error('Could not update refresh token - unable to find session:', sessionId);
+  }
+};
+
+export const sessionRefresh = (sessionId: string, lastUsedAt: number) => {
+  if (fs.existsSync(MOCK_STORE_FILE)) {
+    const storeStr = fs.readFileSync(MOCK_STORE_FILE, 'utf8');
+    const store = JSON.parse(storeStr);
+    if (store[sessionId]) {
+      const session: Session = store[sessionId];
+
+      let sessionExpiresAt = lastUsedAt + MIN_SESSION_AGE_SEC;
+      if (session.rememberMe) {
+        sessionExpiresAt = session.tokenExpiresAt
+          ? Math.min(lastUsedAt + MAX_SESSION_AGE_SEC, session.tokenExpiresAt)
+          : lastUsedAt + MAX_SESSION_AGE_SEC;
+      }
+
+      session.usedCount++;
+      session.lastUsedAt = lastUsedAt;
+      session.sessionExpiresAt = sessionExpiresAt;
+    }
+    fs.writeFileSync(MOCK_STORE_FILE, JSON.stringify(store, null, 2), 'utf-8');
+  }
 };
 
 export const deleteSession = (sessionId?: string | null) => {
@@ -115,15 +151,21 @@ export const deleteSession = (sessionId?: string | null) => {
   }
 };
 
-export const setSessionCookie = (res: Response, sessionId: string, expiresInSec: number, expiresAtSec: number) => {
-  const serializedCookie = cookie.serialize(SESSION_COOKIE_NAME, sessionId, {
+export const setSessionCookie = (res: Response, sessionId: string, rememberMe: boolean, tokenExpiresInSec: number | null) => {
+  const options: cookie.SerializeOptions = {
     httpOnly: true,
     secure: process.argv?.includes('--ssl'),
     sameSite: 'lax',
-    expires: new Date(expiresAtSec * 1000),
-    maxAge: expiresInSec,
     path: '/'
-  });
+  };
+
+  if (rememberMe) {
+    options.maxAge = tokenExpiresInSec === null ? MAX_SESSION_AGE_SEC : Math.min(tokenExpiresInSec, MAX_SESSION_AGE_SEC);
+
+    // if maxAge is not provided, this cookie will last as long as the user's browser session
+  }
+
+  const serializedCookie = cookie.serialize(SESSION_COOKIE_NAME, sessionId, options);
 
   console.log('setting session cookie:', serializedCookie);
   res.set('Set-Cookie', serializedCookie);
@@ -134,7 +176,6 @@ export const deleteSessionCookie = (res: Response) => {
     httpOnly: true,
     secure: process.argv?.includes('--ssl'),
     sameSite: 'lax',
-    expires: new Date(0),
     maxAge: -1,
     path: '/'
   });
@@ -175,7 +216,7 @@ export const getAllSessions = (nowSec: number): any[] => {
     if (store) {
       return Object.entries(store).map(([sessionId, session]) => {
         const sess = session as Session;
-        const expired = sess.expiresAt && sess.expiresAt <= nowSec;
+        const expired = sess.tokenExpiresAt && sess.tokenExpiresAt <= nowSec;
         return {
           expired,
           sessionId,
@@ -183,10 +224,12 @@ export const getAllSessions = (nowSec: number): any[] => {
             refreshToken: sess.refreshToken,
             createdAt: `${sess.createdAt} (${ nowSec - sess.createdAt } sec ago)`,
             updatedAt: `${sess.updatedAt} (${ nowSec - sess.updatedAt } sec ago)`,
-            grantLegth: sess.expiresAt ? `${ sess.expiresAt - sess.updatedAt } sec` : 'No Expiration',
-            expiresAt: `${sess.expiresAt} ${ sess.expiresAt ? `(${ sess.expiresAt - nowSec } sec left)` : 'No Expiration' }`,
             lastUsedAt: `${sess.lastUsedAt} ${ sess.lastUsedAt ? `(${ nowSec - sess.lastUsedAt } sec ago)` : '' }`,
-            usedCount: sess.usedCount
+            usedCount: sess.usedCount,
+            grantLegth: sess.tokenExpiresAt ? `${ sess.tokenExpiresAt - sess.updatedAt } sec` : 'No Expiration',
+            tokenExpiresAt: sess.tokenExpiresAt ? `${sess.tokenExpiresAt} (${ sess.tokenExpiresAt - nowSec } sec left)` : 'No Expiration',
+            rememberMe: sess.rememberMe,
+            sessionExpiresAt: `${sess.sessionExpiresAt} (${ sess.sessionExpiresAt - nowSec } sec left)`,
           }
         };
       });
@@ -213,7 +256,7 @@ export const expireSessions = (): number => {
       for (let i = keys.length - 1; i >= 0; i--) {
         const key = keys[i];
         const session: Session = store[key];
-        const expired = session.expiresAt && session.expiresAt <= sec;
+        const expired = session.tokenExpiresAt && session.tokenExpiresAt <= sec;
 
         if (expired) {
           console.log('Expired:', key);
