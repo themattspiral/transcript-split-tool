@@ -117,7 +117,7 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     const create = async () => {
       console.log('creating manually');
       const projectFile = await createJSONFile(this.#accessToken, `${project.projectName}.json`, this.#folderId || '', project);
-      console.log('created project file:', projectFile);
+      console.log('created project file:', projectFile.id);
 
       return projectFile.sha256Checksum;
     };
@@ -140,12 +140,12 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
         console.log('project file exists, update it:', projectFile.id);
 
         projectFile = await updateJSONFile(this.#accessToken, projectFile.id, project);
-        console.log('updated.', projectFile);
+        console.log('updated. hash:', projectFile.sha256Checksum);
       } else {
         // TODO - remove this - it must be explicitly created (when possible)
         console.log('gotta create');
         projectFile = await createJSONFile(this.#accessToken, `${project.projectName}.json`, this.#folderId || '', project);
-        console.log('created project file:', projectFile);
+        console.log('created project file:', projectFile.id);
       }
 
       return projectFile.sha256Checksum;

@@ -5,7 +5,7 @@ import basicSsl from '@vitejs/plugin-basic-ssl';
 import dotenv from 'dotenv';
 
 import packageJson from './package.json';
-import { mockServer } from './cloud-function-mocks/mock-cloud-functions';
+import { mockServer } from './cloud-function-mocks/mock-server';
 
 /* 
  * Define an express server to handle mock cloud function requests,
