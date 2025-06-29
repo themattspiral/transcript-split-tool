@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { PersistenceErrorStatus, PersistenceEvent, PersistenceMethod, PersistenceStatus, Project } from '../../shared/data';
+import { PersistenceErrorStatus, PersistenceEvent, PersistenceMethod, PersistenceStatus, Project, ProjectDataVersion } from '../../shared/data';
 import { ExternalPersistenceStore, PersistenceContext, PersistenceStore } from './persistence-context';
 import { useProjectData } from '../project-data-context';
 import { useViewState } from '../view-state-context';
@@ -79,18 +79,23 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         if (projectResponse === null) {
           console.log('no existing project found with name', projectName);
           setPersistenceStatus(PersistenceStatus.Idle);
+          setLastPersistenceEvent(PersistenceEvent.NotFound);
           return;
         }
 
         const { project, hash } = projectResponse;
         setLastPersistenceHash(hash);
-        loadDeserializedProjectData(project);
-        
-        setTimeout(() => {
-          setPersistenceStatus(PersistenceStatus.Idle);
-          setLastPersistenceEvent(PersistenceEvent.Loaded);
-        }, 1000);
-        
+
+        try {
+          loadDeserializedProjectData(project);
+          setTimeout(() => {
+            setPersistenceStatus(PersistenceStatus.Idle);
+            setLastPersistenceEvent(PersistenceEvent.Loaded);
+          }, 1000);
+        } catch (err) {
+          setPersistenceStatus(PersistenceStatus.ErrorData);
+          setLastPersistenceEvent(PersistenceEvent.Error);
+        }
       } catch (err) {
         setPersistenceStatus(err as PersistenceErrorStatus);
         setLastPersistenceEvent(PersistenceEvent.Error);
@@ -101,9 +106,9 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash, loadDeserializedProjectData, setLastPersistenceEvent]);
 
-  const completeAuthorizeExternalAndInitializeStore = useCallback(async (newStore: ExternalPersistenceStore, lastProjectName?: string | null): Promise<void> => {
+  const completeAuthorizeExternalAndInitializeStore = useCallback(async (newStore: ExternalPersistenceStore, rememberMe: boolean, lastProjectName?: string | null): Promise<void> => {
     try {
-      await newStore.completeAuthorizeExternal();
+      await newStore.completeAuthorizeExternal(rememberMe);
     } finally {
       console.log('auth: cleaning up URL post auth callback');
       window.history.replaceState({}, '', window.location.origin);
@@ -190,10 +195,11 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const codeIdx = window.location.search.indexOf('code=');
 
     try {
-      if (idx >= 0 && codeIdx >= 0 && method === PersistenceMethod.GoogleDrive) {
+      if (method === PersistenceMethod.GoogleDrive && idx >= 0 && codeIdx >= 0) {
         console.log('auth: completing Google Drive auth before init');
         busyModal(`Finishing Google Drive Setup...`);
-        await completeAuthorizeExternalAndInitializeStore(newStore as ExternalPersistenceStore, lastProjectName);
+        // todo - save rememberMe with persistenceMethod or other settings (maybe put all together) and feed in here
+        await completeAuthorizeExternalAndInitializeStore(newStore as ExternalPersistenceStore, true, lastProjectName);
       } else {
         await initializeStore(newStore as PersistenceStore, lastProjectName);
       }
@@ -254,7 +260,8 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         projectName,
         transcriptLines,
         poeticStructures: Object.values(poeticStructures),
-        topsOptions
+        topsOptions,
+        dataVersion: ProjectDataVersion.V1
       });
     }
   }, [
@@ -262,14 +269,22 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     transcriptLines, poeticStructures, topsOptions
   ]);
 
+  const forget = useCallback(() => {
+    if ((store as any)?.forget) {
+      (store as any)?.forget();
+    }
+  }, [store]);
+
   const value = useMemo(() => ({
     persistenceMethod, setPersistenceMethod: setPersistenceMethodPublic, 
     isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
-    authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
+    authorizeExternal, revokeAuthorizeExternal, createProject, loadProject,
+    forget
   }), [
     persistenceMethod, setPersistenceMethodPublic,
     isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
-    authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
+    authorizeExternal, revokeAuthorizeExternal, createProject, loadProject,
+    forget
   ]);
 
   return (

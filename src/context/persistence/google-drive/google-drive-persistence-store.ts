@@ -14,30 +14,30 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
   #folderId: string | null = null;
   #folderName: string;
 
-  async #handleApiError(error: number | string): Promise<void> {
+  async #handleApiError(error: number | string, retryOnReauth: () => Promise<any>): Promise<any> {
     if (error === PARSE_ERROR) {
       throw PersistenceStatus.ErrorData;
     } else if (error === 401 || error === 403) {
       this.#accessToken = null;
-      throw PersistenceStatus.ErrorUnauthorized;
       
-      // if (this.#authError) {
-      //   // don't try refresh again if we're already in error state
-      //   console.log('Got 401 from API - Internal authError True - Not Refreshing');
-      //   throw PersistenceStatus.ErrorUnauthorized;
-      // } else {
-      //   console.log('Got 401 from API - Internal authError False - Trying to Refresh Access Token');
-      //   try {
-      //     this.#accessToken = await refreshAuthorize();
-      //     this.#authError = false;
-      //     console.log('Refresh Successful');
-      //     // TODO - retry operation
-      //   } catch (err) {
-      //     console.log('Refresh Failed. Setting Internal authError True');
-      //     this.#authError = true;
-      //     throw PersistenceStatus.ErrorUnauthorized;
-      //   }
-      // }
+      if (this.#authError) {
+        // don't try refresh auth again if we're already in auth error state
+        console.log('Got 401 from API - Internal authError True - Not Refreshing Auth again');
+        throw PersistenceStatus.ErrorUnauthorized;
+      } else {
+        console.log('Got 401 from API - Internal authError False - Trying to Refresh Access Token');
+        try {
+          this.#accessToken = await refreshAuthorize();
+          this.#authError = false;
+          console.log('Refresh Successful - Retrying operation that failed');
+          
+          return await retryOnReauth();
+        } catch (err) {
+          console.log('Refresh Failed. Setting Internal authError True');
+          this.#authError = true;
+          throw PersistenceStatus.ErrorUnauthorized;
+        }
+      }
     } else {
       throw PersistenceStatus.ErrorConnect;
     }
@@ -47,30 +47,9 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     this.#folderName = folderName;
   }
 
-  // check for folder, create if needed, and cache id
+  // check for project folder, create if needed, and cache id
   async initialize(): Promise<void> {
-    if (this.#accessToken) {
-      console.log('init: skipping token refresh, we got it from completing auth already');
-    } else {
-      console.log('init: beginning with token refresh');
-      try {
-        this.#accessToken = await refreshAuthorize();
-        this.#authError = false;
-        console.log('init: got new token');
-      } catch (statusCode) {
-        console.log('init: Error getting token:', statusCode);
-
-        if ((statusCode as number) === 401 || (statusCode as number) === 403) {
-          this.#authError = true;
-          throw PersistenceStatus.ErrorUnauthorized;
-        } else {
-          this.#authError = true;
-          throw PersistenceStatus.ErrorConnect;
-        }
-      }
-    }
-
-    try {
+    const init = async () => {
       console.log('init: getting project folder info...');
       let folder = await getFolderInfo(this.#accessToken, this.#folderName);
       if (folder) {
@@ -82,13 +61,19 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
       }
 
       this.#folderId = folder.id;
+    };
+
+    try {
+      return await init();
     } catch (statusCode) {
-      await this.#handleApiError(statusCode as number);
+      // will either return the result of the retry after reauth if successful,
+      // or throw the appropriate PersistenceStatus for the error
+      return await this.#handleApiError(statusCode as number, init);
     }
   }
   
   async fetchProject(projectName: string): Promise<{ project: Project, hash: string} | null> {
-    try {
+    const fetch = async () => {
       console.log('store fetching project file');
       const projectFileInfo = await getJSONFileInfo(this.#accessToken, `${projectName}.json`, this.#folderId || '');
 
@@ -102,33 +87,39 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
       } else {
         return null;
       }
+    };
+    
+    try {
+      return await fetch();
     } catch (statusCode) {
-      await this.#handleApiError(statusCode as number);
-
-      // never called (#handleApiError throws)
-      return {} as { project: Project, hash: string};
+      // will either return the result of the retry after reauth if successful,
+      // or throw the appropriate PersistenceStatus for the error
+      return await this.#handleApiError(statusCode as number, fetch);
     }
   }
   
   async createProject(project: Project): Promise<string> {
-    try {
+    const create = async () => {
       console.log('creating manually');
       const projectFile = await createJSONFile(this.#accessToken, `${project.projectName}.json`, this.#folderId || '', project);
       console.log('created project file:', projectFile);
 
       return projectFile.sha256Checksum;
+    };
+
+    try {
+      return await create();
     } catch (statusCode) {
-      await this.#handleApiError(statusCode as number);
-      
-      // never called (#handleApiError throws)
-      return '';
+      // will either return the result of the retry after reauth if successful,
+      // or throw the appropriate PersistenceStatus for the error
+      return await this.#handleApiError(statusCode as number, create);
     }
   }
   
   async updateProject(project: Project): Promise<string> {
-    console.log('store updating ', project.projectName);
+    const update = async () => {
+      console.log('store updating ', project.projectName);
 
-    try {
       let projectFile = await getJSONFileInfo(this.#accessToken, `${project.projectName}.json`, this.#folderId || '');
       if (projectFile) {
         console.log('project file exists, update it:', projectFile.id);
@@ -143,11 +134,14 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
       }
 
       return projectFile.sha256Checksum;
+    };
+
+    try {
+      return await update();
     } catch (statusCode) {
-      await this.#handleApiError(statusCode as number);
-      
-      // never called (#handleApiError throws)
-      return '';
+      // will either return the result of the retry after reauth if successful,
+      // or throw the appropriate PersistenceStatus for the error
+      return await this.#handleApiError(statusCode as number, update);
     }
   }
 
@@ -155,10 +149,10 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     authorize();
   }
 
-  async completeAuthorizeExternal() {
+  async completeAuthorizeExternal(rememberMe: boolean) {
     try {
       console.log('store running completeAuthorize()');
-      this.#accessToken = await completeAuthorize();
+      this.#accessToken = await completeAuthorize(rememberMe);
       console.log('store finished completeAuthorize()');
     } catch (err) {
       throw PersistenceStatus.ErrorUnauthorized;
@@ -177,5 +171,10 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
 
   get isInitialized(): boolean {
     return !!this.#folderId;
+  }
+
+  // temp for testing failures
+  forget() {
+    this.#accessToken = null;
   }
 }

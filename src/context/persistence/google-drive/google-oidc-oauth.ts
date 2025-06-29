@@ -1,4 +1,5 @@
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
+import { OauthProvider } from '../../../shared/data';
 
 const STATE_KEY_PREFIX = 'oidc-google.';
 
@@ -20,8 +21,12 @@ const GoogleUserManager: UserManager = new UserManager({
   client_id: import.meta.env.TST_OAUTH_GOOGLE_CLIENT_ID,
 
   // https://developers.google.com/workspace/drive/api/guides/api-specific-auth
-  // "Create new Drive files, or modify existing files, that you open with an app
-  // or that the user shares with an app while using the Google Picker API or the app's file picker"
+  // https://www.googleapis.com/auth/drive.file:
+  //   "Create new Drive files, or modify existing files, that you open with an app
+  //    or that the user shares with an app while using the Google Picker API or the app's file picker"
+  // Note also:
+  // We are explicitly using Oauth for *authorization*, not *authentication*. So we don't
+  // request scopes like openid, profile, or email to keep the permissions as simple as possible.
   scope: 'https://www.googleapis.com/auth/drive.file',
 
   // https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-pkce
@@ -39,7 +44,7 @@ export const authorize = () => {
   GoogleUserManager.signinRedirect();
 };
 
-export const completeAuthorize = async (): Promise<string> => {
+export const completeAuthorize = async (rememberMe: boolean): Promise<string> => {
   const urlParams = new URLSearchParams(window.location.search);
   const code = urlParams.get('code');
   const state = urlParams.get('state');
@@ -62,9 +67,10 @@ export const completeAuthorize = async (): Promise<string> => {
     body: JSON.stringify({
       code,
       codeVerifier,
-      redirectUri: GoogleUserManager.settings.redirect_uri
-    }),
-    credentials: 'include'
+      redirectUri: GoogleUserManager.settings.redirect_uri,
+      oauthProvider: OauthProvider.Google,
+      rememberMe
+    })
   });
 
   if (!exchangeResponse.ok) {
@@ -79,6 +85,10 @@ export const completeAuthorize = async (): Promise<string> => {
 export const refreshAuthorize = async (): Promise<string> => {
   const refreshResponse = await fetch(import.meta.env.TST_OAUTH_REFRESH_URI, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      oauthProvider: OauthProvider.Google
+    }),
     credentials: 'include'
   });
 

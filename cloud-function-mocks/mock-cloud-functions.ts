@@ -1,8 +1,9 @@
 import fs from 'fs';
-
 import express, { Response } from 'express';
 import dotenv from 'dotenv';
 import cookie from 'cookie';
+
+import { OauthProvider } from '../src/shared/data';
 
 interface Session {
   refreshToken: string;
@@ -30,68 +31,6 @@ const getNowSec = () => dateToSec(new Date());
 const generateSessionId = (): string => {
   return crypto.randomUUID();
 }
-
-const getAllSessions = (nowSec: number): any[] => {
-  if (fs.existsSync(MOCK_STORE_FILE)) {
-    const storeStr = fs.readFileSync(MOCK_STORE_FILE, 'utf8');
-
-    const store = JSON.parse(storeStr);
-    
-    if (store) {
-      return Object.entries(store).map(([sessionId, session]) => {
-        const sess = session as Session;
-        const expired = sess.expiresAt && sess.expiresAt <= nowSec;
-        return {
-          expired,
-          sessionId,
-          session: {
-            refreshToken: sess.refreshToken,
-            createdAt: `${sess.createdAt} (${ nowSec - sess.createdAt } sec ago)`,
-            updatedAt: `${sess.updatedAt} (${ nowSec - sess.updatedAt } sec ago)`,
-            grantLegth: sess.expiresAt ? `${ sess.expiresAt - sess.updatedAt } sec` : 'No Expiration',
-            expiresAt: `${sess.expiresAt} ${ sess.expiresAt ? `(${ sess.expiresAt - nowSec } sec left)` : 'No Expiration' }`,
-            lastUsedAt: `${sess.lastUsedAt} ${ sess.lastUsedAt ? `(${ nowSec - sess.lastUsedAt } sec ago)` : '' }`,
-            usedCount: sess.usedCount
-          }
-        };
-      });
-    } else {
-      return [];
-    }
-  }
-  
-  return [];
-};
-
-const expireSessions = (): number => {
-  let expiredCount = 0;
-
-  if (fs.existsSync(MOCK_STORE_FILE)) {
-    const storeStr = fs.readFileSync(MOCK_STORE_FILE, 'utf8');
-    const store = JSON.parse(storeStr);
-
-    if (store) {
-      const keys = Object.keys(store);
-      const sec = getNowSec();
-
-      for (let i = keys.length - 1; i >= 0; i--) {
-        const key = keys[i];
-        const session: Session = store[key];
-        const expired = session.expiresAt && session.expiresAt <= sec;
-
-        if (expired) {
-          console.log('Expired:', key);
-          expiredCount++;
-          delete store[key];
-        }
-      }
-
-      fs.writeFileSync(MOCK_STORE_FILE, JSON.stringify(store, null, 2), 'utf-8');
-    }
-  }
-
-  return expiredCount;
-};
 
 const getSession = (sessionId: string): Session | null => {
   if (fs.existsSync(MOCK_STORE_FILE)) {
@@ -198,38 +137,142 @@ const deleteSessionCookie = (res: Response) => {
   res.set('Set-Cookie', serializedCookie);
 };
 
+const getTokenParams = (oauthProvider: string | null | undefined) => {
+  const params: {
+    tokenUrl: string | null; clientId: string | null; clientSecret: string | null
+  } = {
+    tokenUrl: null, clientId: null, clientSecret: null
+  };
+
+  // potentially support other providers in the future
+  switch (oauthProvider) {
+    case OauthProvider.Google:
+      params.tokenUrl = dotEnvVars.MOCK_OAUTH_GOOGLE_TOKEN_URI;
+      params.clientId = dotEnvVars.TST_OAUTH_GOOGLE_CLIENT_ID;
+      params.clientSecret = dotEnvVars.MOCK_OAUTH_GOOGLE_CLIENT_SECRET;
+      break;
+    default:
+      break;
+  }
+
+  return params;
+};
+
+// admin
+const getAllSessions = (nowSec: number): any[] => {
+  if (fs.existsSync(MOCK_STORE_FILE)) {
+    const storeStr = fs.readFileSync(MOCK_STORE_FILE, 'utf8');
+
+    const store = JSON.parse(storeStr);
+    
+    if (store) {
+      return Object.entries(store).map(([sessionId, session]) => {
+        const sess = session as Session;
+        const expired = sess.expiresAt && sess.expiresAt <= nowSec;
+        return {
+          expired,
+          sessionId,
+          session: {
+            refreshToken: sess.refreshToken,
+            createdAt: `${sess.createdAt} (${ nowSec - sess.createdAt } sec ago)`,
+            updatedAt: `${sess.updatedAt} (${ nowSec - sess.updatedAt } sec ago)`,
+            grantLegth: sess.expiresAt ? `${ sess.expiresAt - sess.updatedAt } sec` : 'No Expiration',
+            expiresAt: `${sess.expiresAt} ${ sess.expiresAt ? `(${ sess.expiresAt - nowSec } sec left)` : 'No Expiration' }`,
+            lastUsedAt: `${sess.lastUsedAt} ${ sess.lastUsedAt ? `(${ nowSec - sess.lastUsedAt } sec ago)` : '' }`,
+            usedCount: sess.usedCount
+          }
+        };
+      });
+    } else {
+      return [];
+    }
+  }
+  
+  return [];
+};
+
+// admin
+const expireSessions = (): number => {
+  let expiredCount = 0;
+
+  if (fs.existsSync(MOCK_STORE_FILE)) {
+    const storeStr = fs.readFileSync(MOCK_STORE_FILE, 'utf8');
+    const store = JSON.parse(storeStr);
+
+    if (store) {
+      const keys = Object.keys(store);
+      const sec = getNowSec();
+
+      for (let i = keys.length - 1; i >= 0; i--) {
+        const key = keys[i];
+        const session: Session = store[key];
+        const expired = session.expiresAt && session.expiresAt <= sec;
+
+        if (expired) {
+          console.log('Expired:', key);
+          expiredCount++;
+          delete store[key];
+        }
+      }
+
+      fs.writeFileSync(MOCK_STORE_FILE, JSON.stringify(store, null, 2), 'utf-8');
+    }
+  }
+
+  return expiredCount;
+};
+
+
+/*** Mock Server / Handler function definition ***/
+/*************************************************/
+
 const mockServer = express();
 mockServer.use(express.json());
 
 // exchange PKCE code for access token (and refresh token)
 mockServer.post('/oauth-exchange', async (req, res) => {
   console.log('---- 1 EXCHANGE ----');
-  if (!req.body) {
-    res.status(400).json({ message: 'Missing params' }).end();
-    return;
-  }
 
   try {
-    const { code, codeVerifier, redirectUri } = req.body;
-
-    if (!code || !codeVerifier || !redirectUri) {
-      res.status(400).json({ message: 'Missing params' }).end();
+    if (!req.body) {
+      res.status(400).json({ message: 'Missing required params' }).end();
       return;
     }
 
-    const tokenResponse = await fetch(dotEnvVars.MOCK_OAUTH_GOOGLE_TOKEN_URI, {
+    const { code, codeVerifier, redirectUri, oauthProvider } = req.body;
+
+    if (!code || !codeVerifier || !redirectUri || !oauthProvider) {
+      res.status(400).json({ message: 'Missing required params' }).end();
+      return;
+    }
+
+    const { tokenUrl, clientId, clientSecret } = getTokenParams(oauthProvider);
+
+    if (!tokenUrl || !clientId) {
+      res.status(400).json({ message: 'Invalid provider' }).end();
+      return;
+    }
+
+    const bodyParams = new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: clientId,
+      code: code,
+      code_verifier: codeVerifier,
+      redirect_uri: redirectUri
+    });
+
+    if (clientSecret) {
+      // client_secret SHOULD NOT be needed for PKCE flow, but Google OAuth requires it,
+      // seemingly because the client was created as a web app. however, PKCE is still used -
+      // (code + code_verifier must be correct) so we still have better security, and the 
+      // client secret remains private here on the server side.
+      bodyParams.append('client_secret', clientSecret);
+    }
+
+    const tokenResponse = await fetch(tokenUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: dotEnvVars.TST_OAUTH_GOOGLE_CLIENT_ID,
-        // client_secret SHOULD NOT be needed for PKCE flow,
-        // but Google OAuth requires it since I created my client as a web app
-        client_secret: dotEnvVars.MOCK_OAUTH_GOOGLE_CLIENT_SECRET,
-        code: code,
-        code_verifier: codeVerifier,
-        redirect_uri: redirectUri
-      }).toString()
+      body: bodyParams.toString()
     });
 
     const tokens: any = await tokenResponse.json();
@@ -302,45 +345,58 @@ mockServer.post('/oauth-exchange', async (req, res) => {
 mockServer.post('/oauth-refresh', async (req, res) => {
   console.log('---- 2 REFRESH ----');
 
-  const cookies = cookie.parse(req.headers.cookie || '');
-  const sessionId = cookies[SESSION_COOKIE_NAME];
-
-  if (!sessionId) {
-    res.status(401).json({ message: 'Invalid session. Please reauthorize.' }).end();
-    return;
-  }
-
-  // get session
-  const session = getSession(sessionId);
-
-  if (!session) {
-    res.status(401).json({ message: 'Invalid session. Please reauthorize.' }).end();
-    return;
-  } else if (session.expiresAt && session.expiresAt < getNowSec()) {
-    deleteSession(sessionId);
-    deleteSessionCookie(res);
-    res.status(401).json({ message: 'Expired session. Please reauthorize.' }).end();
-    return;
-  } else if (!session.refreshToken) {
-    console.log('session missing refresh token (deleting anyway):', sessionId, session);
-    deleteSession(sessionId);
-    deleteSessionCookie(res);
-    res.status(401).json({ message: 'Invalid data. Please reauthorize.' }).end();
-    return;
-  }
-
   try {
-    const tokenResponse = await fetch(dotEnvVars.MOCK_OAUTH_GOOGLE_TOKEN_URI, {
+    const cookies = cookie.parse(req.headers.cookie || '');
+    const sessionId = cookies[SESSION_COOKIE_NAME];
+
+    if (!sessionId) {
+      res.status(401).json({ message: 'Invalid session. Please reauthorize.' }).end();
+      return;
+    }
+
+    const session = getSession(sessionId);
+
+    if (!session) {
+      res.status(401).json({ message: 'Invalid session. Please reauthorize.' }).end();
+      return;
+    } else if (session.expiresAt && session.expiresAt < getNowSec()) {
+      deleteSession(sessionId);
+      deleteSessionCookie(res);
+      res.status(401).json({ message: 'Expired session. Please reauthorize.' }).end();
+      return;
+    } else if (!session.refreshToken) {
+      console.log('session missing refresh token (deleting anyway):', sessionId, session);
+      deleteSession(sessionId);
+      deleteSessionCookie(res);
+      res.status(401).json({ message: 'Invalid data. Please reauthorize.' }).end();
+      return;
+    }
+
+    const { tokenUrl, clientId, clientSecret } = getTokenParams(req.body?.oauthProvider);
+      
+    if (!tokenUrl || !clientId) {
+      res.status(400).json({ message: 'Invalid provider' }).end();
+      return;
+    }
+
+    const bodyParams = new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: clientId,
+      refresh_token: session.refreshToken
+    });
+
+    if (clientSecret) {
+      // client_secret SHOULD NOT be needed for PKCE flow, but Google OAuth requires it,
+      // seemingly because the client was created as a web app. however, PKCE is still used -
+      // (code + code_verifier must be correct) so we still have better security, and the 
+      // client secret remains private here on the server side.
+      bodyParams.append('client_secret', clientSecret);
+    }
+
+    const tokenResponse = await fetch(tokenUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        client_id: dotEnvVars.TST_OAUTH_GOOGLE_CLIENT_ID,
-        // client_secret SHOULD NOT be needed for PKCE flow,
-        // but Google OAuth requires it since I created my client as a web app
-        client_secret: dotEnvVars.MOCK_OAUTH_GOOGLE_CLIENT_SECRET,
-        refresh_token: session?.refreshToken || '',
-      }).toString()
+      body: bodyParams.toString()
     });
 
     const tokens: any = await tokenResponse.json();

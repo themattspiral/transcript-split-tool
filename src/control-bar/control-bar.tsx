@@ -16,7 +16,7 @@ const ControlBar: React.FC = () => {
   const { transcriptLines, setNewTranscript, poeticStructures } = useProjectData();
   const {
     persistenceStatus, isPersistenceMethodExternal, persistenceMethod, lastPersistenceEvent,
-    authorizeExternal, revokeAuthorizeExternal
+    authorizeExternal, revokeAuthorizeExternal, forget
 } = usePersistence();
 
   const psCount = useMemo(() => Object.keys(poeticStructures).length, [poeticStructures])
@@ -119,22 +119,33 @@ const ControlBar: React.FC = () => {
           </button>
           
           { isPersistenceMethodExternal &&
-            <button
-              type="button"
-              onClick={() => {
-                if (isAuthorized) {
-                  revokeAuthorizeExternal();
-                } else {
-                  authorizeExternal();
-                }
-              }}
-              className={classNames(
-                ' px-4 py-2 rounded cursor-pointer flex items-center',
-                isAuthorized ? 'bg-violet-400 hover:bg-violet-500 text-white' : 'bg-amber-500 hover:bg-amber-600'
-              )}
-            >
-              { isAuthorized ? 'Revoke Drive' : 'Authorize Drive' }
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  if (isAuthorized) {
+                    revokeAuthorizeExternal();
+                  } else {
+                    authorizeExternal();
+                  }
+                }}
+                className={classNames(
+                  ' px-4 py-2 rounded cursor-pointer flex items-center',
+                  isAuthorized ? 'bg-violet-400 hover:bg-violet-500 text-white' : 'bg-amber-500 hover:bg-amber-600'
+                )}
+              >
+                { isAuthorized ? 'Revoke Drive' : 'Authorize Drive' }
+              </button>
+
+              {/* temp for testing failures */}
+              <button
+                type="button"
+                onClick={forget}
+                className='px-4 py-2 rounded cursor-pointer flex items-center bg-pink-400 hover:bg-pink-500 text-white'
+              >
+                Forget Access Token
+              </button>
+            </>
           }
 
           <div className='flex flex-col'>

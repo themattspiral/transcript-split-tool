@@ -59,7 +59,7 @@ export interface PersistenceStore {
 
 export interface ExternalPersistenceStore extends PersistenceStore {
   authorizeExternal: () => void;
-  completeAuthorizeExternal: () => Promise<void>;
+  completeAuthorizeExternal: (rememberMe: boolean) => Promise<void>;
   revokeAuthorizeExternal: () => Promise<void>;
   isAuthorized: boolean;
 }
