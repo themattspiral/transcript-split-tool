@@ -7,11 +7,8 @@ import dotenv from 'dotenv';
 import packageJson from './package.json';
 import { mockServer } from './cloud-function-mocks/mock-server';
 
-/* 
- * Define an express server to handle mock cloud function requests,
- * and configure it as a vite server middleware plugin.
- */
-
+// define a mock express server to handle cloud function requests,
+// and configure it as a vite server middleware plugin
 const mockServerPlugin = () => {
   return {
     name: 'mock-cloud-functions',

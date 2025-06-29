@@ -35,7 +35,7 @@ const oauthRevoke = async (req: Request, res: Response) => {
         }).toString()
       });
     } else {
-      console.log('no refresh token tok revoke - skipping revoke call for session:', sessionId);
+      console.log('no refresh token to revoke - skipping revoke call for session:', sessionId);
     }
   } catch (err) {
     console.error('Error during token revoke:', err);
