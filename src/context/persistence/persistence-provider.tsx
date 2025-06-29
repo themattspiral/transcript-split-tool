@@ -6,22 +6,15 @@ import { useProjectData } from '../project-data-context';
 import { useViewState } from '../view-state-context';
 import { GoogleDrivePersistenceStore } from './google-drive/google-drive-persistence-store';
 import { LocalStoragePersistenceStore } from './local-storage-persistence-store';
-import { persistenceSerialize } from './persistence-utils';
 
 const GOOGLE_DRIVE_FOLDER_NAME = 'TST Projects';
-const RECOVERY_KEY = 'persistenceRecovery';
-
-interface PersistenceRecovery {
-  project: Project;
-  ts: number;
-}
 
 export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
     projectName, transcriptLines, poeticStructures, topsOptions,
     loadDeserializedProjectData
   } = useProjectData();
-  const { confirmModal, infoModal, busyModal, hideModals } = useViewState();
+  const { infoModal, busyModal, hideModals } = useViewState();
 
   const [persistenceMethod, setPersistenceMethod] = useState<PersistenceMethod | null>(null);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(PersistenceStatus.Initializing);
@@ -117,39 +110,13 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     console.log('auth: complete. now calling store.initialize()');
     await newStore.initialize();
 
-    console.log('init complete. now determining load operation....');
-    const persistenceRecoveryStr = sessionStorage.getItem(RECOVERY_KEY);
+    console.log('init complete.');
 
-    let recoveredData: PersistenceRecovery | null = null;
-    try {
-      recoveredData = JSON.parse(persistenceRecoveryStr || '{}');
-    } catch (err) {
-      console.error(`Error parsing JSON from persistenceRecovery:`, err);
-      setLastPersistenceEvent(PersistenceEvent.Error);
-      recoveredData = null;
-    }
-
-    if (persistenceRecoveryStr && lastProjectName && recoveredData?.project?.projectName === lastProjectName) {
-      try {
-        await confirmModal(`Do you want to restore your locally saved recovery backup from ${new Date(recoveredData?.ts).toLocaleString()}?`);
-        
-        console.log('load: recovering from persistence recovery');
-        loadDeserializedProjectData(recoveredData.project);
-        
-        setPersistenceStatus(PersistenceStatus.Idle);
-        setLastPersistenceEvent(PersistenceEvent.Recovered);
-      } catch (cancelled) {
-        console.log('load: persistence recovery cancelled - loading last project from store', lastProjectName);
-        await loadProject(lastProjectName, newStore);
-      } finally {
-        sessionStorage.removeItem(RECOVERY_KEY);
-        console.log('load: removed persistence recovery');
-      }
-    } else if (lastProjectName) {
-      console.log('load: loading last project from store', lastProjectName);
+    if (lastProjectName) {
+      console.log('load: loading last project from store:', lastProjectName);
       await loadProject(lastProjectName, newStore);
     } else {
-      console.log('load: no recovery or last project. persistence ready.');
+      console.log('load: no last project. persistence is ready.');
       setPersistenceStatus(PersistenceStatus.Idle);
     }
   }, [loadDeserializedProjectData, loadProject, setPersistenceStatus, setLastPersistenceEvent]);
@@ -243,25 +210,14 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       } catch (err) {
         setPersistenceStatus(err as PersistenceErrorStatus);
         setLastPersistenceEvent(PersistenceEvent.Error);
-        
-        if (err === PersistenceStatus.ErrorUnauthorized) {
-          console.log('saving to persistenceRecovery');
-          const data: PersistenceRecovery = { project, ts: Date.now() }
-          sessionStorage.setItem(RECOVERY_KEY, persistenceSerialize(data));
-          setLastPersistenceEvent(PersistenceEvent.RecoveryTempStored);
-        }
+        console.log('persistence update failed - status:', err);
       }
     } else {
       console.log('skipping persistence update - status:', persistenceStatus);
-      if (persistenceStatus === PersistenceStatus.ErrorUnauthorized) {
-        console.log('saving to persistenceRecovery');
-        const data: PersistenceRecovery = { project, ts: Date.now() }
-        sessionStorage.setItem(RECOVERY_KEY, persistenceSerialize(data));
-        setLastPersistenceEvent(PersistenceEvent.RecoveryTempStored);
-      }
     }
   }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash, setLastPersistenceEvent]);
 
+  // temp
   useEffect(() => {
     console.log('persistenceStatus changed:', persistenceStatus);
   }, [persistenceStatus]);

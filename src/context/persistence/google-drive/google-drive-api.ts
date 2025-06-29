@@ -1,6 +1,6 @@
 // https://developers.google.com/workspace/drive/api/reference/rest/v3/files
 
-import { persistenceSerialize } from '../persistence-utils';
+import { persistenceSerialize } from '../persistence-util';
 
 const API_BASE = import.meta.env.TST_GOOGLE_API_BASE;
 const FOLDER_MIME_TYPE = 'application/vnd.google-apps.folder';
