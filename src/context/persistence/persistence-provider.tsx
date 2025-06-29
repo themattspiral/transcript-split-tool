@@ -21,7 +21,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     projectName, transcriptLines, poeticStructures, topsOptions,
     loadDeserializedProjectData
   } = useProjectData();
-  const { confirmModal, busyModal, hideModals } = useViewState();
+  const { confirmModal, infoModal, busyModal, hideModals } = useViewState();
 
   const [persistenceMethod, setPersistenceMethod] = useState<PersistenceMethod | null>(null);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(PersistenceStatus.Initializing);
@@ -195,11 +195,24 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const codeIdx = window.location.search.indexOf('code=');
 
     try {
-      if (method === PersistenceMethod.GoogleDrive && idx >= 0 && codeIdx >= 0) {
-        console.log('auth: completing Google Drive auth before init');
-        busyModal(`Finishing Google Drive Setup...`);
-        // todo - save rememberMe with persistenceMethod or other settings (maybe put all together) and feed in here
-        await completeAuthorizeExternalAndInitializeStore(newStore as ExternalPersistenceStore, true, lastProjectName);
+      if (method === PersistenceMethod.GoogleDrive && idx >= 0) {
+        if (codeIdx >= 0) {
+          console.log('auth: completing Google Drive auth before init');
+          busyModal(`Finishing Google Drive Setup...`);
+
+          // todo - save rememberMe with persistenceMethod or other settings (maybe put all together) and feed in here
+          await completeAuthorizeExternalAndInitializeStore(newStore as ExternalPersistenceStore, true, lastProjectName);
+        } else {
+          console.log('auth: incomplete.');
+
+          setPersistenceStatus(PersistenceStatus.ErrorUnauthorized);
+          setLastPersistenceEvent(PersistenceEvent.Error);
+
+          console.log('auth: cleaning up URL post auth callback');
+          window.history.replaceState({}, '', window.location.origin);
+
+          await infoModal('Google Drive Setup was not completed due to an error or cancellation.');
+        }
       } else {
         await initializeStore(newStore as PersistenceStore, lastProjectName);
       }

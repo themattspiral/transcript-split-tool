@@ -49,28 +49,28 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
 
   // check for project folder, create if needed, and cache id
   async initialize(): Promise<void> {
-    try {
-      if (this.#accessToken) {
-        console.log('init: skipping token refresh, we got it from completing auth already');
-      } else {
-        console.log('init: beginning with token refresh');
-        try {
-          this.#accessToken = await refreshAuthorize();
-          this.#authError = false;
-          console.log('init: got new token');
-        } catch (statusCode) {
-          console.log('init: Error getting token:', statusCode);
+    if (this.#accessToken) {
+      console.log('init: skipping token refresh, we got it from completing auth already');
+    } else {
+      console.log('init: beginning with token refresh');
+      try {
+        this.#accessToken = await refreshAuthorize();
+        this.#authError = false;
+        console.log('init: got new token');
+      } catch (statusCode) {
+        console.log('init: Error getting token:', statusCode);
 
-          if ((statusCode as number) === 401 || (statusCode as number) === 403) {
-            this.#authError = true;
-            throw PersistenceStatus.ErrorUnauthorized;
-          } else {
-            this.#authError = true;
-            throw PersistenceStatus.ErrorConnect;
-          }
+        if ((statusCode as number) === 401 || (statusCode as number) === 403) {
+          this.#authError = true;
+          throw PersistenceStatus.ErrorUnauthorized;
+        } else {
+          this.#authError = true;
+          throw PersistenceStatus.ErrorConnect;
         }
       }
-
+    }
+    
+    try {
       console.log('init: getting project folder info...');
       let folder = await getFolderInfo(this.#accessToken, this.#folderName);
       if (folder) {
