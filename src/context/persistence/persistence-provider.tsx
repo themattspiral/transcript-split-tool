@@ -238,22 +238,14 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     transcriptLines, poeticStructures, topsOptions
   ]);
 
-  const forget = useCallback(() => {
-    if ((store as any)?.forget) {
-      (store as any)?.forget();
-    }
-  }, [store]);
-
   const value = useMemo(() => ({
     persistenceMethod, setPersistenceMethod: setPersistenceMethodPublic, 
     isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
-    authorizeExternal, revokeAuthorizeExternal, createProject, loadProject,
-    forget
+    authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
   }), [
     persistenceMethod, setPersistenceMethodPublic,
     isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
-    authorizeExternal, revokeAuthorizeExternal, createProject, loadProject,
-    forget
+    authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
   ]);
 
   return (

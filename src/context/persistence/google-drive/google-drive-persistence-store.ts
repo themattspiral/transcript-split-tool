@@ -180,16 +180,7 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     await revoke();
   }
 
-  get isAuthorized(): boolean {
-    return !!this.#accessToken;
-  }
-
   get isInitialized(): boolean {
     return !!this.#folderId;
-  }
-
-  // temp for testing failures
-  forget() {
-    this.#accessToken = null;
   }
 }
