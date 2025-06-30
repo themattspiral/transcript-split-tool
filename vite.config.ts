@@ -19,9 +19,9 @@ const mockServerPlugin = () => {
 }
 
 const plugins: PluginOption[] = [
-    react(),
-    tailwindcss(),
-    mockServerPlugin()
+  react(),
+  tailwindcss(),
+  mockServerPlugin()
 ];
 
 const define: Record<string, string> = {

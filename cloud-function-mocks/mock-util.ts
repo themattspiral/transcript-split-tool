@@ -216,9 +216,11 @@ export const getAllSessions = (nowSec: number): any[] => {
     if (store) {
       return Object.entries(store).map(([sessionId, session]) => {
         const sess = session as Session;
-        const expired = sess.tokenExpiresAt && sess.tokenExpiresAt <= nowSec;
+        const tokenExpired = !!sess.tokenExpiresAt && sess.tokenExpiresAt <= nowSec;
+        const sessionExpired = sess.sessionExpiresAt <= nowSec;
         return {
-          expired,
+          sessionExpired,
+          tokenExpired,
           sessionId,
           session: {
             refreshToken: sess.refreshToken,
@@ -251,12 +253,12 @@ export const expireSessions = (): number => {
 
     if (store) {
       const keys = Object.keys(store);
-      const sec = getNowSec();
+      const now = getNowSec();
 
       for (let i = keys.length - 1; i >= 0; i--) {
         const key = keys[i];
         const session: Session = store[key];
-        const expired = session.tokenExpiresAt && session.tokenExpiresAt <= sec;
+        const expired = !!session.tokenExpiresAt && session.tokenExpiresAt <= now;
 
         if (expired) {
           console.log('Expired:', key);
