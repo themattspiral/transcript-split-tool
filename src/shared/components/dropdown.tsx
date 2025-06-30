@@ -35,6 +35,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ options, selectedId, onChang
     > 
 
       <button
+        type="button"
         className="dropdown-button flex items-center cursor-pointer"
         onClick={() => setIsOpen(o => !o)}
       >

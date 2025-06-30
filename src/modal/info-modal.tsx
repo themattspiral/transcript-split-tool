@@ -16,6 +16,7 @@ export const InfoModal: React.FC = () => {
 
       <div className="flex gap-4 justify-end">
         <button
+          type="button"
           className="px-4 py-2 rounded bg-red-500 hover:bg-red-600 text-white cursor-pointer"
           onClick={handleModalConfirm}
         >

@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import {
   DefaultTOPSValues, OverallPhraseRole, Phrase, PhraseLink, PhraseLinkInfo, PhraseRole, 
-  PoeticStructure, PoeticStructureRelationshipType, Project, sortPhrases, TranscriptLine,
+  PoeticStructure, PoeticStructureRelationshipType, Project, ProjectDataVersion, sortPhrases, TranscriptLine,
   TypeOfPoeticStructure
 } from '../shared/data';
 import { ProjectDataContext } from './project-data-context';
@@ -181,6 +181,11 @@ export const ProjectDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const loadDeserializedProjectData = useCallback((deserializedProject: Project) => {
     // TODO - SCRUB POTENTIALLY DANGEROUS INPUT
 
+    // in the future, handle upgrade of older data versions here if needed
+    if (deserializedProject?.dataVersion !== ProjectDataVersion.V1) {
+      throw new Error(`Cannot parse project dataVersion: ${deserializedProject?.dataVersion}`);
+    }
+    
     setProjectName(deserializedProject.projectName);
     setNewTranscript(deserializedProject.transcriptLines);
     setTopsOptions(deserializedProject.topsOptions);

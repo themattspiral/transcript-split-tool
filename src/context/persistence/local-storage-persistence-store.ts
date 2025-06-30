@@ -1,6 +1,6 @@
 import { PersistenceStore } from './persistence-context';
 import { PersistenceStatus, Project } from '../../shared/data';
-import { persistenceSerialize } from './persistence-utils';
+import { persistenceSerialize } from './persistence-util';
 
 const PROJECT_KEY_PREFIX = 'project.';
 

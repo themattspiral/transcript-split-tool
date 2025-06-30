@@ -60,6 +60,9 @@
 .span-bubble {
   font-family: var(--font-mono);
 
+  /* for z-indexes to apply */
+  position: relative;
+
   /* SpanType.Repetition */
   &.repetition {
     background-color: var(--color-repetition);

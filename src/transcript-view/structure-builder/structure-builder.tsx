@@ -147,6 +147,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
 
                     { isMultiSource &&
                       <button
+                        type="button"
                         className="self-start w-[20px] text-red-500 hover:text-red-600 cursor-pointer absolute top-[-10px] right-[-10px]"
                         onClick={() => removeSourceFromStructureUnderEdit(source.id)}
                       >
@@ -217,6 +218,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
       <section className="shrink-0 flex flex-col gap-2 min-w-[50px] max-w-[200px] w-full mt-2">
 
         <button
+          type="button"
           disabled={!submitEnabled}
           className={classNames(
             'w-full h-[35px] rounded-lg text-white',
@@ -229,6 +231,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
         </button>
 
         <button
+          type="button"
           className="w-full h-[35px] rounded-lg bg-gray-400 hover:bg-gray-500 text-white hover:text-gray-100 cursor-pointer shadow-md shadow-gray-400"
           onClick={clearAllPending}
         >
@@ -238,6 +241,7 @@ export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, s
 
         { editState === EditState.EditingExisting &&
           <button
+            type="button"
             className="w-full h-[35px] rounded-lg bg-red-500 hover:bg-red-600 text-white hover:text-red-100 cursor-pointer shadow-md shadow-gray-400 mt-2"
             onClick={() => {
               confirmModal(CONFIRM_DELETE).then(() => deleteStructureUnderEdit).catch(() => {});

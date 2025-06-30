@@ -177,7 +177,12 @@ export enum PersistenceEvent {
   RecoveryTempStored = 'RecoveryTempStored',
   Recovered = 'Recovered',
   RecoveredAndSaved = 'RecoveredAndSaved',
+  NotFound = 'NotFound',
   Error = 'Error'
+}
+
+export enum ProjectDataVersion {
+  V1 = 'v1'
 }
 
 export interface Project {
@@ -185,6 +190,11 @@ export interface Project {
   transcriptLines: TranscriptLine[];
   poeticStructures: PoeticStructure[];
   topsOptions: TypeOfPoeticStructure[];
+  readonly dataVersion: string;
+}
+
+export enum OauthProvider {
+  Google = 'Google'
 }
 
 

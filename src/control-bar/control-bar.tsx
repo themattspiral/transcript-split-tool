@@ -96,6 +96,7 @@ const ControlBar: React.FC = () => {
       <div className="pb-2 h-full grow-1 flex gap-2">
         
           <button
+            type="button"
             onClick={() => fileInputRef.current?.click()}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer flex items-center"
           >
@@ -104,6 +105,7 @@ const ControlBar: React.FC = () => {
           </button>
 
           <button
+            type="button"
             onClick={() => {}}
             disabled={transcriptLines.length === 0}
             className={`px-4 py-2 rounded flex items-center ${
@@ -118,6 +120,7 @@ const ControlBar: React.FC = () => {
           
           { isPersistenceMethodExternal &&
             <button
+              type="button"
               onClick={() => {
                 if (isAuthorized) {
                   revokeAuthorizeExternal();
@@ -135,7 +138,7 @@ const ControlBar: React.FC = () => {
           }
 
           <div className='flex flex-col'>
-            <span>Persistence Status: { persistenceStatus }</span>
+            <span>Persistence Status: { persistenceStatus?.toString() }</span>
             <span>Last Persistence Event: { lastPersistenceEvent }</span>
           </div>
         
@@ -149,6 +152,7 @@ const ControlBar: React.FC = () => {
 
         <div className="flex gap-2 font-medium grow-1 items-end">
           <button
+            type="button"
             onClick={() => setActiveTabId(TabId.Transcript)}
             className={activeTabId === TabId.Transcript ? activeTabClasses : otherTabClasses}
             style={activeTabId === TabId.Transcript ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
@@ -157,6 +161,7 @@ const ControlBar: React.FC = () => {
           </button>
           
           <button
+            type="button"
             onClick={() => setActiveTabId(TabId.Structures)}
             className={activeTabId === TabId.Structures ? activeTabClasses : otherTabClasses}
             style={activeTabId === TabId.Structures ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}

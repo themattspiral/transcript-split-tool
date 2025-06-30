@@ -1,4 +1,5 @@
-import { User, UserManager, WebStorageStateStore } from 'oidc-client-ts';
+import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
+import { OauthProvider } from '../../../shared/data';
 
 const STATE_KEY_PREFIX = 'oidc-google.';
 
@@ -18,13 +19,14 @@ const GoogleUserManager: UserManager = new UserManager({
   metadataUrl: import.meta.env.TST_OAUTH_GOOGLE_METADATA_URI,
   redirect_uri: `${import.meta.env.TST_OAUTH_GOOGLE_REDIRECT_ORIGIN}${import.meta.env.TST_OAUTH_GOOGLE_REDIRECT_PATH}`,
   client_id: import.meta.env.TST_OAUTH_GOOGLE_CLIENT_ID,
-  
-  // TODO - remove secret (recreate app as Desktop)
-  client_secret: import.meta.env.TST_OAUTH_GOOGLE_CLIENT_SECRET,
 
   // https://developers.google.com/workspace/drive/api/guides/api-specific-auth
-  // "Create new Drive files, or modify existing files, that you open with an app
-  // or that the user shares with an app while using the Google Picker API or the app's file picker"
+  // https://www.googleapis.com/auth/drive.file:
+  //   "Create new Drive files, or modify existing files, that you open with an app
+  //    or that the user shares with an app while using the Google Picker API or the app's file picker"
+  // Note also:
+  // We are explicitly using Oauth for *authorization*, not *authentication*. So we don't
+  // request scopes like openid, profile, or email to keep the permissions as simple as possible.
   scope: 'https://www.googleapis.com/auth/drive.file',
 
   // https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-pkce
@@ -33,83 +35,77 @@ const GoogleUserManager: UserManager = new UserManager({
   // disablePKCE: false,
 
   // re-add this to get refresh_token once we have token-exchange & refresh via cloud functions in place
-  // extraQueryParams: {
-  //   access_type: 'offline'
-  // }
+  extraQueryParams: {
+    access_type: 'offline'
+  }
 });
 
 export const authorize = () => {
   GoogleUserManager.signinRedirect();
 };
 
-export const completeAuthorize = async (): Promise<string | null> => {
-  // get code and verifier
+export const completeAuthorize = async (rememberMe: boolean): Promise<string> => {
   const urlParams = new URLSearchParams(window.location.search);
   const code = urlParams.get('code');
   const state = urlParams.get('state');
-  // console.log('code', code);
-  // console.log('state', state);
 
   const s = sessionStorage.getItem(`${STATE_KEY_PREFIX}${state}`);
-  if (s) {
-    // const so = JSON.parse(s);
-    // console.log('cv:', so?.code_verifier);
-    console.log('Google OIDC oauth completion: State present - continuing with signinCallback');
-  } else {
-    console.log('Google OIDC oauth completion: No state, not calling signinCallback');
-    return null;
+  const codeVerifier = JSON.parse(s || '{}')?.code_verifier || null;
+  if (!codeVerifier) {
+    console.error(`Google OIDC oauth completion: No state found matching [${state}], not calling signinCallback`);
+    console.debug('sessionStorage', sessionStorage);
+    throw 401;
   }
 
   // cleanup PKCE flow state entry - cloud function will complete the PKCE flow from here
-  // googleOidc.clearStaleState();
+  GoogleUserManager.clearStaleState();
 
-  // TODO - exchange for token with clound function
+  // exchange code for token with cloud function
+  const exchangeResponse = await fetch(import.meta.env.TST_OAUTH_EXCHANGE_URI, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      code,
+      codeVerifier,
+      redirectUri: GoogleUserManager.settings.redirect_uri,
+      oauthProvider: OauthProvider.Google,
+      rememberMe
+    })
+  });
 
-  // Clean up URL/history (remove code and state query params)
-  // TODO - update this if necessary when adding react-router
-  // window.history.replaceState({}, '', window.location.origin);
-
-  // TEMP - complete auth on frontend
-  // TODO - replace with token-exchange / refresh flow with cloud functions
-  // const oauthUser = await GoogleUserManager.getUser();
-  // if (oauthUser) {
-  //     console.log('already signed in, not processing callback again');
-  //     console.log('user:', user);
-  // } else {
-  //   //
-  // }
-
-  // TEMP - complete code token-exchange on frontend
-  const user: User | undefined = await GoogleUserManager.signinCallback();
-  if (user && user.access_token) {
-    console.log('Callback processed - User logged in:', user);
-
-    const accessToken = user.access_token;
-
-    // cleanup the user object - token is extracted so this is not needed
-    await GoogleUserManager.removeUser();
-
-    return accessToken;
-  } else {
-    console.log('Callback couldnt process User:', user);
-    return null;
+  if (!exchangeResponse.ok) {
+    throw exchangeResponse.status;
   }
+
+  const response = await exchangeResponse.json();
+
+  return response.accessToken;
 };
 
-export const revoke = async (token: string | null) => {
-  if (!token) {
-    console.log('no token to revoke');
-    return;
+export const refreshAuthorize = async (): Promise<string> => {
+  const refreshResponse = await fetch(import.meta.env.TST_OAUTH_REFRESH_URI, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      oauthProvider: OauthProvider.Google
+    }),
+    credentials: 'include'
+  });
+
+  if (!refreshResponse.ok) {
+    throw refreshResponse.status;
   }
-  
+
+  const response = await refreshResponse.json();
+
+  return response.accessToken;
+};
+
+export const revoke = async (): Promise<void> => {
   try {
-    // TODO replace with call to /revoke cloud function
-    await fetch(import.meta.env.TST_OAUTH_GOOGLE_REVOKE_URI, {
+    await fetch(import.meta.env.TST_OAUTH_REVOKE_URI, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: `token=${encodeURIComponent(token)}&client_id=${encodeURIComponent(GoogleUserManager.settings.client_id)}`
+      credentials: 'include'
     });
   } catch (err) {
     console.log('Error revoking token', err);
