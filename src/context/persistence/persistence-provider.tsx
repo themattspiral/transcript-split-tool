@@ -132,7 +132,11 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [loadProject, setPersistenceStatus, setLastPersistenceEvent]);
 
-  const setPersistenceMethodPublic = useCallback(async (method: PersistenceMethod, lastProjectName?: string | null): Promise<void> => {
+  const setPersistenceMethodPublic = useCallback(async (
+    method: PersistenceMethod,
+    rememberMe: boolean,
+    lastProjectName: string | null
+  ): Promise<void> => {
     if (lockRef.current === true) {
       console.log('already locked - not setting persistence method again');
       return;
@@ -164,11 +168,10 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       if (method === PersistenceMethod.GoogleDrive && idx >= 0) {
         if (codeIdx >= 0) {
-          console.log('auth: completing Google Drive auth before init');
+          console.log('auth: completing Google Drive auth before init. rememberMe:', rememberMe);
           busyModal(`Finishing Google Drive Setup...`);
 
-          // todo - save rememberMe with persistenceMethod or other settings (maybe put all together) and feed in here
-          await completeAuthorizeExternalAndInitializeStore(newStore as ExternalPersistenceStore, true, lastProjectName);
+          await completeAuthorizeExternalAndInitializeStore(newStore as ExternalPersistenceStore, rememberMe, lastProjectName);
         } else {
           console.log('auth: incomplete.');
 
@@ -230,7 +233,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         transcriptLines,
         poeticStructures: Object.values(poeticStructures),
         topsOptions,
-        dataVersion: ProjectDataVersion.V1
+        dataVersion: ProjectDataVersion.v1
       });
     }
   }, [

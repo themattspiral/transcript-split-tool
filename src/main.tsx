@@ -6,13 +6,13 @@ import './main.css';
 import './shared/styles.scss';
 import './shared/components/components.scss';
 
-import { App } from './app';
 import { ViewStateProvider } from './context/view-state-provider';
 import { ProjectDataProvider } from './context/project-data-provider';
 import { StructureEditProvider } from './context/structure-edit-provider';
 import { TranscriptInteractionProvider } from './context/transcript-interaction-provider';
-import { ClientSessionProvider } from './context/client-session-provider';
 import { PersistenceProvider } from './context/persistence/persistence-provider';
+import { AppSettingsProvider } from './context/app-settings-provider';
+import { App } from './app';
 
 // reference
 // import reactLogo from './assets/react.svg' // src
@@ -25,9 +25,9 @@ createRoot(document.getElementById('root')!).render(
         <StructureEditProvider>
           <TranscriptInteractionProvider>
             <PersistenceProvider>
-              <ClientSessionProvider>
+              <AppSettingsProvider>
                 <App />
-              </ClientSessionProvider>
+              </AppSettingsProvider>
             </PersistenceProvider>
           </TranscriptInteractionProvider>
         </StructureEditProvider>

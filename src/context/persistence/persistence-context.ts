@@ -4,7 +4,11 @@ import { PersistenceEvent, PersistenceMethod, PersistenceStatus, Project } from 
 
 interface PersistenceContextProps {
   persistenceMethod: PersistenceMethod | null;
-  setPersistenceMethod: (persistenceMethod: PersistenceMethod, initialProjectName?: string | null) => Promise<void>;
+  setPersistenceMethod: (
+    persistenceMethod: PersistenceMethod,
+    persistenceRememberMe: boolean,
+    initialProjectName: string | null
+  ) => Promise<void>;
   isPersistenceMethodExternal: boolean;
   lastPersistenceEvent: PersistenceEvent | null;
   lastPersistenceHash: string | null;

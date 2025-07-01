@@ -181,8 +181,12 @@ export enum PersistenceEvent {
   Error = 'Error'
 }
 
+export enum OauthProvider {
+  Google = 'Google'
+}
+
 export enum ProjectDataVersion {
-  V1 = 'v1'
+  v1 = 'v1'
 }
 
 export interface Project {
@@ -190,11 +194,18 @@ export interface Project {
   transcriptLines: TranscriptLine[];
   poeticStructures: PoeticStructure[];
   topsOptions: TypeOfPoeticStructure[];
-  readonly dataVersion: string;
+  readonly dataVersion: ProjectDataVersion;
 }
 
-export enum OauthProvider {
-  Google = 'Google'
+export enum AppSettingsDataVersion {
+  v1 = 'v1'
+}
+
+export interface AppSettings {
+  persistenceMethod: PersistenceMethod;
+  persistenceRememberMe: boolean;
+  lastProjectName: string | null;
+  readonly dataVersion: AppSettingsDataVersion;
 }
 
 

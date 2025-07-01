@@ -182,7 +182,7 @@ export const ProjectDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // TODO - SCRUB POTENTIALLY DANGEROUS INPUT
 
     // in the future, handle upgrade of older data versions here if needed
-    if (deserializedProject?.dataVersion !== ProjectDataVersion.V1) {
+    if (deserializedProject?.dataVersion !== ProjectDataVersion.v1) {
       throw new Error(`Cannot parse project dataVersion: ${deserializedProject?.dataVersion}`);
     }
     
