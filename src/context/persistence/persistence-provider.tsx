@@ -7,7 +7,7 @@ import { useViewState } from '../view-state-context';
 import { GoogleDrivePersistenceStore } from './google-drive/google-drive-persistence-store';
 import { LocalStoragePersistenceStore } from './local-storage-persistence-store';
 
-const GOOGLE_DRIVE_FOLDER_NAME = 'TST Projects';
+const DEFAULT_EXTERNAL_STORE_FOLDER_NAME = 'TST Projects';
 
 export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
@@ -135,6 +135,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const setPersistenceMethodPublic = useCallback(async (
     method: PersistenceMethod,
     rememberMe: boolean,
+    persistenceFolderName: string | null,
     lastProjectName: string | null
   ): Promise<void> => {
     if (lockRef.current === true) {
@@ -157,7 +158,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } else if (method === PersistenceMethod.BrowserLocal) {
       newStore = new LocalStoragePersistenceStore();
     } else if (method === PersistenceMethod.GoogleDrive) {
-      newStore = new GoogleDrivePersistenceStore(GOOGLE_DRIVE_FOLDER_NAME);
+      newStore = new GoogleDrivePersistenceStore(persistenceFolderName || DEFAULT_EXTERNAL_STORE_FOLDER_NAME);
     }
 
     setStore(newStore);
@@ -181,7 +182,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
           console.log('auth: cleaning up URL post auth callback');
           window.history.replaceState({}, '', window.location.origin);
 
-          await infoModal('Google Drive Setup was not completed due to an error or cancellation.');
+          await infoModal('Google Drive Setup was not completed due to user cancellation or an error.');
         }
       } else {
         await initializeStore(newStore as PersistenceStore, lastProjectName);

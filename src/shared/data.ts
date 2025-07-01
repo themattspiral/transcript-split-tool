@@ -204,6 +204,7 @@ export enum AppSettingsDataVersion {
 export interface AppSettings {
   persistenceMethod: PersistenceMethod;
   persistenceRememberMe: boolean;
+  persistenceFolderName: string | null;
   lastProjectName: string | null;
   readonly dataVersion: AppSettingsDataVersion;
 }

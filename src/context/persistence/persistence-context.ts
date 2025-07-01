@@ -7,6 +7,7 @@ interface PersistenceContextProps {
   setPersistenceMethod: (
     persistenceMethod: PersistenceMethod,
     persistenceRememberMe: boolean,
+    persistenceFolderName: string | null,
     initialProjectName: string | null
   ) => Promise<void>;
   isPersistenceMethodExternal: boolean;
@@ -27,16 +28,16 @@ interface PersistenceContextProps {
 
 export const PersistenceContext = createContext<PersistenceContextProps>({
   persistenceMethod: null,
-  setPersistenceMethod: () => Promise.reject(),
+  setPersistenceMethod: () => Promise.reject(0),
   isPersistenceMethodExternal: false,
   lastPersistenceEvent: null,
   lastPersistenceHash: null,
   persistenceStatus: PersistenceStatus.Initializing,
-  loadProject: () => Promise.reject(),
-  createProject: () => Promise.reject(),
+  loadProject: () => Promise.reject(0),
+  createProject: () => Promise.reject(0),
 
   authorizeExternal: () => {},
-  revokeAuthorizeExternal: () => Promise.reject()
+  revokeAuthorizeExternal: () => Promise.reject(0)
 });
 
 export const usePersistence = () => {

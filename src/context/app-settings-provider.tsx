@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AppSettingsContext } from './app-settings-context';
 import { useProjectData } from './project-data-context';
@@ -35,6 +35,7 @@ const loadFromLocalStorage = (): AppSettings | null => {
         dataVersion: AppSettingsDataVersion.v1,
         persistenceMethod: parsedSettings.persistenceMethod,
         persistenceRememberMe: parsedSettings.persistenceRememberMe || false,
+        persistenceFolderName: parsedSettings.persistenceFolderName || null,
         lastProjectName: parsedSettings.lastProjectName || null
       };
     } catch (err) {
@@ -56,19 +57,26 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { setPersistenceMethod } = usePersistence();
 
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
+  const isInitializedRef = useRef<boolean>(false);
 
-  const savePersistenceMethod = useCallback((persistenceMethod: PersistenceMethod, persistenceRememberMe?: boolean) => {
+  const savePersistenceMethod = useCallback((
+    persistenceMethod: PersistenceMethod,
+    persistenceRememberMe?: boolean,
+    persistenceFolderName?: string
+  ) => {
     setAppSettings(s => {
       if (s) {
         return {
           ...s,
           persistenceMethod,
-          persistenceRememberMe: persistenceRememberMe || false
+          persistenceRememberMe: persistenceRememberMe || false,
+          persistenceFolderName: persistenceFolderName || null
         };
       } else {
         return {
           persistenceMethod,
           persistenceRememberMe: persistenceRememberMe || false,
+          persistenceFolderName: persistenceFolderName || null,
           lastProjectName: null,
           dataVersion: AppSettingsDataVersion.v1
         };
@@ -78,22 +86,41 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   // restore local settings on mount - this kicks off the rest of the app init process
   useEffect(() => {
-    const settings = loadFromLocalStorage();
+    if (isInitializedRef.current === false) {
+      console.log('settings: not yet initialized');
+      isInitializedRef.current = true;
 
-    if (settings) {
-      setAppSettings(settings);
-      setPersistenceMethod(
-        settings.persistenceMethod,
-        settings.persistenceRememberMe,
-        settings.lastProjectName
-      );
+      const settings = loadFromLocalStorage();
+      if (settings) {
+        console.log('settings: retrieved');
+        setAppSettings(settings);
+
+        console.log('settings: setting persistence options...');
+
+        // we don't need to wait for the async setPersistenceMethod function to complete - just fire and forget
+        // (persistence init errors are caught and handled with error statuses in that context)
+        setPersistenceMethod(
+          settings.persistenceMethod,
+          settings.persistenceRememberMe,
+          settings.persistenceFolderName,
+          settings.lastProjectName
+        )
+      } else {
+        console.log('settings: no app settings defined yet (initial use)');
+      }
+
+      console.log('settings: init done!');
+    } else {
+      console.log('settings: already initialized, not loading again');
     }
-  }, [setAppSettings, setPersistenceMethod]);
+  }, [isInitializedRef, setAppSettings, setPersistenceMethod]);
 
   // update app settings when they're changed
+  // todo - make this an explicit call from outside instead
   useEffect(() => {
     // todo - clear it also when project flows exist
     if (projectName && projectName !== '') {
+      console.log('saving new local app settings for new project name');
       setAppSettings(s => {
         if (!s) return s;
 
