@@ -39,6 +39,11 @@ if (process.argv?.includes('--ssl')) {
 }
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      'cloud-functions': '/cloud-functions',
+    },
+  },
   plugins,
   server: {
     // these routes will be handled by mockServerPlugin, but we define them here in the proxy config

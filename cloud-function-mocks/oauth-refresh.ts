@@ -2,10 +2,11 @@ import cookie from 'cookie';
 import { Request, Response } from 'express';
 
 import {
-  AccessTokenResponse, deleteSession, deleteSessionCookie, 
-  getNowSec, getSession, getTokenParams, sessionRefresh,
+  deleteSession, deleteSessionCookie, 
+  getNowSec, getSession, getProviderParams, sessionRefresh,
   sessionRefreshWithTokenRotation, SESSION_COOKIE_NAME, setSessionCookie
 } from './mock-util';
+import { OauthAccessTokenResponse } from '../cloud-functions/cloud-function-data';
 
 const oauthRefresh = async (req: Request, res: Response) => {
   console.log('---- 2 REFRESH ----');
@@ -36,8 +37,8 @@ const oauthRefresh = async (req: Request, res: Response) => {
       res.status(401).json({ message: 'Invalid data. Please reauthorize.' }).end();
       return;
     }
-
-    const { tokenUrl, clientId, clientSecret } = getTokenParams(req.body?.oauthProvider);
+    
+    const { tokenUrl, clientId, clientSecret } = getProviderParams(session.provider);
       
     if (!tokenUrl || !clientId) {
       res.status(400).json({ message: 'Invalid provider' }).end();
@@ -98,15 +99,22 @@ const oauthRefresh = async (req: Request, res: Response) => {
       console.log('  old expiration:', session.tokenExpiresAt);
       console.log('  new expiration:', expiresAtSec);
     
+      // set the new refresh token and update session stats and expiration timestamp
       sessionRefreshWithTokenRotation(sessionId, refresh_token, expiresAtSec);
+
+      // update the cookie expiration (max-age) to reflect the newly refreshed session expiration (rolling)
       setSessionCookie(res, sessionId, session.rememberMe, refresh_token_expires_in);
     } else {
       console.log('No refresh token rotation');
+
+      // update session stats and expiration timestamp
       sessionRefresh(sessionId, nowSec);
+
+      // update the cookie expiration (max-age) to reflect the newly refreshed session expiration (rolling)
       setSessionCookie(res, sessionId, session.rememberMe, refresh_token_expires_in);
     }
 
-    const response: AccessTokenResponse = {
+    const response: OauthAccessTokenResponse = {
       accessToken: access_token,
       expiresInSec: expires_in
     };

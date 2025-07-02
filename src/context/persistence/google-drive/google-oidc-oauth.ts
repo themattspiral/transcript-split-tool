@@ -1,5 +1,6 @@
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
-import { OauthProvider } from '../../../shared/data';
+
+import { OauthExchangeRequest, OauthProvider } from 'cloud-functions/cloud-function-data';
 
 const STATE_KEY_PREFIX = 'oidc-google.';
 
@@ -49,10 +50,17 @@ export const completeAuthorize = async (rememberMe: boolean): Promise<string> =>
   const code = urlParams.get('code');
   const state = urlParams.get('state');
 
+  if (!code) {
+    console.error(`Google OIDC oauth completion: No code found in URL:`, window.location.href);
+    console.debug('sessionStorage', sessionStorage);
+    throw 401;
+  }
+
   const s = sessionStorage.getItem(`${STATE_KEY_PREFIX}${state}`);
   const codeVerifier = JSON.parse(s || '{}')?.code_verifier || null;
+  
   if (!codeVerifier) {
-    console.error(`Google OIDC oauth completion: No state found matching [${state}], not calling signinCallback`);
+    console.error(`Google OIDC oauth completion: No state found matching [${state}]`);
     console.debug('sessionStorage', sessionStorage);
     throw 401;
   }
@@ -60,17 +68,19 @@ export const completeAuthorize = async (rememberMe: boolean): Promise<string> =>
   // cleanup PKCE flow state entry - cloud function will complete the PKCE flow from here
   GoogleUserManager.clearStaleState();
 
+  const request: OauthExchangeRequest = {
+    code,
+    codeVerifier,
+    redirectUri: GoogleUserManager.settings.redirect_uri,
+    provider: OauthProvider.Google,
+    rememberMe
+  };
+
   // exchange code for token with cloud function
   const exchangeResponse = await fetch(import.meta.env.TST_OAUTH_EXCHANGE_URI, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      code,
-      codeVerifier,
-      redirectUri: GoogleUserManager.settings.redirect_uri,
-      oauthProvider: OauthProvider.Google,
-      rememberMe
-    })
+    body: JSON.stringify(request)
   });
 
   if (!exchangeResponse.ok) {
@@ -85,10 +95,6 @@ export const completeAuthorize = async (rememberMe: boolean): Promise<string> =>
 export const refreshAuthorize = async (): Promise<string> => {
   const refreshResponse = await fetch(import.meta.env.TST_OAUTH_REFRESH_URI, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      oauthProvider: OauthProvider.Google
-    }),
     credentials: 'include'
   });
 

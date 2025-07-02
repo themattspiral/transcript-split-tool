@@ -181,10 +181,6 @@ export enum PersistenceEvent {
   Error = 'Error'
 }
 
-export enum OauthProvider {
-  Google = 'Google'
-}
-
 export enum ProjectDataVersion {
   v1 = 'v1'
 }

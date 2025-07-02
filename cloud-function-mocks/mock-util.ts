@@ -3,7 +3,7 @@ import { Response } from 'express';
 import dotenv from 'dotenv';
 import cookie from 'cookie';
 
-import { OauthProvider } from '../src/shared/data';
+import { OauthProvider, Session } from '../cloud-functions/cloud-function-data';
 
 export const getDotEnvVars = () => {
   const dotEnvVars: { [varKey: string]: string} = {};
@@ -15,22 +15,6 @@ const dotEnvVars = getDotEnvVars();
 const MOCK_STORE_FILE = './mock-session-store.json';
 const MIN_SESSION_AGE_SEC = 60 * 60 * 24;  // 1 day
 const MAX_SESSION_AGE_SEC = 60 * 60 * 24 * 90;  // 90 days
-
-export interface Session {
-  refreshToken: string;
-  createdAt: number;
-  updatedAt: number;
-  lastUsedAt: number | null;
-  usedCount: number;
-  tokenExpiresAt: number | null;
-  rememberMe: boolean;
-  sessionExpiresAt: number;
-}
-
-export interface AccessTokenResponse {
-  accessToken: string;
-  expiresInSec: number;
-}
 
 export const SESSION_COOKIE_NAME = 'session_id';
 
@@ -52,7 +36,7 @@ export const getSession = (sessionId: string): Session | null => {
   }
 };
 
-export const createSession = (sessionId: string, refreshToken: string, tokenExpiresAt: number | null, rememberMe: boolean) => {
+export const createSession = (provider: OauthProvider, refreshToken: string, tokenExpiresAt: number | null, rememberMe: boolean): string => {
   let storeStr = '{}';
   if (fs.existsSync(MOCK_STORE_FILE)) {
     storeStr = fs.readFileSync(MOCK_STORE_FILE, 'utf8');
@@ -60,13 +44,16 @@ export const createSession = (sessionId: string, refreshToken: string, tokenExpi
   const store = JSON.parse(storeStr);
   const now = getNowSec();
 
+  const sessionId = generateSessionId();
+  console.log('creating new session in store', sessionId);
+
   let sessionExpiresAt = now + MIN_SESSION_AGE_SEC;
   if (rememberMe) {
     sessionExpiresAt = tokenExpiresAt ? Math.min(now + MAX_SESSION_AGE_SEC, tokenExpiresAt) : now + MAX_SESSION_AGE_SEC;
   }
   
-  console.log('creating new session in store', sessionId);
   const session: Session = {
+    provider,
     refreshToken,
     createdAt: now,
     updatedAt: now,
@@ -79,6 +66,8 @@ export const createSession = (sessionId: string, refreshToken: string, tokenExpi
   store[sessionId] = session;
 
   fs.writeFileSync(MOCK_STORE_FILE, JSON.stringify(store, null, 2), 'utf-8');
+
+  return sessionId;
 };
 
 export const sessionRefreshWithTokenRotation = (sessionId: string, refreshToken: string, tokenExpiresAt: number | null) => {
@@ -160,10 +149,11 @@ export const setSessionCookie = (res: Response, sessionId: string, rememberMe: b
   };
 
   if (rememberMe) {
+    // TODO - explain this 
     options.maxAge = tokenExpiresInSec === null ? MAX_SESSION_AGE_SEC : Math.min(tokenExpiresInSec, MAX_SESSION_AGE_SEC);
-
-    // if maxAge is not provided, this cookie will last as long as the user's browser session
   }
+  // if maxAge is not provided (e.g. rememberMe is false), then this cookie will last as long as the user's browser session,
+  // and the cloud session will expire after after MIN_SESSION_AGE_SEC
 
   const serializedCookie = cookie.serialize(SESSION_COOKIE_NAME, sessionId, options);
 
@@ -184,7 +174,7 @@ export const deleteSessionCookie = (res: Response) => {
   res.set('Set-Cookie', serializedCookie);
 };
 
-export const getTokenParams = (oauthProvider: string | null | undefined) => {
+export const getProviderParams = (provider: OauthProvider | string | null | undefined) => {
   const params: {
     tokenUrl: string | null; clientId: string | null; clientSecret: string | null
   } = {
@@ -192,7 +182,7 @@ export const getTokenParams = (oauthProvider: string | null | undefined) => {
   };
 
   // potentially support other providers in the future
-  switch (oauthProvider) {
+  switch (provider) {
     case OauthProvider.Google:
       params.tokenUrl = dotEnvVars.MOCK_OAUTH_GOOGLE_TOKEN_URI;
       params.clientId = dotEnvVars.TST_OAUTH_GOOGLE_CLIENT_ID;
@@ -223,6 +213,7 @@ export const getAllSessions = (nowSec: number): any[] => {
           tokenExpired,
           sessionId,
           session: {
+            provider: sess.provider,
             refreshToken: sess.refreshToken,
             createdAt: `${sess.createdAt} (${ nowSec - sess.createdAt } sec ago)`,
             updatedAt: `${sess.updatedAt} (${ nowSec - sess.updatedAt } sec ago)`,

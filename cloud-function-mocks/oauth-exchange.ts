@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 
 import {
-  AccessTokenResponse, createSession, generateSessionId,
-  getDotEnvVars, getNowSec, getTokenParams, setSessionCookie
+  createSession, getDotEnvVars, getNowSec, getProviderParams, setSessionCookie
 } from './mock-util';
+import { OauthAccessTokenResponse, OauthExchangeRequest } from '../cloud-functions/cloud-function-data';
 
 const dotEnvVars = getDotEnvVars();
 
@@ -16,16 +16,17 @@ const oauthExchange = async (req: Request, res: Response) => {
       return;
     }
 
-    const { code, codeVerifier, redirectUri, oauthProvider, rememberMe: rememberMeVal } = req.body;
+    const { code, codeVerifier, redirectUri, provider, rememberMe }: OauthExchangeRequest = req.body;
 
-    if (!code || !codeVerifier || !redirectUri || !oauthProvider) {
+    if (!code || !codeVerifier || !redirectUri || !provider) {
       res.status(400).json({ message: 'Missing required params' }).end();
       return;
     }
-    
-    const rememberMe = rememberMeVal === true;
 
-    const { tokenUrl, clientId, clientSecret } = getTokenParams(oauthProvider);
+    // ensure it's a boolean
+    const isRememberMeSession = rememberMe === true;
+
+    const { tokenUrl, clientId, clientSecret } = getProviderParams(provider);
 
     if (!tokenUrl || !clientId) {
       res.status(400).json({ message: 'Invalid provider' }).end();
@@ -74,7 +75,6 @@ const oauthExchange = async (req: Request, res: Response) => {
     if (!refresh_token) {
       // shouldn't happen, but just in case
       console.warn('No refresh token received. Ensure "offline_access" scope is requested.');
-      res.status(401).json({ message: 'No refresh token provided. Please reauthorize.' });
 
       if (access_token) {
         try {
@@ -95,18 +95,18 @@ const oauthExchange = async (req: Request, res: Response) => {
         }
       }
 
+      res.status(401).json({ message: 'No refresh token provided. Please reauthorize.' }).end();
       return;
     }
 
     const tokenExpiresAtSec: number | null = refresh_token_expires_in
       ? getNowSec() + refresh_token_expires_in
       : null;
-    const sessionId = generateSessionId();
+    
+    const sessionId = createSession(provider, refresh_token, tokenExpiresAtSec, isRememberMeSession);
+    setSessionCookie(res, sessionId, isRememberMeSession, refresh_token_expires_in);
 
-    createSession(sessionId, refresh_token, tokenExpiresAtSec, rememberMe);
-    setSessionCookie(res, sessionId, rememberMe, refresh_token_expires_in);
-
-    const response: AccessTokenResponse = {
+    const response: OauthAccessTokenResponse = {
       accessToken: access_token,
       expiresInSec: expires_in
     };
