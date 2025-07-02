@@ -1,12 +1,12 @@
-import { CSSProperties, ReactNode } from 'react';
+import { ReactNode } from 'react';
 import classNames from 'classnames';
 
-interface BadgeProps {
+import { StylableProps } from 'data';
+
+interface BadgeProps extends StylableProps {
   children: ReactNode;
   mode?: 'general' | 'line-number';
   size?: 'small' | 'large';
-  className?: string | undefined;
-  style?: CSSProperties | undefined;
 }
 
 export const Badge: React.FC<BadgeProps> = (props) => {

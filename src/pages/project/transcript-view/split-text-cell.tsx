@@ -1,19 +1,17 @@
-import { CSSProperties, useMemo } from 'react';
+import { useMemo } from 'react';
 import classNames from 'classnames';
 
 import {
   OverallPhraseRole, Phrase, PhraseLinkInfo,
-  SpanType, SplitTextSpanBubbleDefinition, TranscriptLine
+  SpanType, SplitTextSpanBubbleDefinition, StylableProps, TranscriptLine
 } from 'data';
 import { useTranscriptInteraction } from 'context/transcript-interaction-context';
 import { EditState, useStructureEdit } from 'context/structure-edit-context';
 import { useProjectData } from 'context/project-data-context';
 import { SplitTextSpanBubble } from './split-text-span-bubble';
 
-interface SplitTextCellProps {
+interface SplitTextCellProps extends StylableProps {
   line: TranscriptLine;
-  className?: string;
-  style?: CSSProperties | undefined;
   attributes?: any;
 }
 

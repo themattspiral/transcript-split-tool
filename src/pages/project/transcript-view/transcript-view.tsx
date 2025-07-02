@@ -1,8 +1,9 @@
-import { CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGripLinesVertical } from '@fortawesome/free-solid-svg-icons';
 import classNames from 'classnames';
 
+import { StylableProps } from 'data';
 import { useViewState } from 'context/view-state-context';
 import { CustomCSSVariables } from 'context/view-state-context';
 import { TranscriptGrid } from './transcript-grid';
@@ -23,12 +24,7 @@ interface ResizeContext {
   isResizing: boolean;
 }
 
-interface TranscriptViewProps {
-  className?: string | undefined;
-  style?: CSSProperties | undefined;
-}
-
-export const TranscriptView: React.FC<TranscriptViewProps> = ({ className, style }) => {
+export const TranscriptView: React.FC<StylableProps> = ({ className, style }) => {
   const { cssVariables } = useViewState();
   const containerRef = useRef<HTMLDivElement>(null);
   const [resizeContext, setResizeContext] = useState<ResizeContext>({

@@ -1,10 +1,7 @@
-import { CSSProperties } from 'react';
-
+import { StylableProps } from 'data';
 import { CustomCSSVariables, useViewState } from 'context/view-state-context';
 
-interface ManyToOneIconProps {
-  className?: string | undefined;
-  style?: CSSProperties | undefined;
+interface ManyToOneIconProps extends StylableProps {
   width?: number;
   height?: number;
 }

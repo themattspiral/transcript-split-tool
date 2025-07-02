@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { CSSProperties, ReactNode } from 'react';
 
 export interface TranscriptLine {
   lineNumber: number;
@@ -143,6 +143,11 @@ export interface SplitTextSpanBubbleDefinition {
 export interface ValidationResult {
   isCompleteStructure: boolean;
   hasOrderingError: boolean;
+}
+
+export interface StylableProps {
+  className?: string | undefined;
+  style?: CSSProperties | undefined;
 }
 
 export enum PersistenceMethod {

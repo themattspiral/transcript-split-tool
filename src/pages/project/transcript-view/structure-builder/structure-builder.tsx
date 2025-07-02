@@ -1,9 +1,9 @@
-import { CSSProperties, useMemo } from 'react';
+import { useMemo } from 'react';
 import classNames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faX, faTrash, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 
-import { getPhraseText, PoeticStructureRelationshipType, SpanType } from 'data';
+import { getPhraseText, PoeticStructureRelationshipType, SpanType, StylableProps } from 'data';
 import { useProjectData } from 'context/project-data-context';
 import { useViewState } from 'context/view-state-context';
 import { EditState, useStructureEdit } from 'context/structure-edit-context';
@@ -16,12 +16,7 @@ import { CONFIRM_DELETE } from 'components/modal-messages';
 const PENDING_TEXT = '<selection pending>';
 const CONTAINER_CLASSES = 'pl-5 pr-6 pt-6 pb-6 flex flex-col justify-center items-center overflow-x-hidden overflow-y-auto';
 
-interface StructureBuilderProps {
-  className?: string | undefined;
-  style?: CSSProperties | undefined;
-}
-
-export const StructureBuilder: React.FC<StructureBuilderProps> = ({ className, style }) => {
+export const StructureBuilder: React.FC<StylableProps> = ({ className, style }) => {
   const { confirmModal } = useViewState();
   const { transcriptLines, topsMap } = useProjectData();
   const {

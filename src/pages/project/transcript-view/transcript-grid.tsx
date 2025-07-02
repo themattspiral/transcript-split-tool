@@ -1,9 +1,9 @@
-import { CSSProperties, useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useContextMenu } from 'react-contexify';
 import classNames from 'classnames';
 
 import { Badge } from 'components/badge';
-import { Phrase } from 'data';
+import { Phrase, StylableProps } from 'data';
 import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../../../shared/util';
 import { useProjectData } from 'context/project-data-context';
 import { EditState, useStructureEdit } from 'context/structure-edit-context';
@@ -14,12 +14,7 @@ import { ErrorMultipleLinesMenu } from './menus/error-multiple-lines-menu';
 import { SplitTextCell } from './split-text-cell';
 import { StructureSelectMenu } from './menus/structure-select-menu/structure-select-menu';
 
-interface TranscriptGridProps {
-  className?: string | undefined;
-  style?: CSSProperties | undefined;
-}
-
-const TranscriptGrid: React.FC<TranscriptGridProps> = ({ className, style }) => {
+const TranscriptGrid: React.FC<StylableProps> = ({ className, style }) => {
   const { show: showContextMenu } = useContextMenu();
   const { transcriptLines } = useProjectData();
   const { editState } = useStructureEdit();
