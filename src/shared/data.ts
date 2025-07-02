@@ -107,11 +107,6 @@ export enum MenuAction {
   Delete
 }
 
-export enum TabId {
-  Transcript,
-  Structures
-}
-
 export interface TypeOfPoeticStructure {
   id: string;
   displayName: string;

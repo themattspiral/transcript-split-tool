@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom';
 
 import { ModalWindow } from 'components/modal-window';
-import { ControlBar } from './control-bar/control-bar';
+import { ControlBar } from 'pages/project/control-bar/control-bar';
 
 export const App: React.FC = () => {
   return (

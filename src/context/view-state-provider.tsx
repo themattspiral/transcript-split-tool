@@ -1,7 +1,6 @@
 
 import { ReactNode, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { TabId } from 'data';
 import { CONFIRM_MODAL_ID } from 'components/confirm-modal';
 import { INFO_MODAL_ID } from 'components/info-modal';
 import { BUSY_MODAL_ID } from 'components/busy-modal';
@@ -13,7 +12,6 @@ interface OutsideClickContext {
 }
 
 export const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activeTabId, setActiveTabId] = useState<TabId>(TabId.Transcript);
   const [displayedModalId, setDisplayedModalId] = useState<string | null>(null);
   const isModalShowing = !!displayedModalId;
   const [modalContent, setModalContent] = useState<ReactNode | null>(null);
@@ -103,14 +101,12 @@ export const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [handleOutsideClick]);
 
   const value = useMemo(() => ({
-    activeTabId, setActiveTabId,
     displayedModalId, isModalShowing, modalContent,
     confirmModal, infoModal, busyModal,
     handleModalConfirm, handleModalCancel, hideModals,
     registerOutsideClick, unregisterOutsideClick,
     cssVariables
   }), [
-    activeTabId, setActiveTabId,
     displayedModalId, isModalShowing, modalContent,
     confirmModal, infoModal, busyModal,
     handleModalConfirm, handleModalCancel, hideModals,

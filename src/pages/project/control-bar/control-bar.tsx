@@ -1,26 +1,23 @@
-import { useMemo, useRef } from 'react';
+import { CSSProperties, useMemo, useRef } from 'react';
+import { NavLink } from 'react-router-dom';
 import { extractRawText } from 'mammoth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from '@fortawesome/free-regular-svg-icons';
 import classNames from 'classnames';
 
-import { TranscriptLine, TabId, PersistenceStatus } from 'data';
-import { useViewState } from 'context/view-state-context';
+import { TranscriptLine, PersistenceStatus } from 'data';
 import { useProjectData } from 'context/project-data-context';
 import { usePersistence } from 'context/persistence/persistence-context';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
 const ControlBar: React.FC = () => {
-  const { activeTabId, setActiveTabId } = useViewState();
   const { transcriptLines, setNewTranscript, poeticStructures } = useProjectData();
   const {
-    persistenceStatus, isPersistenceMethodExternal, persistenceMethod, lastPersistenceEvent,
+    persistenceStatus, isPersistenceMethodExternal, lastPersistenceEvent,
     authorizeExternal, revokeAuthorizeExternal
 } = usePersistence();
-
   const psCount = useMemo(() => Object.keys(poeticStructures).length, [poeticStructures])
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,6 +76,7 @@ const ControlBar: React.FC = () => {
 
   const activeTabClasses = 'bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg text-nowrap';
   const otherTabClasses = 'bg-gray-200 hover:bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg cursor-pointer text-nowrap';
+  const activeBoxShadow: CSSProperties = { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' };
   const isAuthorized = persistenceStatus !== PersistenceStatus.ErrorUnauthorized;
   
   return (
@@ -151,23 +149,21 @@ const ControlBar: React.FC = () => {
         </div>
 
         <div className="flex gap-2 font-medium grow-1 items-end">
-          <button
-            type="button"
-            onClick={() => setActiveTabId(TabId.Transcript)}
-            className={activeTabId === TabId.Transcript ? activeTabClasses : otherTabClasses}
-            style={activeTabId === TabId.Transcript ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
+          <NavLink
+            to="/transcript"
+            className={({ isActive }) => isActive ? activeTabClasses : otherTabClasses}
+            style={({ isActive }) => isActive ? activeBoxShadow : {}}
           >
-            Transcript
-          </button>
+            Transcript!
+          </NavLink>
           
-          <button
-            type="button"
-            onClick={() => setActiveTabId(TabId.Structures)}
-            className={activeTabId === TabId.Structures ? activeTabClasses : otherTabClasses}
-            style={activeTabId === TabId.Structures ? { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' } : {}}
+          <NavLink
+            to="/structures"
+            className={({ isActive }) => isActive ? activeTabClasses : otherTabClasses}
+            style={({ isActive }) => isActive ? activeBoxShadow : {}}
           >
             Poetic Structures ({ psCount })
-          </button>
+          </NavLink>
           
         </div>
       </div>

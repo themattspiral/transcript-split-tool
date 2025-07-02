@@ -1,7 +1,5 @@
 import { createContext, ReactNode, RefObject, useContext } from 'react';
 
-import { TabId } from 'data';
-
 export enum CustomCSSVariables {
   ColorRepetition = '--color-repetition',
   ColorRepetitionLite = '--color-repetition-lite',
@@ -19,8 +17,6 @@ export enum CustomCSSVariables {
 }
 
 interface ViewStateContextProps {
-  activeTabId: TabId;
-  setActiveTabId: (tab: TabId) => void;
   displayedModalId: string | null;
   isModalShowing: boolean;
   confirmModal: (content: ReactNode) => Promise<void>;
@@ -36,8 +32,6 @@ interface ViewStateContextProps {
 }
 
 export const ViewStateContext = createContext<ViewStateContextProps>({
-  activeTabId: TabId.Transcript,
-  setActiveTabId: () => {},
   displayedModalId: null,
   isModalShowing: false,
   confirmModal: () => Promise.reject(0),
