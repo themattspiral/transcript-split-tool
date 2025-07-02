@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { PersistenceEvent, PersistenceMethod, PersistenceStatus, Project } from '../../shared/data';
+import { PersistenceEvent, PersistenceMethod, PersistenceStatus, Project } from 'data';
 
 interface PersistenceContextProps {
   persistenceMethod: PersistenceMethod | null;

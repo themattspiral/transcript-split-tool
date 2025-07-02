@@ -3,15 +3,15 @@ import classNames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faX, faTrash, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 
-import { getPhraseText, PoeticStructureRelationshipType, SpanType } from '../../shared/data';
-import { useProjectData } from '../../context/project-data-context';
-import { useViewState } from '../../context/view-state-context';
-import { EditState, useStructureEdit } from '../../context/structure-edit-context';
-import { SimpleSpanBubble } from '../../shared/components/simple-span-bubble';
-import { Badge } from '../../shared/components/badge';
-import { Dropdown } from '../../shared/components/dropdown';
-import { ManyToOneIcon } from '../../shared/components/many-to-one-icon';
-import { CONFIRM_DELETE } from '../../modal/modal-messages';
+import { getPhraseText, PoeticStructureRelationshipType, SpanType } from 'data';
+import { useProjectData } from 'context/project-data-context';
+import { useViewState } from 'context/view-state-context';
+import { EditState, useStructureEdit } from 'context/structure-edit-context';
+import { SimpleSpanBubble } from 'components/simple-span-bubble';
+import { Badge } from 'components/badge';
+import { Dropdown } from 'components/dropdown';
+import { ManyToOneIcon } from 'components/many-to-one-icon';
+import { CONFIRM_DELETE } from 'components/modal-messages';
 
 const PENDING_TEXT = '<selection pending>';
 const CONTAINER_CLASSES = 'pl-5 pr-6 pt-6 pb-6 flex flex-col justify-center items-center overflow-x-hidden overflow-y-auto';

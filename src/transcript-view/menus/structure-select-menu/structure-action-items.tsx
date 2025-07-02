@@ -2,11 +2,11 @@ import { Item } from 'react-contexify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare, faTrash } from '@fortawesome/free-solid-svg-icons';
 
-import { MenuAction, PhraseLink } from '../../../shared/data';
-import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
-import { CONFIRM_DELETE } from '../../../modal/modal-messages';
-import { useViewState } from '../../../context/view-state-context';
-import { useProjectData } from '../../../context/project-data-context';
+import { MenuAction, PhraseLink } from 'data';
+import { CONFIRM_DELETE } from 'components/modal-messages';
+import { useTranscriptInteraction } from 'context/transcript-interaction-context';
+import { useViewState } from 'context/view-state-context';
+import { useProjectData } from 'context/project-data-context';
 
 interface StructureActionItemsProps {
   link: PhraseLink;

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { AppSettings, AppSettingsDataVersion, PersistenceMethod } from 'data';
 import { AppSettingsContext } from './app-settings-context';
 import { useProjectData } from './project-data-context';
-import { AppSettings, AppSettingsDataVersion, PersistenceMethod } from '../shared/data';
 import { usePersistence } from './persistence/persistence-context';
 
 /* App Settings Provider 

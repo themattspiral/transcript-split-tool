@@ -1,4 +1,4 @@
-import { useViewState } from '../context/view-state-context';
+import { useViewState } from 'context/view-state-context';
 
 export const INFO_MODAL_ID = 'info-modal';
 

@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   PoeticStructure, Phrase, PhraseRole, TypeOfPoeticStructure, GenericTOPS,
   PoeticStructureRelationshipType, sortPhrases, ValidationResult
-} from '../shared/data';
+} from 'data';
 import { StructureEditContext, EditState, EditInfo } from './structure-edit-context';
 import { useProjectData } from './project-data-context';
 

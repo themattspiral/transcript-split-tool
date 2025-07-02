@@ -1,8 +1,8 @@
-import { TabId } from './shared/data';
-import { ModalWindow } from './modal/modal-window';
+import { TabId } from 'data';
+import { ModalWindow } from 'components/modal-window';
+import { useViewState } from 'context/view-state-context';
 import { ControlBar } from './control-bar/control-bar';
 import { StructuresGrid } from './structures-view/structures-grid';
-import { useViewState } from './context/view-state-context';
 import { TranscriptView } from './transcript-view/transcript-view';
 
 export const App: React.FC = () => {

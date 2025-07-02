@@ -1,6 +1,6 @@
 import { CSSProperties } from 'react';
 
-import { CustomCSSVariables, useViewState } from '../../context/view-state-context';
+import { CustomCSSVariables, useViewState } from 'context/view-state-context';
 
 interface ManyToOneIconProps {
   className?: string | undefined;

@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
-import { AppSettings, PersistenceMethod } from '../shared/data';
+
+import { AppSettings, PersistenceMethod } from 'data';
 
 interface AppSettingsContextProps {
   appSettings: AppSettings | null;

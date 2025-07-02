@@ -3,13 +3,13 @@ import { Menu, Item, Separator } from 'react-contexify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faArrowsRotate, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
-import { TranscriptMenuId } from './transcript-menus';
-import { getPhraseText, PhraseRole, PoeticStructureRelationshipType, SpanType } from '../../shared/data';
-import { EditState, useStructureEdit } from '../../context/structure-edit-context';
-import { useProjectData } from '../../context/project-data-context';
-import { useTranscriptInteraction } from '../../context/transcript-interaction-context';
+import { getPhraseText, PhraseRole, PoeticStructureRelationshipType, SpanType } from 'data';
+import { SimpleSpanBubble } from 'components/simple-span-bubble';
 import { clearDocumentTextSelection } from '../../shared/util';
-import { SimpleSpanBubble } from '../../shared/components/simple-span-bubble';
+import { EditState, useStructureEdit } from 'context/structure-edit-context';
+import { useProjectData } from 'context/project-data-context';
+import { useTranscriptInteraction } from 'context/transcript-interaction-context';
+import { TranscriptMenuId } from './transcript-menus';
 
 export const HighlightMenu: React.FC = () => {
   const { transcriptLines } = useProjectData();

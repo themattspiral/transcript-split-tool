@@ -1,9 +1,9 @@
 import { useMemo, CSSProperties } from 'react';
 
-import { HEADER_ROW_ID, PoeticStructureRelationshipType, getPhraseText, sortPoeticStructures } from '../shared/data';
-import { getGridColumnAttributes,  } from '../shared/util';
-import { useViewState } from '../context/view-state-context';
-import { useProjectData } from '../context/project-data-context';
+import { HEADER_ROW_ID, PoeticStructureRelationshipType, getPhraseText, sortPoeticStructures } from 'data';
+import { getGridColumnAttributes  } from '../shared/util';
+import { useViewState } from 'context/view-state-context';
+import { useProjectData } from 'context/project-data-context';
 
 interface StructuresGridProps {
   style?: CSSProperties | undefined;

@@ -4,7 +4,7 @@ import {
   DefaultTOPSValues, OverallPhraseRole, Phrase, PhraseLink, PhraseLinkInfo, PhraseRole, 
   PoeticStructure, PoeticStructureRelationshipType, Project, ProjectDataVersion, sortPhrases, TranscriptLine,
   TypeOfPoeticStructure
-} from '../shared/data';
+} from 'data';
 import { ProjectDataContext } from './project-data-context';
 
 const flattenTops = (option: TypeOfPoeticStructure, level: number, parentHierarchyDisplayName?: string) => {

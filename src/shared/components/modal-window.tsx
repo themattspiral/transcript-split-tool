@@ -1,4 +1,4 @@
-import { useViewState } from '../context/view-state-context';
+import { useViewState } from 'context/view-state-context';
 import { CONFIRM_MODAL_ID, ConfirmModal } from './confirm-modal';
 import { INFO_MODAL_ID, InfoModal } from './info-modal';
 import { BUSY_MODAL_ID, BusyModal } from './busy-modal';

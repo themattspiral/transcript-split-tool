@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseLink, PhraseLinkInfo, PoeticStructure, Project, TranscriptLine, TypeOfPoeticStructure } from '../shared/data';
+import { Phrase, PhraseLink, PhraseLinkInfo, PoeticStructure, Project, TranscriptLine, TypeOfPoeticStructure } from 'data';
 
 interface ProjectDataContextProps {
   projectName: string | null;

@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 
-import { PhraseAction, SplitTextSpanBubbleDefinition } from '../shared/data';
-import { useTranscriptInteraction } from '../context/transcript-interaction-context';
+import { PhraseAction, SplitTextSpanBubbleDefinition } from 'data';
+import { useTranscriptInteraction } from 'context/transcript-interaction-context';
 
 interface SplitTextSpanBubbleProps {
   span: SplitTextSpanBubbleDefinition;

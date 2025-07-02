@@ -4,10 +4,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from '@fortawesome/free-regular-svg-icons';
 import classNames from 'classnames';
 
-import { TranscriptLine, TabId, PersistenceStatus } from '../shared/data';
-import { useViewState } from '../context/view-state-context';
-import { useProjectData } from '../context/project-data-context';
-import { usePersistence } from '../context/persistence/persistence-context';
+import { TranscriptLine, TabId, PersistenceStatus } from 'data';
+import { useViewState } from 'context/view-state-context';
+import { useProjectData } from 'context/project-data-context';
+import { usePersistence } from 'context/persistence/persistence-context';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 

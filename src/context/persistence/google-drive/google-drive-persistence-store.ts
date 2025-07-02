@@ -1,5 +1,5 @@
+import { PersistenceStatus, Project } from 'data';
 import { ExternalPersistenceStore } from '../persistence-context';
-import { PersistenceStatus, Project } from '../../../shared/data';
 import { authorize, completeAuthorize, refreshAuthorize, revoke } from './google-oidc-oauth';
 import {
   getFolderInfo, getJSONFileInfo, getJSONFileContents,

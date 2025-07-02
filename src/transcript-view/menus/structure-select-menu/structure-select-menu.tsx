@@ -3,11 +3,11 @@ import { Menu, Item } from 'react-contexify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
-import { TranscriptMenuId } from '../transcript-menus';
-import { PoeticStructureRelationshipType } from '../../../shared/data';
-import { useProjectData } from '../../../context/project-data-context';
-import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
+import { PoeticStructureRelationshipType } from 'data';
+import { useProjectData } from 'context/project-data-context';
+import { useTranscriptInteraction } from 'context/transcript-interaction-context';
 import { StructureActionItems } from './structure-action-items';
+import { TranscriptMenuId } from '../transcript-menus';
 import { PairStructureItem } from './pair-structure-item';
 import { UnaryStructureItem } from './unary-structure-item';
 import { MultisourceStructureItem } from './multisource-structure-item';

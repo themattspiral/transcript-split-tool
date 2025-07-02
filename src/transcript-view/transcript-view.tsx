@@ -1,11 +1,11 @@
 import { CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGripLinesVertical } from '@fortawesome/free-solid-svg-icons';
-
-import { useViewState } from '../context/view-state-context';
-import { CustomCSSVariables } from '../context/view-state-context';
-import { TranscriptGrid } from './transcript-grid';
 import classNames from 'classnames';
+
+import { useViewState } from 'context/view-state-context';
+import { CustomCSSVariables } from 'context/view-state-context';
+import { TranscriptGrid } from './transcript-grid';
 import { StructureBuilder } from './structure-builder/structure-builder';
 
 const RESIZE_ACTIVE_COLOR = 'red';

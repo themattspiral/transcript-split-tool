@@ -3,8 +3,8 @@ import classNames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 
-import { DropdownOption } from '../data';
-import { useViewState } from '../../context/view-state-context';
+import { DropdownOption } from 'data';
+import { useViewState } from 'context/view-state-context';
 import { Badge } from './badge';
 
 interface DropdownProps {

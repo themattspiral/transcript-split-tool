@@ -42,6 +42,9 @@ export default defineConfig({
   resolve: {
     alias: {
       'cloud-functions': '/cloud-functions',
+      'data': '/src/shared/data',
+      'components': '/src/shared/components',
+      'context': '/src/context',
     },
   },
   plugins,

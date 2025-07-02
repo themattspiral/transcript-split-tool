@@ -1,6 +1,6 @@
 import { createContext, ReactNode, RefObject, useContext } from 'react';
 
-import { TabId } from '../shared/data';
+import { TabId } from 'data';
 
 export enum CustomCSSVariables {
   ColorRepetition = '--color-repetition',

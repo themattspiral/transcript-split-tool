@@ -4,10 +4,10 @@ import classNames from 'classnames';
 import {
   OverallPhraseRole, Phrase, PhraseLinkInfo,
   SpanType, SplitTextSpanBubbleDefinition, TranscriptLine
-} from '../shared/data';
-import { useTranscriptInteraction } from '../context/transcript-interaction-context';
-import { EditState, useStructureEdit } from '../context/structure-edit-context';
-import { useProjectData } from '../context/project-data-context';
+} from 'data';
+import { useTranscriptInteraction } from 'context/transcript-interaction-context';
+import { EditState, useStructureEdit } from 'context/structure-edit-context';
+import { useProjectData } from 'context/project-data-context';
 import { SplitTextSpanBubble } from './split-text-span-bubble';
 
 interface SplitTextCellProps {

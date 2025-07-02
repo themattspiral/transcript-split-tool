@@ -1,7 +1,7 @@
 import { CSSProperties } from 'react';
 import classNames from 'classnames';
 
-import { SpanType } from '../../shared/data';
+import { SpanType } from 'data';
 
 interface SimpleSpanBubbleProps {
   spanType: SpanType;

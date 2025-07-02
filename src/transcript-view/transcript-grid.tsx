@@ -2,17 +2,17 @@ import { CSSProperties, useMemo, useCallback } from 'react';
 import { useContextMenu } from 'react-contexify';
 import classNames from 'classnames';
 
-import { Phrase } from '../shared/data';
+import { Badge } from 'components/badge';
+import { Phrase } from 'data';
 import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../shared/util';
+import { useProjectData } from 'context/project-data-context';
+import { EditState, useStructureEdit } from 'context/structure-edit-context';
+import { useTranscriptInteraction } from 'context/transcript-interaction-context';
 import { TranscriptMenuId } from './menus/transcript-menus';
 import { HighlightMenu } from './menus/highlight-menu';
 import { ErrorMultipleLinesMenu } from './menus/error-multiple-lines-menu';
 import { SplitTextCell } from './split-text-cell';
-import { EditState, useStructureEdit } from '../context/structure-edit-context';
-import { useProjectData } from '../context/project-data-context';
-import { useTranscriptInteraction } from '../context/transcript-interaction-context';
 import { StructureSelectMenu } from './menus/structure-select-menu/structure-select-menu';
-import { Badge } from '../shared/components/badge';
 
 interface TranscriptGridProps {
   className?: string | undefined;

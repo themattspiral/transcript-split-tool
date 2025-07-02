@@ -1,11 +1,11 @@
 import { Submenu } from 'react-contexify';
 
-import { getPhraseText, MenuAction, PhraseLink, SpanType } from '../../../shared/data';
-import { useProjectData } from '../../../context/project-data-context';
-import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
-import { SimpleSpanBubble } from '../../../shared/components/simple-span-bubble';
+import { getPhraseText, MenuAction, PhraseLink, SpanType } from 'data';
+import { useProjectData } from 'context/project-data-context';
+import { useTranscriptInteraction } from 'context/transcript-interaction-context';
+import { SimpleSpanBubble } from 'components/simple-span-bubble';
+import { Badge } from 'components/badge';
 import { StructureActionItems } from './structure-action-items';
-import { Badge } from '../../../shared/components/badge';
 
 interface UnaryStructureItemProps {
   link: PhraseLink;

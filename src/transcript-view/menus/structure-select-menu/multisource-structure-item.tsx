@@ -1,11 +1,11 @@
 import { Submenu } from 'react-contexify';
 
-import { getPhraseText, MenuAction, PhraseLink, PoeticStructureRelationshipType, SpanType } from '../../../shared/data';
-import { useProjectData } from '../../../context/project-data-context';
-import { useTranscriptInteraction } from '../../../context/transcript-interaction-context';
-import { CurvedArrow } from '../../../shared/components/curved-arrow';
-import { Badge } from '../../../shared/components/badge';
-import { SimpleSpanBubble } from '../../../shared/components/simple-span-bubble';
+import { getPhraseText, MenuAction, PhraseLink, PoeticStructureRelationshipType, SpanType } from 'data';
+import { useProjectData } from 'context/project-data-context';
+import { useTranscriptInteraction } from 'context/transcript-interaction-context';
+import { CurvedArrow } from 'components/curved-arrow';
+import { Badge } from 'components/badge';
+import { SimpleSpanBubble } from 'components/simple-span-bubble';
 import { StructureActionItems } from './structure-action-items';
 
 interface MultisourceStructureItemProps {

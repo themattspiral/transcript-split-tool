@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseRole, TypeOfPoeticStructure, ValidationResult } from '../shared/data';
+import { Phrase, PhraseRole, TypeOfPoeticStructure, ValidationResult } from 'data';
 
 export enum EditState {
   Idle = 'Idle',

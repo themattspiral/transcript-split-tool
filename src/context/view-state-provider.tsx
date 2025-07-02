@@ -1,11 +1,11 @@
 
 import { ReactNode, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { TabId } from '../shared/data';
+import { TabId } from 'data';
+import { CONFIRM_MODAL_ID } from 'components/confirm-modal';
+import { INFO_MODAL_ID } from 'components/info-modal';
+import { BUSY_MODAL_ID } from 'components/busy-modal';
 import { CustomCSSVariables, ViewStateContext } from './view-state-context';
-import { CONFIRM_MODAL_ID } from '../modal/confirm-modal';
-import { INFO_MODAL_ID } from '../modal/info-modal';
-import { BUSY_MODAL_ID } from '../modal/busy-modal';
 
 interface OutsideClickContext {
   outsideElementRef: RefObject<HTMLElement | null>,

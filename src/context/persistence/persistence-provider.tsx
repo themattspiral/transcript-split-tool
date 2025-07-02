@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { PersistenceErrorStatus, PersistenceEvent, PersistenceMethod, PersistenceStatus, Project, ProjectDataVersion } from '../../shared/data';
+import { PersistenceErrorStatus, PersistenceEvent, PersistenceMethod, PersistenceStatus, Project, ProjectDataVersion } from 'data';
 import { ExternalPersistenceStore, PersistenceContext, PersistenceStore } from './persistence-context';
 import { useProjectData } from '../project-data-context';
 import { useViewState } from '../view-state-context';
