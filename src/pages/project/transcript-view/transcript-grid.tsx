@@ -4,7 +4,7 @@ import classNames from 'classnames';
 
 import { Badge } from 'components/badge';
 import { Phrase } from 'data';
-import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../shared/util';
+import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../../../shared/util';
 import { useProjectData } from 'context/project-data-context';
 import { EditState, useStructureEdit } from 'context/structure-edit-context';
 import { useTranscriptInteraction } from 'context/transcript-interaction-context';

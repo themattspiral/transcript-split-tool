@@ -5,7 +5,7 @@ import { faPlus, faArrowsRotate, faPenToSquare } from '@fortawesome/free-solid-s
 
 import { getPhraseText, PhraseRole, PoeticStructureRelationshipType, SpanType } from 'data';
 import { SimpleSpanBubble } from 'components/simple-span-bubble';
-import { clearDocumentTextSelection } from '../../shared/util';
+import { clearDocumentTextSelection } from '../../../../shared/util';
 import { EditState, useStructureEdit } from 'context/structure-edit-context';
 import { useProjectData } from 'context/project-data-context';
 import { useTranscriptInteraction } from 'context/transcript-interaction-context';

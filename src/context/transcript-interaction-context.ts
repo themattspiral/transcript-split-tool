@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 
 import { MenuAction, Phrase, PhraseAction, PhraseRole, PhraseViewState } from 'data';
-import { TranscriptMenuId } from '../transcript-view/menus/transcript-menus';
+import { TranscriptMenuId } from 'pages/project/transcript-view/menus/transcript-menus';
 
 interface TranscriptInteractionContextProps {
   phraseViewStates: { [phraseId: string]: PhraseViewState };

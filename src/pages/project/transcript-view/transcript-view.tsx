@@ -95,7 +95,7 @@ export const TranscriptView: React.FC<TranscriptViewProps> = ({ className, style
   return (
     <div
       ref={containerRef}
-      className={classNames('overflow-hidden flex', className)}
+      className={classNames('overflow-hidden flex grow-1 w-full', className)}
       style={style}
     >
       

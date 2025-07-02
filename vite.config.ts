@@ -45,6 +45,7 @@ export default defineConfig({
       'data': '/src/shared/data',
       'components': '/src/shared/components',
       'context': '/src/context',
+      'pages': '/src/pages',
     },
   },
   plugins,

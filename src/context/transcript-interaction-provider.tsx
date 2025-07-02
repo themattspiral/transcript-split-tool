@@ -5,7 +5,7 @@ import { TranscriptInteractionContext } from './transcript-interaction-context';
 import { MenuAction, Phrase, PhraseAction, PhraseRole, PhraseViewState } from 'data';
 import { useProjectData } from './project-data-context';
 import { EditState, useStructureEdit } from './structure-edit-context';
-import { TranscriptMenuId } from '../transcript-view/menus/transcript-menus';
+import { TranscriptMenuId } from 'pages/project/transcript-view/menus/transcript-menus';
 
 interface TranscriptHoverState {
   phraseIds: string[];
