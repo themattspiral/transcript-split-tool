@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 
-import { AppSettings, AppSettingsDataVersion, PersistenceEvent, PersistenceMethod } from 'data';
+import { AppSettings, AppSettingsDataVersion, PersistenceEvent, PersistenceMethod, PersistenceResult } from 'data';
 import { AppSettingsContext } from './app-settings-context';
 import { useProjectData } from './project-data-context';
 import { usePersistence } from './persistence/persistence-context';
+import { useViewState } from './view-state-context';
 
 /* App Settings Provider 
   - Provides browser session continuity by storing information about the last project
@@ -63,10 +65,63 @@ const saveToLocalStorage = (settings: AppSettings) => {
 
 export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { projectName } = useProjectData();
-  const { setPersistenceMethod, initializePersistence, isPathOauthCallback, lastPersistenceEvent } = usePersistence();
+  const {
+    setPersistenceMethod, completeAuthorizeExternal, initializePersistence,
+    isPathOauthCallback, lastPersistenceEvent
+  } = usePersistence();
+
+  const { busyModal, infoModal, hideModals } = useViewState();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   const settingsLoadedRef = useRef<boolean>(false);
+
+  const completeOauthAndInitialize = useCallback(async (rememberMe: boolean, lastProjectName: string | null): Promise<void> => {
+    busyModal(`Finishing Google Drive Setup...`);
+
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    if (!code || !state) {
+      infoModal(`Error completing authorization. Incorrect params from Oauth provider.`);
+      console.error('settings page: no code or state found in query params:', searchParams.toString());
+      return;
+    }
+
+    completeAuthorizeExternal(code, state, rememberMe).then(() => {
+      console.log('settings: authorized!');
+
+      console.log('settings: initial url cleanup (replace state)');
+      window.history.replaceState({}, '', '/settings');
+
+      console.log('settings: initializing persistence');
+      initializePersistence().then(() => {
+        console.log('settings: persistence initialized!');
+        hideModals();
+
+        if (lastProjectName) {
+          console.log('settings: navigate to /transcript for last project load');
+          navigate('/transcript', { replace: true });
+        } else {
+          // align react router state with the history we changed above
+          console.log('settings: navigate to /settings (finish url cleanup)');
+          navigate('/settings', { replace: true });
+        }
+      }).catch((initResult: PersistenceResult) => {
+        console.log('settings: error completing persistence init:', initResult);
+        infoModal(`Error completing init. Persistence status: ${initResult.persistenceStatus}`);
+
+        console.log('settings: navigate to /settings (finish url cleanup)');
+        navigate('/settings', { replace: true });
+      });
+    }).catch((authResult: PersistenceResult) => {
+      console.log('settings: - error completing auth:', authResult);
+      infoModal(`Error completing authorization. Persistence status: ${authResult.persistenceStatus}`);
+
+      console.log('settings: navigate to /settings (finish url cleanup)');
+      navigate('/settings', { replace: true });
+    });
+  }, [searchParams, busyModal, infoModal, hideModals, completeAuthorizeExternal, initializePersistence, navigate]);
 
   const savePersistenceMethod = useCallback((
     persistenceMethod: PersistenceMethod,
@@ -94,7 +149,25 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
   }, [setAppSettings]);
 
-  // restore local settings on mount - this kicks off the rest of the app init process
+  const saveSetting = useCallback((key: keyof AppSettings, value: any) => {
+    setAppSettings(s => {
+      if (!s) return s;
+
+      if (s[key] === value) {
+        return s;
+      }
+
+      console.log(`settings: saving new local app settings for new [${key}]`);
+
+      const newSettings: AppSettings = {
+        ...(s as AppSettings),
+        [key]: value
+      };
+      return newSettings;
+    });
+  }, [setAppSettings]);
+
+  // restore local settings on mount and initialize persistence
   useEffect(() => {
     if (!settingsLoadedRef.current) {
       settingsLoadedRef.current = true;
@@ -109,66 +182,37 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
         setPersistenceMethod(settings.persistenceMethod, settings.persistenceFolderName);
 
-        if (!isPathOauthCallback) {
-          console.log('settings: initializing persistence (no await)');
-          initializePersistence();
-          // we don't need to wait for the async setPersistenceMethod function to complete - just fire and forget
-          // (persistence init errors are caught and handled with error statuses in that context)
+        if (isPathOauthCallback) {
+          console.log('settings: on Oauth callback path - complete authorization then initialize persistence');
+          completeOauthAndInitialize(settings.persistenceRememberMe, settings.lastProjectName);
         } else {
-          console.log('settings: skipping persistence init to allow auth completion and init from settings page');
+          console.log('settings: initializing persistence');
+          initializePersistence().then(() => {
+            console.log('settings: persistence initialized!');
+          }).catch((initResult: PersistenceResult) => {
+            console.log('settings: error completing persistence init:', initResult);
+          });
         }
       } else {
         console.log('settings: no app settings defined yet (initial use)');
       }
 
       console.log('settings: load complete');
-    } else {
-      // console.log('settings: already loaded, not loading again');
     }
-  }, [isPathOauthCallback, initializePersistence, setAppSettings, setPersistenceMethod]);
+  }, [isPathOauthCallback, initializePersistence, completeOauthAndInitialize, setAppSettings, setPersistenceMethod]);
 
-  // project name
-  // todo - make this an explicit call from outside instead
+  // save project name
   useEffect(() => {
     // todo - clear it also when project flows exist
     if (projectName && projectName !== '') {
-      setAppSettings(s => {
-        if (!s) return s;
-
-        if (s.lastProjectName === projectName) {
-          return s;
-        }
-
-        console.log('settings: saving new local app settings for new lastProjectName');
-
-        const newSettings: AppSettings = {
-          ...(s as AppSettings),
-          lastProjectName: projectName
-        };
-        return newSettings;
-      });
+      saveSetting('lastProjectName', projectName);
     }
-  }, [setAppSettings, projectName]);
+  }, [saveSetting, projectName]);
 
-  // persistenceHasAuthorized
-  // todo - make this an explicit call from outside instead
+  // save persistenceHasAuthorized
   useEffect(() => {
     if (lastPersistenceEvent === PersistenceEvent.Authorized) {
-      setAppSettings(s => {
-        if (!s) return s;
-
-        if (s.persistenceHasAuthorized) {
-          return s;
-        }
-
-        console.log('settings: saving persistenceHasAuthorized');
-
-        const newSettings: AppSettings = {
-          ...(s as AppSettings),
-          persistenceHasAuthorized: true
-        };
-        return newSettings;
-      });
+      saveSetting('persistenceHasAuthorized', true);
     }
   }, [setAppSettings, lastPersistenceEvent]);
 

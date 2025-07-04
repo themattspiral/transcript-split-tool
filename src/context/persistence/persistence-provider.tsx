@@ -132,7 +132,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return initializingRef.current.promise;
     } else {
       console.error('waitForInit: no promise to return!');
-      throw new Error('HRM.....');
+      throw new Error('waitForInit: No Promise to return in initializingRef.current.promise.');
     }
   }, [persistenceStatus, lastPersistenceEvent]);
 
