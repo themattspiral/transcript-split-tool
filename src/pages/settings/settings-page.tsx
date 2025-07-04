@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { useViewState } from 'context/view-state-context';
 import { usePersistence } from 'context/persistence/persistence-context';
 import { useAppSettings } from 'context/app-settings-context';
-import { PersistenceEvent } from 'data';
+import { PersistenceResult } from 'data';
 
 export const SettingsPage: React.FC = () => {
   const { completeAuthorizeExternal, initializePersistence, isPathOauthCallback } = usePersistence();
@@ -12,9 +12,12 @@ export const SettingsPage: React.FC = () => {
   const { appSettings } = useAppSettings();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const completedAuthRef = useRef<boolean>(false);
 
   useEffect(() => {
-    if (appSettings && isPathOauthCallback) {
+    if (appSettings && isPathOauthCallback && !completedAuthRef.current) {
+      completedAuthRef.current = true;
+      
       console.log('settings page - isPathOauthCallback is true!');
       busyModal(`Finishing Google Drive Setup...`);
 
@@ -27,39 +30,35 @@ export const SettingsPage: React.FC = () => {
         return;
       }
 
-      completeAuthorizeExternal(code, state, appSettings?.persistenceRememberMe || false).then(authResut => {
-        if (authResut.lastPersistenceEvent === PersistenceEvent.Authorized) {
-          console.log('settings page - authorized!');
-          console.log('settings page - initial url cleanup');
-          window.history.replaceState({}, '', '/settings');
+      completeAuthorizeExternal(code, state, appSettings?.persistenceRememberMe || false).then(() => {
+        console.log('settings page - authorized!');
+        console.log('settings page - initial url cleanup');
+        window.history.replaceState({}, '', '/settings');
 
-          console.log('settings: initializing persistence');
-          initializePersistence().then(initResult => {
-
-            if (initResult.lastPersistenceEvent === PersistenceEvent.Initialized) {
-              console.log('settings page - persistence initialized!');
-
-              console.log('settings: navigate');
-              if (appSettings?.lastProjectName) {
-                navigate('/transcript', { replace: true });
-              } else {
-                hideModals();
-                navigate('/settings', { replace: true });
-              }
-            } else {
-              console.log('settings page - error completing init:', initResult);
-              infoModal(`Error completing init. Persistence status: ${initResult.persistenceStatus}`)
-              navigate('/settings', { replace: true });
-            }
-          });
-        } else {
-          console.log('settings page - error completing auth:', authResut);
-          infoModal(`Error completing authorization. Persistence status: ${authResut.persistenceStatus}`)
+        console.log('settings page - initializing persistence');
+        
+        initializePersistence().then(() => {
+          console.log('settings page - persistence initialized!');
+          if (appSettings?.lastProjectName) {
+            console.log('settings page - navigate to /transcript');
+            navigate('/transcript', { replace: true });
+          } else {
+            console.log('settings page - navigate to /settings (finish url cleanup)');
+            hideModals();
+            navigate('/settings', { replace: true });
+          }
+        }).catch((initResult: PersistenceResult) => {
+          console.log('settings page - error completing init:', initResult);
+          infoModal(`Error completing init. Persistence status: ${initResult.persistenceStatus}`)
           navigate('/settings', { replace: true });
-        }
+        });
+      }).catch((authResult: PersistenceResult) => {
+        console.log('settings page - error completing auth:', authResult);
+        infoModal(`Error completing authorization. Persistence status: ${authResult.persistenceStatus}`)
+        navigate('/settings', { replace: true });
       });
     } else {
-      console.log(`settings page - isPathOauthCallback (${isPathOauthCallback}) is false or no appSettings yet (${appSettings})`);
+      // console.log(`settings page - isPathOauthCallback (${isPathOauthCallback}) is false or no appSettings yet (${appSettings})`);
     }
   }, [appSettings, isPathOauthCallback]);
 

@@ -17,7 +17,6 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(PersistenceStatus.Initializing);
   const [lastPersistenceEvent, setLastPersistenceEvent] = useState<PersistenceEvent | null>(null);
   const [lastPersistenceHash, setLastPersistenceHash] = useState<string | null>(null);
-  const [isPersistenceInitialized, setIsPersistenceInitialized] = useState<boolean>(false);
   
   const storeRef = useRef<PersistenceStore | null>(null);
   const isPersistenceMethodExternal = storeRef.current?.isExternal || false;
@@ -82,8 +81,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setPersistenceStatus(err as PersistenceErrorStatus);
       setLastPersistenceEvent(PersistenceEvent.Error);
 
-      // todo - throw here and catch in settings page
-      return {
+      throw {
         persistenceStatus: err as PersistenceErrorStatus,
         lastPersistenceEvent: PersistenceEvent.Error
       };
@@ -98,7 +96,6 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setLastPersistenceEvent(PersistenceEvent.Initialized);
 
       if (initializingRef.current.resolve) {
-        setIsPersistenceInitialized(true);
         initializingRef.current.resolve();
       }
 
@@ -117,13 +114,12 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         });
       }
 
-      // todo - throw here and catch in settings page + 
-      return {
+      throw {
         persistenceStatus: err as PersistenceErrorStatus,
         lastPersistenceEvent: PersistenceEvent.Error
       };
     }
-  }, [setPersistenceStatus, setLastPersistenceEvent, setIsPersistenceInitialized]);
+  }, [setPersistenceStatus, setLastPersistenceEvent]);
 
   const waitForInit = useCallback(async (): Promise<void> => {
     console.log('waitForInit - storeRef.current?.isInitialized:', storeRef.current?.isInitialized);
@@ -271,13 +267,13 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const value = useMemo(() => ({
     persistenceMethod, setPersistenceMethod: setPersistenceMethodPublic, initializePersistence,
-    isPersistenceMethodExternal, isPathOauthCallback, isPersistenceInitialized,
+    isPersistenceMethodExternal, isPathOauthCallback,
     lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
     loadProject, createProject,
     authorizeExternal, completeAuthorizeExternal, revokeAuthorizeExternal
   }), [
     persistenceMethod, setPersistenceMethodPublic, initializePersistence,
-    isPersistenceMethodExternal, isPathOauthCallback, isPersistenceInitialized,
+    isPersistenceMethodExternal, isPathOauthCallback,
     lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
     loadProject, createProject,
     authorizeExternal, completeAuthorizeExternal, revokeAuthorizeExternal

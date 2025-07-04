@@ -22,20 +22,37 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
       
       if (this.#authError || !retryOnReauth) {
         // don't try refresh auth again if we're already in auth error state (or no retry function provided)
-        console.log('Got 401 from API - Internal authError True - Not Refreshing Auth again');
+        console.log('store-handleAptError - 401 from API (authError already True) - Unauthorized');
         throw PersistenceStatus.ErrorUnauthorized;
       } else {
-        console.log('Got 401 from API - Internal authError False - Trying to Refresh Access Token');
+        console.log('store-handleAptError - 401 from API (authError False) - Trying to Refresh Access Token');
+
         try {
           this.#accessToken = await refreshAuthorize();
-          this.#authError = false;
-          console.log('Refresh Successful - Retrying operation that failed');
-          
+          console.log('store-handleAptError - Refresh Successful');
+        } catch (statusCode) {
+          if (statusCode === 401 || statusCode === 403) {
+            console.log('store-handleAptError - Refresh Failed - Unauthorized (setting authError True)');
+            this.#authError = true;
+            throw PersistenceStatus.ErrorUnauthorized;
+          } else {
+            console.log('store-handleAptError - Error during auth refresh:', statusCode);
+            throw PersistenceStatus.ErrorConnect;
+          }
+        }
+
+        try {
+          console.log('store-handleAptError - Retrying operation that failed');
           return await retryOnReauth();
-        } catch (err) {
-          console.log('Refresh Failed. Setting Internal authError True');
-          this.#authError = true;
-          throw PersistenceStatus.ErrorUnauthorized;
+        } catch (statusCode) {
+          if (statusCode === 401 || statusCode === 403) {
+            console.log('store-handleAptError - Auth error again after refresh - Unauthorized (Setting authError True)');
+            this.#authError = true;
+            throw PersistenceStatus.ErrorUnauthorized;
+          } else {
+            console.log('store-handleAptError - Error during retry operation:', statusCode);
+            throw PersistenceStatus.ErrorConnect;
+          }
         }
       }
     } else {

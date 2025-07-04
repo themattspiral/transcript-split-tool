@@ -8,7 +8,6 @@ interface PersistenceContextProps {
   initializePersistence: () => Promise<PersistenceResult>;
 
   isPersistenceMethodExternal: boolean;
-  isPersistenceInitialized: boolean;
   isPathOauthCallback: boolean;
   lastPersistenceEvent: PersistenceEvent | null;
   lastPersistenceHash: string | null;
@@ -33,7 +32,6 @@ export const PersistenceContext = createContext<PersistenceContextProps>({
   initializePersistence: () => Promise.reject(0),
 
   isPersistenceMethodExternal: false,
-  isPersistenceInitialized: false,
   isPathOauthCallback: false,
   lastPersistenceEvent: null,
   lastPersistenceHash: null,

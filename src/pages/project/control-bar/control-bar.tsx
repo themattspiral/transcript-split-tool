@@ -8,18 +8,20 @@ import classNames from 'classnames';
 import { PersistenceStatus, TranscriptLine } from 'data';
 import { useProjectData } from 'context/project-data-context';
 import { usePersistence } from 'context/persistence/persistence-context';
+import { useAppSettings } from 'context/app-settings-context';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
 const ControlBar: React.FC = () => {
   const { transcriptLines, setNewTranscript, poeticStructures } = useProjectData();
+  const { appSettings } = useAppSettings();
   const {
-    persistenceStatus, isPersistenceMethodExternal, lastPersistenceEvent, isPersistenceInitialized,
+    persistenceStatus, isPersistenceMethodExternal, lastPersistenceEvent,
     authorizeExternal, revokeAuthorizeExternal
 } = usePersistence();
   const psCount = useMemo(() => Object.keys(poeticStructures).length, [poeticStructures])
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isAuthorized = isPersistenceInitialized && persistenceStatus !== PersistenceStatus.ErrorUnauthorized;
+  const isAuthorized = appSettings?.persistenceHasAuthorized && persistenceStatus !== PersistenceStatus.ErrorUnauthorized;
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event?.target?.files?.[0];

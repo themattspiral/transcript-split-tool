@@ -205,6 +205,7 @@ export interface AppSettings {
   persistenceMethod: PersistenceMethod;
   persistenceRememberMe: boolean;
   persistenceFolderName: string | null;
+  persistenceHasAuthorized: boolean;
   lastProjectName: string | null;
   readonly dataVersion: AppSettingsDataVersion;
 }

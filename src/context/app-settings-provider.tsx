@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { AppSettings, AppSettingsDataVersion, PersistenceMethod } from 'data';
+import { AppSettings, AppSettingsDataVersion, PersistenceEvent, PersistenceMethod } from 'data';
 import { AppSettingsContext } from './app-settings-context';
 import { useProjectData } from './project-data-context';
 import { usePersistence } from './persistence/persistence-context';
@@ -12,6 +12,14 @@ import { usePersistence } from './persistence/persistence-context';
 */
 
 const APP_SETTINGS_STORAGE_KEY = 'appSettings';
+
+const parseBoolean = (setting: any): boolean => {
+  if (setting === undefined || setting === null) {
+    return false;
+  } else {
+    return setting === true;
+  }
+};
 
 const loadFromLocalStorage = (): AppSettings | null => {
   let confirmedSettings: AppSettings | null = null;
@@ -34,8 +42,9 @@ const loadFromLocalStorage = (): AppSettings | null => {
       confirmedSettings = {
         dataVersion: AppSettingsDataVersion.v1,
         persistenceMethod: parsedSettings.persistenceMethod,
-        persistenceRememberMe: parsedSettings.persistenceRememberMe || false,
+        persistenceRememberMe: parseBoolean(parsedSettings.persistenceRememberMe),
         persistenceFolderName: parsedSettings.persistenceFolderName || null,
+        persistenceHasAuthorized: parseBoolean(parsedSettings.persistenceHasAuthorized),
         lastProjectName: parsedSettings.lastProjectName || null
       };
     } catch (err) {
@@ -54,10 +63,10 @@ const saveToLocalStorage = (settings: AppSettings) => {
 
 export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { projectName } = useProjectData();
-  const { setPersistenceMethod, initializePersistence, isPathOauthCallback } = usePersistence();
+  const { setPersistenceMethod, initializePersistence, isPathOauthCallback, lastPersistenceEvent } = usePersistence();
 
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
-  const isInitializedRef = useRef<boolean>(false);
+  const settingsLoadedRef = useRef<boolean>(false);
 
   const savePersistenceMethod = useCallback((
     persistenceMethod: PersistenceMethod,
@@ -77,6 +86,7 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
           persistenceMethod,
           persistenceRememberMe: persistenceRememberMe || false,
           persistenceFolderName: persistenceFolderName || null,
+          persistenceHasAuthorized: false,
           lastProjectName: null,
           dataVersion: AppSettingsDataVersion.v1
         };
@@ -86,9 +96,9 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   // restore local settings on mount - this kicks off the rest of the app init process
   useEffect(() => {
-    if (isInitializedRef.current === false) {
+    if (!settingsLoadedRef.current) {
+      settingsLoadedRef.current = true;
       console.log('settings: not yet loaded');
-      isInitializedRef.current = true;
 
       const settings = loadFromLocalStorage();
       if (settings) {
@@ -100,12 +110,12 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setPersistenceMethod(settings.persistenceMethod, settings.persistenceFolderName);
 
         if (!isPathOauthCallback) {
-          console.log('settings: initializing persistence (kickoff)');
+          console.log('settings: initializing persistence (no await)');
           initializePersistence();
           // we don't need to wait for the async setPersistenceMethod function to complete - just fire and forget
           // (persistence init errors are caught and handled with error statuses in that context)
         } else {
-          console.log('settings: skipping persistence init to allow auth completion from settings page');
+          console.log('settings: skipping persistence init to allow auth completion and init from settings page');
         }
       } else {
         console.log('settings: no app settings defined yet (initial use)');
@@ -113,22 +123,23 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       console.log('settings: load complete');
     } else {
-      console.log('settings: already loaded, not loading again');
+      // console.log('settings: already loaded, not loading again');
     }
   }, [isPathOauthCallback, initializePersistence, setAppSettings, setPersistenceMethod]);
 
-  // update app settings when they're changed
+  // project name
   // todo - make this an explicit call from outside instead
   useEffect(() => {
     // todo - clear it also when project flows exist
     if (projectName && projectName !== '') {
-      console.log('saving new local app settings for new project name');
       setAppSettings(s => {
         if (!s) return s;
 
         if (s.lastProjectName === projectName) {
           return s;
         }
+
+        console.log('settings: saving new local app settings for new lastProjectName');
 
         const newSettings: AppSettings = {
           ...(s as AppSettings),
@@ -138,6 +149,28 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
       });
     }
   }, [setAppSettings, projectName]);
+
+  // persistenceHasAuthorized
+  // todo - make this an explicit call from outside instead
+  useEffect(() => {
+    if (lastPersistenceEvent === PersistenceEvent.Authorized) {
+      setAppSettings(s => {
+        if (!s) return s;
+
+        if (s.persistenceHasAuthorized) {
+          return s;
+        }
+
+        console.log('settings: saving persistenceHasAuthorized');
+
+        const newSettings: AppSettings = {
+          ...(s as AppSettings),
+          persistenceHasAuthorized: true
+        };
+        return newSettings;
+      });
+    }
+  }, [setAppSettings, lastPersistenceEvent]);
 
   // store app settings when they're updated
   useEffect(() => {

@@ -32,7 +32,7 @@ export const ProjectPage: React.FC = () => {
         }
       });
     } else {
-      console.log('project page - NO ACTION', projectName, appSettings?.lastProjectName);
+      // console.log('project page - NO ACTION', projectName, appSettings?.lastProjectName);
     }
   }, [projectName, appSettings]);
 
