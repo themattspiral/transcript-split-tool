@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from '@fortawesome/free-regular-svg-icons';
 import classNames from 'classnames';
 
-import { TranscriptLine, PersistenceStatus } from 'data';
+import { PersistenceStatus, TranscriptLine } from 'data';
 import { useProjectData } from 'context/project-data-context';
 import { usePersistence } from 'context/persistence/persistence-context';
 
@@ -14,11 +14,12 @@ const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 const ControlBar: React.FC = () => {
   const { transcriptLines, setNewTranscript, poeticStructures } = useProjectData();
   const {
-    persistenceStatus, isPersistenceMethodExternal, lastPersistenceEvent,
+    persistenceStatus, isPersistenceMethodExternal, lastPersistenceEvent, isPersistenceInitialized,
     authorizeExternal, revokeAuthorizeExternal
 } = usePersistence();
   const psCount = useMemo(() => Object.keys(poeticStructures).length, [poeticStructures])
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isAuthorized = isPersistenceInitialized && persistenceStatus !== PersistenceStatus.ErrorUnauthorized;
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event?.target?.files?.[0];
@@ -77,7 +78,6 @@ const ControlBar: React.FC = () => {
   const activeTabClasses = 'bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg text-nowrap';
   const otherTabClasses = 'bg-gray-200 hover:bg-gray-300 px-3 pt-1 pb-2 rounded-t-lg cursor-pointer text-nowrap';
   const activeBoxShadow: CSSProperties = { boxShadow: '2px 2px 6px rgba(0,0,0,.5)' };
-  const isAuthorized = persistenceStatus !== PersistenceStatus.ErrorUnauthorized;
   
   return (
     <div className="flex gap-4 items-end">

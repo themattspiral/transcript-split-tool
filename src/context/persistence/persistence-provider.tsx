@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMatch } from 'react-router';
 
-import { PersistenceErrorStatus, PersistenceEvent, PersistenceMethod, PersistenceStatus, Project, ProjectDataVersion } from 'data';
+import { PersistenceErrorStatus, PersistenceEvent, PersistenceMethod, PersistenceStatus, PersistenceResult, Project, ProjectDataVersion } from 'data';
 import { ExternalPersistenceStore, PersistenceContext, PersistenceStore } from './persistence-context';
-import { useProjectData } from '../project-data-context';
-import { useViewState } from '../view-state-context';
+import { useProjectData } from 'context/project-data-context';
 import { GoogleDrivePersistenceStore } from './google-drive/google-drive-persistence-store';
 import { LocalStoragePersistenceStore } from './local-storage-persistence-store';
 
@@ -11,224 +11,251 @@ const DEFAULT_EXTERNAL_STORE_FOLDER_NAME = 'TST Projects';
 
 export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
-    projectName, transcriptLines, poeticStructures, topsOptions,
-    loadDeserializedProjectData
+    projectName, transcriptLines, poeticStructures, topsOptions, loadDeserializedProjectData
   } = useProjectData();
-  const { infoModal, busyModal, hideModals } = useViewState();
-
   const [persistenceMethod, setPersistenceMethod] = useState<PersistenceMethod | null>(null);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(PersistenceStatus.Initializing);
   const [lastPersistenceEvent, setLastPersistenceEvent] = useState<PersistenceEvent | null>(null);
   const [lastPersistenceHash, setLastPersistenceHash] = useState<string | null>(null);
+  const [isPersistenceInitialized, setIsPersistenceInitialized] = useState<boolean>(false);
+  
+  const storeRef = useRef<PersistenceStore | null>(null);
+  const isPersistenceMethodExternal = storeRef.current?.isExternal || false;
+  const isPathOauthCallback = !!useMatch(import.meta.env.TST_OAUTH_GOOGLE_REDIRECT_PATH);
+  
+  const initializingRef = useRef<{
+    promise: Promise<void> | null,
+    resolve: (() => void) | null;
+    reject: ((reason: PersistenceResult) => void) | null;
+  }>({
+    promise: null,
+    resolve: null,
+    reject: null
+  });
 
-  const [store, setStore] = useState<PersistenceStore | null>(null);
+  const setPersistenceMethodPublic = useCallback((method: PersistenceMethod, persistenceFolderName: string | null) => {
+    setPersistenceMethod(method);
+    setPersistenceStatus(PersistenceStatus.Initializing);
 
-  const lockRef = useRef<boolean>(false);
+    const promise = new Promise<void>((resolve, reject) => {
+      initializingRef.current.resolve = resolve;
+      initializingRef.current.reject = reject;
+    });
+    initializingRef.current.promise = promise;
 
-  const isPersistenceMethodExternal = store?.isExternal || false;
-
-  const authorizeExternal = useCallback(() => {
-    if (store && store.isExternal) {
-      (store as ExternalPersistenceStore).authorizeExternal();
+    if (method === PersistenceMethod.SessionOnly) {
+      // todo
+    } else if (method === PersistenceMethod.BrowserLocal) {
+      storeRef.current = new LocalStoragePersistenceStore();
+    } else if (method === PersistenceMethod.GoogleDrive) {
+      storeRef.current = new GoogleDrivePersistenceStore(persistenceFolderName || DEFAULT_EXTERNAL_STORE_FOLDER_NAME);
     }
-  }, [store]);
+  }, [setPersistenceMethod, setPersistenceStatus]);
+  
+  const authorizeExternal = useCallback(() => {
+    (storeRef.current as ExternalPersistenceStore).authorizeExternal();
+  }, []);
   
   const revokeAuthorizeExternal = useCallback(async () => {
-    if (store && store.isExternal) {
-      try {
-        await (store as ExternalPersistenceStore).revokeAuthorizeExternal();
-      } finally {
-        setPersistenceStatus(PersistenceStatus.ErrorUnauthorized);
-        setLastPersistenceEvent(PersistenceEvent.Error);
-      }
+    try {
+      await (storeRef.current as ExternalPersistenceStore).revokeAuthorizeExternal();
+    } finally {
+      setPersistenceStatus(PersistenceStatus.ErrorUnauthorized);
+      setLastPersistenceEvent(PersistenceEvent.Error);
     }
-  }, [store, setPersistenceStatus, setLastPersistenceEvent]);
-
-  const createProject = useCallback(async (project: Project): Promise<void> => {
-    if (store && persistenceStatus === PersistenceStatus.Idle) {
-      setPersistenceStatus(PersistenceStatus.Paused);
-
-      try {
-        const hash = await store.createProject(project);
-        setLastPersistenceHash(hash);
-        setPersistenceStatus(PersistenceStatus.Idle);
-        setLastPersistenceEvent(PersistenceEvent.Saved);
-      } catch (err) {
-        setPersistenceStatus(err as PersistenceErrorStatus);
-        setLastPersistenceEvent(PersistenceEvent.Error);
-        throw(err);
-      }
-    }
-  }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash]);
+  }, [setPersistenceStatus, setLastPersistenceEvent]);
   
-  const loadProject = useCallback(async (projectName: string, storeOverride?: PersistenceStore | null): Promise<void> => {
-    const storeToUse = storeOverride || store;
-    if (storeToUse) {
-      setPersistenceStatus(PersistenceStatus.Paused);
-      busyModal(`Loading Project "${projectName}"...`);
+  const completeAuthorizeExternal = useCallback(async (code: string, state: string, rememberMe: boolean): Promise<PersistenceResult> => {
+    console.log('persistence: completing Google Drive auth');
+    
+    try {
+      await (storeRef.current as ExternalPersistenceStore).completeAuthorizeExternal(code, state, rememberMe);
 
+      setPersistenceStatus(PersistenceStatus.Initializing);
+      setLastPersistenceEvent(PersistenceEvent.Authorized);
+
+      return {
+        persistenceStatus: PersistenceStatus.Initializing,
+        lastPersistenceEvent: PersistenceEvent.Authorized
+      };
+    } catch (err) {
+      setPersistenceStatus(err as PersistenceErrorStatus);
+      setLastPersistenceEvent(PersistenceEvent.Error);
+
+      // todo - throw here and catch in settings page
+      return {
+        persistenceStatus: err as PersistenceErrorStatus,
+        lastPersistenceEvent: PersistenceEvent.Error
+      };
+    }
+  }, [setPersistenceStatus, setLastPersistenceEvent]);
+
+  const initializePersistence = useCallback(async (): Promise<PersistenceResult> => {
+    try {
+      await storeRef.current?.initialize();
+
+      setPersistenceStatus(PersistenceStatus.Idle);
+      setLastPersistenceEvent(PersistenceEvent.Initialized);
+
+      if (initializingRef.current.resolve) {
+        setIsPersistenceInitialized(true);
+        initializingRef.current.resolve();
+      }
+
+      return {
+        persistenceStatus: PersistenceStatus.Idle,
+        lastPersistenceEvent: PersistenceEvent.Initialized
+      };
+    } catch (err) {
+      setPersistenceStatus(err as PersistenceErrorStatus);
+      setLastPersistenceEvent(PersistenceEvent.Error);
+
+      if (initializingRef.current.reject) {
+        initializingRef.current.reject({
+          persistenceStatus: err as PersistenceErrorStatus,
+          lastPersistenceEvent: PersistenceEvent.Error
+        });
+      }
+
+      // todo - throw here and catch in settings page + 
+      return {
+        persistenceStatus: err as PersistenceErrorStatus,
+        lastPersistenceEvent: PersistenceEvent.Error
+      };
+    }
+  }, [setPersistenceStatus, setLastPersistenceEvent, setIsPersistenceInitialized]);
+
+  const waitForInit = useCallback(async (): Promise<void> => {
+    console.log('waitForInit - storeRef.current?.isInitialized:', storeRef.current?.isInitialized);
+    if (storeRef.current?.isInitialized) {
+      return;
+    }
+
+    if (initializingRef.current.promise) {
+      console.log('waitForInit - returning exisiting promise', initializingRef.current.promise);
+      return initializingRef.current.promise;
+    } else {
+      console.error('waitForInit: no promise to return!');
+      throw new Error('HRM.....');
+    }
+  }, [persistenceStatus, lastPersistenceEvent]);
+
+  const loadProject = useCallback((projectName: string): Promise<PersistenceResult> => {
+    return new Promise(async (resolve, reject) => {
       try {
-        const projectResponse = await storeToUse.fetchProject(projectName);
-        if (projectResponse === null) {
-          console.log('no existing project found with name', projectName);
+        console.log('load: waiting for init to complete');
+        await waitForInit();
+        console.log('load: done waiting');
+      } catch (err) {
+        console.log('load: rejecting with init error');
+        return reject(err as PersistenceResult);
+      }
+
+      setPersistenceStatus(PersistenceStatus.Paused);
+      console.log('load: pausing persistence');
+      
+      try {
+        const projectResponse = await storeRef.current?.fetchProject(projectName);
+
+        if (!projectResponse) {
+          console.log('load: no existing project found with name:', projectName);
           setPersistenceStatus(PersistenceStatus.Idle);
-          setLastPersistenceEvent(PersistenceEvent.NotFound);
-          return;
+          setLastPersistenceEvent(PersistenceEvent.ProjectNotFound);
+
+          return reject({
+            persistenceStatus: PersistenceStatus.Idle,
+            lastPersistenceEvent: PersistenceEvent.ProjectNotFound
+          });
         }
 
         const { project, hash } = projectResponse;
         setLastPersistenceHash(hash);
 
         try {
+          console.log('load: putting fetched data into current project context');
           loadDeserializedProjectData(project);
+
           setTimeout(() => {
+            console.log('load: done - success');
             setPersistenceStatus(PersistenceStatus.Idle);
-            setLastPersistenceEvent(PersistenceEvent.Loaded);
+            setLastPersistenceEvent(PersistenceEvent.ProjectLoaded);
+
+            resolve({
+              persistenceStatus: PersistenceStatus.Idle,
+              lastPersistenceEvent: PersistenceEvent.ProjectLoaded
+            });
           }, 1000);
         } catch (err) {
-          setPersistenceStatus(PersistenceStatus.ErrorData);
-          setLastPersistenceEvent(PersistenceEvent.Error);
+          console.log('load: data error');
+          throw PersistenceStatus.ErrorData;
         }
+      } catch (err) {
+        console.log('load: error:', err);
+        setPersistenceStatus(err as PersistenceErrorStatus);
+        setLastPersistenceEvent(PersistenceEvent.Error);
+        
+        reject({
+          persistenceStatus: err as PersistenceErrorStatus,
+          lastPersistenceEvent: PersistenceEvent.Error
+        });
+      }
+    });
+  }, [waitForInit, setPersistenceStatus, setLastPersistenceHash, loadDeserializedProjectData, setLastPersistenceEvent]);
+
+  const createProject = useCallback(async (project: Project): Promise<void> => {
+    if (persistenceStatus === PersistenceStatus.Idle) {
+      setPersistenceStatus(PersistenceStatus.Paused);
+
+      try {
+        const hash = await storeRef.current?.createProject(project);
+        if (hash) {
+          setLastPersistenceHash(hash);
+        }
+        setPersistenceStatus(PersistenceStatus.Idle);
+        setLastPersistenceEvent(PersistenceEvent.ProjectSaved);
       } catch (err) {
         setPersistenceStatus(err as PersistenceErrorStatus);
         setLastPersistenceEvent(PersistenceEvent.Error);
+        // todo update to behave like load
         throw(err);
-      } finally {
-        hideModals();
       }
     }
-  }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash, loadDeserializedProjectData, setLastPersistenceEvent]);
+  }, [persistenceStatus, setPersistenceStatus, setLastPersistenceHash]);
 
-  const completeAuthorizeExternalAndInitializeStore = useCallback(async (newStore: ExternalPersistenceStore, rememberMe: boolean, lastProjectName?: string | null): Promise<void> => {
-    try {
-      await newStore.completeAuthorizeExternal(rememberMe);
-    } finally {
-      console.log('auth: cleaning up URL post auth callback');
-      window.history.replaceState({}, '', window.location.origin);
-    }
 
-    console.log('auth: complete. now calling store.initialize()');
-    await newStore.initialize();
 
-    console.log('init complete.');
 
-    if (lastProjectName) {
-      console.log('load: loading last project from store:', lastProjectName);
-      await loadProject(lastProjectName, newStore);
-    } else {
-      console.log('load: no last project. persistence is ready.');
-      setPersistenceStatus(PersistenceStatus.Idle);
-    }
-  }, [loadDeserializedProjectData, loadProject, setPersistenceStatus, setLastPersistenceEvent]);
-
-  const initializeStore = useCallback(async (newStore: PersistenceStore, lastProjectName?: string | null): Promise<void> => {
-    await newStore.initialize();
-    
-    if (lastProjectName) {
-      console.log('load: loading last project:', lastProjectName);
-      await loadProject(lastProjectName, newStore);
-    } else {
-      setPersistenceStatus(PersistenceStatus.Idle);
-    }
-  }, [loadProject, setPersistenceStatus, setLastPersistenceEvent]);
-
-  const setPersistenceMethodPublic = useCallback(async (
-    method: PersistenceMethod,
-    rememberMe: boolean,
-    persistenceFolderName: string | null,
-    lastProjectName: string | null
-  ): Promise<void> => {
-    if (lockRef.current === true) {
-      console.log('already locked - not setting persistence method again');
-      return;
-    } else if (persistenceMethod === method) {
-      console.log('persistence method already set (not setting again):', method);
-      return;
-    } else {
-      lockRef.current = true;
-      console.log('locked. setting new persistence method', method);
-    }
-
-    setPersistenceMethod(method);
-    setPersistenceStatus(PersistenceStatus.Initializing);
-
-    let newStore: PersistenceStore | null = null;
-    if (method === PersistenceMethod.SessionOnly) {
-      // todo
-    } else if (method === PersistenceMethod.BrowserLocal) {
-      newStore = new LocalStoragePersistenceStore();
-    } else if (method === PersistenceMethod.GoogleDrive) {
-      newStore = new GoogleDrivePersistenceStore(persistenceFolderName || DEFAULT_EXTERNAL_STORE_FOLDER_NAME);
-    }
-
-    setStore(newStore);
-
-    const idx = window.location.pathname.indexOf(import.meta.env.TST_OAUTH_GOOGLE_REDIRECT_PATH);
-    const codeIdx = window.location.search.indexOf('code=');
-
-    try {
-      if (method === PersistenceMethod.GoogleDrive && idx >= 0) {
-        if (codeIdx >= 0) {
-          console.log('auth: completing Google Drive auth before init. rememberMe:', rememberMe);
-          busyModal(`Finishing Google Drive Setup...`);
-
-          await completeAuthorizeExternalAndInitializeStore(newStore as ExternalPersistenceStore, rememberMe, lastProjectName);
-        } else {
-          console.log('auth: incomplete.');
-
-          setPersistenceStatus(PersistenceStatus.ErrorUnauthorized);
-          setLastPersistenceEvent(PersistenceEvent.Error);
-
-          console.log('auth: cleaning up URL post auth callback');
-          window.history.replaceState({}, '', window.location.origin);
-
-          await infoModal('Google Drive Setup was not completed due to user cancellation or an error.');
-        }
-      } else {
-        await initializeStore(newStore as PersistenceStore, lastProjectName);
-      }
-    } catch (err) {
-      setPersistenceStatus(err as PersistenceErrorStatus);
-      setLastPersistenceEvent(PersistenceEvent.Error);
-    } finally {
-      lockRef.current = false;
-      console.log('unlocked.');
-      hideModals();
-    }
-  }, [
-    lockRef, persistenceMethod, setPersistenceMethod, setPersistenceStatus, setStore,
-    completeAuthorizeExternalAndInitializeStore, initializeStore, setLastPersistenceEvent
-  ]);
+    // temp
+  useEffect(() => {
+    console.log('INFO persistenceStatus changed:', persistenceStatus);
+  }, [persistenceStatus]);
 
   const saveUpdate = useCallback(async (project: Project): Promise<void> => {
-    if (store && persistenceStatus === PersistenceStatus.Idle) {
+    if (persistenceStatus === PersistenceStatus.Idle) {
       setPersistenceStatus(PersistenceStatus.Saving);
 
       try {
-        const hash = await store.updateProject(project);
-        setLastPersistenceHash(hash);
+        const hash = await storeRef.current?.updateProject(project);
+        if (hash) {
+          setLastPersistenceHash(hash);
+        }
         setPersistenceStatus(PersistenceStatus.Idle);
-        setLastPersistenceEvent(s => {
-          return s === PersistenceEvent.Recovered ? PersistenceEvent.RecoveredAndSaved : PersistenceEvent.Saved;
-        });
+        setLastPersistenceEvent(PersistenceEvent.ProjectSaved);
       } catch (err) {
         setPersistenceStatus(err as PersistenceErrorStatus);
         setLastPersistenceEvent(PersistenceEvent.Error);
-        console.log('persistence update failed - status:', err);
+        console.error('persistence: project update save failed - status:', err);
       }
     } else {
-      console.log('skipping persistence update - status:', persistenceStatus);
+      console.log('persistence: skipping update save - status:', persistenceStatus);
     }
-  }, [store, persistenceStatus, setPersistenceStatus, setLastPersistenceHash, setLastPersistenceEvent]);
-
-  // temp
-  useEffect(() => {
-    console.log('persistenceStatus changed:', persistenceStatus);
-  }, [persistenceStatus]);
+  }, [persistenceStatus, setPersistenceStatus, setLastPersistenceHash, setLastPersistenceEvent]);
 
   // save project when any changes occur
   useEffect(() => {
     if (projectName) {
+      console.log('persistence: triggering project save...');
+
       saveUpdate({
         projectName,
         transcriptLines,
@@ -238,18 +265,22 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       });
     }
   }, [
-    // intentionally incomplete
+    // intentionally limited
     transcriptLines, poeticStructures, topsOptions
   ]);
 
   const value = useMemo(() => ({
-    persistenceMethod, setPersistenceMethod: setPersistenceMethodPublic, 
-    isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
-    authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
+    persistenceMethod, setPersistenceMethod: setPersistenceMethodPublic, initializePersistence,
+    isPersistenceMethodExternal, isPathOauthCallback, isPersistenceInitialized,
+    lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
+    loadProject, createProject,
+    authorizeExternal, completeAuthorizeExternal, revokeAuthorizeExternal
   }), [
-    persistenceMethod, setPersistenceMethodPublic,
-    isPersistenceMethodExternal, lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
-    authorizeExternal, revokeAuthorizeExternal, createProject, loadProject
+    persistenceMethod, setPersistenceMethodPublic, initializePersistence,
+    isPersistenceMethodExternal, isPathOauthCallback, isPersistenceInitialized,
+    lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
+    loadProject, createProject,
+    authorizeExternal, completeAuthorizeExternal, revokeAuthorizeExternal
   ]);
 
   return (

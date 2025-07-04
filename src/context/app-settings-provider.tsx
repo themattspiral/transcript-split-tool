@@ -54,7 +54,7 @@ const saveToLocalStorage = (settings: AppSettings) => {
 
 export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { projectName } = useProjectData();
-  const { setPersistenceMethod } = usePersistence();
+  const { setPersistenceMethod, initializePersistence, isPathOauthCallback } = usePersistence();
 
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   const isInitializedRef = useRef<boolean>(false);
@@ -87,33 +87,35 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // restore local settings on mount - this kicks off the rest of the app init process
   useEffect(() => {
     if (isInitializedRef.current === false) {
-      console.log('settings: not yet initialized');
+      console.log('settings: not yet loaded');
       isInitializedRef.current = true;
 
       const settings = loadFromLocalStorage();
       if (settings) {
-        console.log('settings: retrieved');
+        console.log('settings: retrieved from localStorage');
         setAppSettings(settings);
 
-        console.log('settings: setting persistence options...');
+        console.log('settings: setting persistence method');
 
-        // we don't need to wait for the async setPersistenceMethod function to complete - just fire and forget
-        // (persistence init errors are caught and handled with error statuses in that context)
-        setPersistenceMethod(
-          settings.persistenceMethod,
-          settings.persistenceRememberMe,
-          settings.persistenceFolderName,
-          settings.lastProjectName
-        )
+        setPersistenceMethod(settings.persistenceMethod, settings.persistenceFolderName);
+
+        if (!isPathOauthCallback) {
+          console.log('settings: initializing persistence (kickoff)');
+          initializePersistence();
+          // we don't need to wait for the async setPersistenceMethod function to complete - just fire and forget
+          // (persistence init errors are caught and handled with error statuses in that context)
+        } else {
+          console.log('settings: skipping persistence init to allow auth completion from settings page');
+        }
       } else {
         console.log('settings: no app settings defined yet (initial use)');
       }
 
-      console.log('settings: init done!');
+      console.log('settings: load complete');
     } else {
-      console.log('settings: already initialized, not loading again');
+      console.log('settings: already loaded, not loading again');
     }
-  }, [isInitializedRef, setAppSettings, setPersistenceMethod]);
+  }, [isPathOauthCallback, initializePersistence, setAppSettings, setPersistenceMethod]);
 
   // update app settings when they're changed
   // todo - make this an explicit call from outside instead
@@ -123,6 +125,10 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.log('saving new local app settings for new project name');
       setAppSettings(s => {
         if (!s) return s;
+
+        if (s.lastProjectName === projectName) {
+          return s;
+        }
 
         const newSettings: AppSettings = {
           ...(s as AppSettings),

@@ -1,20 +1,20 @@
 import { createContext, useContext } from 'react';
 
-import { PersistenceEvent, PersistenceMethod, PersistenceStatus, Project } from 'data';
+import { PersistenceEvent, PersistenceMethod, PersistenceResult, PersistenceStatus, Project } from 'data';
 
 interface PersistenceContextProps {
   persistenceMethod: PersistenceMethod | null;
-  setPersistenceMethod: (
-    persistenceMethod: PersistenceMethod,
-    persistenceRememberMe: boolean,
-    persistenceFolderName: string | null,
-    initialProjectName: string | null
-  ) => Promise<void>;
+  setPersistenceMethod: (persistenceMethod: PersistenceMethod, persistenceFolderName: string | null) => void;
+  initializePersistence: () => Promise<PersistenceResult>;
+
   isPersistenceMethodExternal: boolean;
+  isPersistenceInitialized: boolean;
+  isPathOauthCallback: boolean;
   lastPersistenceEvent: PersistenceEvent | null;
   lastPersistenceHash: string | null;
   persistenceStatus: PersistenceStatus;
-  loadProject: (projectName: string, storeOverride?: PersistenceStore | null) => Promise<void>;
+
+  loadProject: (projectName: string) => Promise<PersistenceResult>;
   createProject: (project: Project) => Promise<void>;
 
   // rename
@@ -23,20 +23,27 @@ interface PersistenceContextProps {
   // check name uniqueness
 
   authorizeExternal: () => void;
+  completeAuthorizeExternal: (code: string, state: string, rememberMe: boolean) => Promise<PersistenceResult>;
   revokeAuthorizeExternal: () => Promise<void>;
 }
 
 export const PersistenceContext = createContext<PersistenceContextProps>({
   persistenceMethod: null,
-  setPersistenceMethod: () => Promise.reject(0),
+  setPersistenceMethod: () => {},
+  initializePersistence: () => Promise.reject(0),
+
   isPersistenceMethodExternal: false,
+  isPersistenceInitialized: false,
+  isPathOauthCallback: false,
   lastPersistenceEvent: null,
   lastPersistenceHash: null,
   persistenceStatus: PersistenceStatus.Initializing,
+
   loadProject: () => Promise.reject(0),
   createProject: () => Promise.reject(0),
 
   authorizeExternal: () => {},
+  completeAuthorizeExternal: () => Promise.reject(0),
   revokeAuthorizeExternal: () => Promise.reject(0)
 });
 
@@ -64,6 +71,6 @@ export interface PersistenceStore {
 
 export interface ExternalPersistenceStore extends PersistenceStore {
   authorizeExternal: () => void;
-  completeAuthorizeExternal: (rememberMe: boolean) => Promise<void>;
+  completeAuthorizeExternal: (code: string, state: string, rememberMe: boolean) => Promise<void>;
   revokeAuthorizeExternal: () => Promise<void>;
 }

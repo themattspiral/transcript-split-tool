@@ -164,13 +164,13 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     authorize();
   }
 
-  async completeAuthorizeExternal(rememberMe: boolean) {
+  async completeAuthorizeExternal(code: string, state: string, rememberMe: boolean): Promise<void> {
     try {
       console.log('store running completeAuthorize()');
-      this.#accessToken = await completeAuthorize(rememberMe);
+      this.#accessToken = await completeAuthorize(code, state, rememberMe);
       console.log('store finished completeAuthorize()');
-    } catch (err) {
-      throw PersistenceStatus.ErrorUnauthorized;
+    } catch (statusCode) {
+      await this.#handleApiError(statusCode as number);
     }
   }
 

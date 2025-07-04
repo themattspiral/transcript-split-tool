@@ -14,14 +14,11 @@ import { StructureEditProvider } from 'context/structure-edit-provider';
 import { TranscriptInteractionProvider } from 'context/transcript-interaction-provider';
 import { PersistenceProvider } from 'context/persistence/persistence-provider';
 import { AppSettingsProvider } from 'context/app-settings-provider';
+
+import { ModalWindow } from 'components/modal-window';
 import { AppRoutes } from './routes';
 
-// reference
-// import reactLogo from './assets/react.svg' // src
-// import viteLogo from '/vite.svg'           // public
-
 createRoot(document.getElementById('root')!).render(
-
   <StrictMode>
 
     <BrowserRouter>
@@ -32,6 +29,8 @@ createRoot(document.getElementById('root')!).render(
             <TranscriptInteractionProvider>
               <PersistenceProvider>
                 <AppSettingsProvider>
+
+                  <ModalWindow />
 
                   <AppRoutes />
 

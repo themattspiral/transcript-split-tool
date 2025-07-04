@@ -172,13 +172,17 @@ export type PersistenceErrorStatus =
   | PersistenceStatus.ErrorData;
 
 export enum PersistenceEvent {
-  Loaded = 'Loaded',
-  Saved = 'Saved',
-  RecoveryTempStored = 'RecoveryTempStored',
-  Recovered = 'Recovered',
-  RecoveredAndSaved = 'RecoveredAndSaved',
-  NotFound = 'NotFound',
+  Authorized = 'Authorized',
+  Initialized = 'Initialized',
+  ProjectLoaded = 'ProjectLoaded',
+  ProjectSaved = 'ProjectSaved',
+  ProjectNotFound = 'ProjectNotFound',
   Error = 'Error'
+}
+
+export interface PersistenceResult {
+  persistenceStatus: PersistenceStatus;
+  lastPersistenceEvent: PersistenceEvent;
 }
 
 export enum ProjectDataVersion {

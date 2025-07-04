@@ -5,7 +5,7 @@ import { HEADER_ROW_ID, PoeticStructureRelationshipType, StylableProps, getPhras
 import { getGridColumnAttributes  } from '../../../shared/util';
 import { useProjectData } from 'context/project-data-context';
 
-const StructuresGrid: React.FC<StylableProps> = ({ style, className }) => {
+export const StructuresView: React.FC<StylableProps> = ({ style, className }) => {
   const { transcriptLines, poeticStructures } = useProjectData();
   // const { show: showContextMenu } = useContextMenu();
   // const { confirmModal } = useViewState();
@@ -223,5 +223,3 @@ const StructuresGrid: React.FC<StylableProps> = ({ style, className }) => {
     </div>
   );
 };
-
-export { StructuresGrid };
