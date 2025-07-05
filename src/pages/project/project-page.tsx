@@ -37,7 +37,7 @@ export const ProjectPage: React.FC = () => {
   }, [projectName, appSettings]);
 
   return (
-    <div className="flex flex-col h-dvh w-dvw p-2 overflow-hidden">
+    <main className="flex flex-col p-2 overflow-hidden">
 
       <ControlBar />
       
@@ -48,6 +48,6 @@ export const ProjectPage: React.FC = () => {
 
       </div>
 
-    </div>
+    </main>
   );
 };

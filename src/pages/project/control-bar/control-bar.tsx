@@ -3,25 +3,18 @@ import { NavLink } from 'react-router-dom';
 import { extractRawText } from 'mammoth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from '@fortawesome/free-regular-svg-icons';
-import classNames from 'classnames';
 
-import { PersistenceStatus, TranscriptLine } from 'data';
+import { TranscriptLine } from 'data';
 import { useProjectData } from 'context/project-data-context';
 import { usePersistence } from 'context/persistence/persistence-context';
-import { useAppSettings } from 'context/app-settings-context';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
 const ControlBar: React.FC = () => {
   const { transcriptLines, setNewTranscript, poeticStructures } = useProjectData();
-  const { appSettings } = useAppSettings();
-  const {
-    persistenceStatus, isPersistenceMethodExternal, lastPersistenceEvent,
-    authorizeExternal, revokeAuthorizeExternal
-} = usePersistence();
+  const { persistenceStatus, lastPersistenceEvent } = usePersistence();
   const psCount = useMemo(() => Object.keys(poeticStructures).length, [poeticStructures])
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isAuthorized = appSettings?.persistenceHasAuthorized && persistenceStatus !== PersistenceStatus.ErrorUnauthorized;
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event?.target?.files?.[0];
@@ -117,25 +110,6 @@ const ControlBar: React.FC = () => {
             Export Grid
             <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
           </button>
-          
-          { isPersistenceMethodExternal &&
-            <button
-              type="button"
-              onClick={() => {
-                if (isAuthorized) {
-                  revokeAuthorizeExternal();
-                } else {
-                  authorizeExternal();
-                }
-              }}
-              className={classNames(
-                ' px-4 py-2 rounded cursor-pointer flex items-center',
-                isAuthorized ? 'bg-violet-400 hover:bg-violet-500 text-white' : 'bg-amber-500 hover:bg-amber-600'
-              )}
-            >
-              { isAuthorized ? 'Revoke Drive' : 'Authorize Drive' }
-            </button>
-          }
 
           <div className='flex flex-col'>
             <span>Persistence Status: { persistenceStatus?.toString() }</span>

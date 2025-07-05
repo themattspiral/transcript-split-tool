@@ -221,10 +221,15 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
 
 
-    // temp
+  // temp
   useEffect(() => {
     console.log('INFO persistenceStatus changed:', persistenceStatus);
   }, [persistenceStatus]);
+
+  // temp
+  useEffect(() => {
+    console.log('INFO lastPersistenceEvent changed:', lastPersistenceEvent);
+  }, [lastPersistenceEvent]);
 
   const saveUpdate = useCallback(async (project: Project): Promise<void> => {
     if (persistenceStatus === PersistenceStatus.Idle) {
