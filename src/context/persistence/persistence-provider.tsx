@@ -60,7 +60,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       await (storeRef.current as ExternalPersistenceStore).revokeAuthorizeExternal();
     } finally {
       setPersistenceStatus(PersistenceStatus.ErrorUnauthorized);
-      setLastPersistenceEvent(PersistenceEvent.Error);
+      setLastPersistenceEvent(PersistenceEvent.RevokedAuth);
     }
   }, [setPersistenceStatus, setLastPersistenceEvent]);
   

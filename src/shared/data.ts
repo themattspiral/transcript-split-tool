@@ -173,6 +173,7 @@ export type PersistenceErrorStatus =
 
 export enum PersistenceEvent {
   Authorized = 'Authorized',
+  RevokedAuth = 'RevokedAuth',
   Initialized = 'Initialized',
   ProjectLoaded = 'ProjectLoaded',
   ProjectSaved = 'ProjectSaved',

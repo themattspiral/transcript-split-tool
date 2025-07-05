@@ -79,48 +79,64 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const completeOauthAndInitialize = useCallback(async (rememberMe: boolean, lastProjectName: string | null): Promise<void> => {
     busyModal(`Finishing Google Drive Setup...`);
+    console.log('settings: completing external authorization');
 
     const code = searchParams.get('code');
     const state = searchParams.get('state');
     if (!code || !state) {
-      infoModal(`Error completing authorization. Incorrect params from Oauth provider.`);
-      console.error('settings page: no code or state found in query params:', searchParams.toString());
+      if (searchParams.get('error') === 'access_denied') {
+        infoModal(`Error completing authorization - access was denied.`);
+        console.error('settings: access_denied from oauth provider (user cancelled)');
+      } else {
+        infoModal(`Error completing authorization. Incorrect data received from your provider.`);
+        console.error('settings: code or state missing in query params:', searchParams.toString());
+      }
+
+      console.log('settings: navigate to /settings (with replace:true for url cleanup)');
+      navigate('/settings', { replace: true });
       return;
     }
 
-    completeAuthorizeExternal(code, state, rememberMe).then(() => {
-      console.log('settings: authorized!');
+    try {
+      await completeAuthorizeExternal(code, state, rememberMe);
+    } catch (authResult) {
+      console.error('settings: error completing external auth:', authResult);
+      infoModal(`Error completing authorization. Status: ${(authResult as PersistenceResult).persistenceStatus}`);
 
-      console.log('settings: initial url cleanup (replace state)');
-      window.history.replaceState({}, '', '/settings');
-
-      console.log('settings: initializing persistence');
-      initializePersistence().then(() => {
-        console.log('settings: persistence initialized!');
-        hideModals();
-
-        if (lastProjectName) {
-          console.log('settings: navigate to /transcript for last project load');
-          navigate('/transcript', { replace: true });
-        } else {
-          // align react router state with the history we changed above
-          console.log('settings: navigate to /settings (finish url cleanup)');
-          navigate('/settings', { replace: true });
-        }
-      }).catch((initResult: PersistenceResult) => {
-        console.log('settings: error completing persistence init:', initResult);
-        infoModal(`Error completing init. Persistence status: ${initResult.persistenceStatus}`);
-
-        console.log('settings: navigate to /settings (finish url cleanup)');
-        navigate('/settings', { replace: true });
-      });
-    }).catch((authResult: PersistenceResult) => {
-      console.log('settings: - error completing auth:', authResult);
-      infoModal(`Error completing authorization. Persistence status: ${authResult.persistenceStatus}`);
-
-      console.log('settings: navigate to /settings (finish url cleanup)');
+      console.log('settings: navigate to /settings (with replace:true for url cleanup)');
       navigate('/settings', { replace: true });
-    });
+      return;
+    }
+
+    console.log('settings: authorized!');
+
+    console.log('settings: initial url cleanup (replace state without router navigation)');
+    window.history.replaceState({}, '', '/settings');
+
+    console.log('settings: initializing persistence');
+    try {
+      await initializePersistence();
+    } catch (initResult) {
+      console.error('settings: error completing persistence init:', initResult);
+      infoModal(`Error completing init. Status: ${(initResult as PersistenceResult).persistenceStatus}`);
+
+      // align react router state with the history we changed above
+      console.log('settings: navigate to /settings (align router with url cleanup)');
+      navigate('/settings', { replace: true });
+      return;
+    }
+
+    console.log('settings: persistence initialized!');
+    hideModals();
+
+    if (lastProjectName) {
+      console.log('settings: navigate to /transcript for last project load');
+      navigate('/transcript', { replace: true });
+    } else {
+      // align react router state with the history we changed above
+      console.log('settings: navigate to /settings (align router with url cleanup)');
+      navigate('/settings', { replace: true });
+    }
   }, [searchParams, busyModal, infoModal, hideModals, completeAuthorizeExternal, initializePersistence, navigate]);
 
   const savePersistenceMethod = useCallback((
@@ -134,7 +150,8 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
           ...s,
           persistenceMethod,
           persistenceRememberMe: persistenceRememberMe || false,
-          persistenceFolderName: persistenceFolderName || null
+          persistenceFolderName: persistenceFolderName || null,
+          persistenceHasAuthorized: false
         };
       } else {
         return {
@@ -157,7 +174,7 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return s;
       }
 
-      console.log(`settings: saving new local app settings for new [${key}]`);
+      console.log(`settings: saving new local app settings for new [${key}]: ${value}`);
 
       const newSettings: AppSettings = {
         ...(s as AppSettings),
@@ -196,8 +213,6 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
       } else {
         console.log('settings: no app settings defined yet (initial use)');
       }
-
-      console.log('settings: load complete');
     }
   }, [isPathOauthCallback, initializePersistence, completeOauthAndInitialize, setAppSettings, setPersistenceMethod]);
 
@@ -213,8 +228,10 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   useEffect(() => {
     if (lastPersistenceEvent === PersistenceEvent.Authorized) {
       saveSetting('persistenceHasAuthorized', true);
+    } else if (lastPersistenceEvent === PersistenceEvent.RevokedAuth) {
+      saveSetting('persistenceHasAuthorized', false);
     }
-  }, [setAppSettings, lastPersistenceEvent]);
+  }, [saveSetting, lastPersistenceEvent]);
 
   // store app settings when they're updated
   useEffect(() => {
