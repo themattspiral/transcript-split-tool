@@ -208,6 +208,7 @@ export const getAllSessions = (nowSec: number): any[] => {
         const sess = session as Session;
         const tokenExpired = !!sess.tokenExpiresAt && sess.tokenExpiresAt <= nowSec;
         const sessionExpired = sess.sessionExpiresAt <= nowSec;
+
         return {
           sessionExpired,
           tokenExpired,

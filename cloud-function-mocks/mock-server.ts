@@ -30,12 +30,26 @@ mockServer.get('/admin-sess', (req, res) => {
 
   const now = new Date();
   const sec = dateToSec(now);
+  const sessions = getAllSessions(sec);
+  const expiredCount = sessions.filter((s: any) => s.expired).length;
 
-  res.json({
-    currentSessionId: sessionId || null,
-    now: `${sec} (${now.toLocaleString()})`,
-    sessions: getAllSessions(sec)
-  }).end();
+  res.send(`
+    <html>
+      <title>Session Store</title>
+      <body style="font-family: sans-serif;">
+     
+        <h4 style="margin-bottom: 5px;">Now:</h4>
+        <div style="font-size: 16px;">${sec} (${now.toLocaleString()})</div>
+
+        <h4 style="margin-bottom: 5px;">Current Session ID:</h4>
+        <div style="font-size: 16px;">${sessionId || null}</div>
+
+        <h4 style="margin-bottom: 5px;">Session Store (${sessions.length} total, ${expiredCount} expired):</h4>
+        <div style="white-space: pre-wrap; font-family: monospace; font-size: 14px;">${JSON.stringify(sessions, null, 2)}</div>
+
+      </body>
+    </html>
+  `).end();
 });
 
 mockServer.get('/admin-expire-sess', (req, res) => {

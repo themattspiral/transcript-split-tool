@@ -1,14 +1,11 @@
-import { CSSProperties } from 'react';
 import classNames from 'classnames';
 
-import { SpanType } from 'data';
+import { SpanType, StylableProps } from 'data';
 
-interface SimpleSpanBubbleProps {
+interface SimpleSpanBubbleProps extends StylableProps {
   spanType: SpanType;
   mode: 'general' | 'menu';
   children: React.ReactNode;
-  className?: string | undefined;
-  style?: CSSProperties | undefined;
   showEmphasized?: boolean;
   showDeemphasized?: boolean;
 }

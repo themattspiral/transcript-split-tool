@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { CSSProperties, ReactNode } from 'react';
 
 export interface TranscriptLine {
   lineNumber: number;
@@ -107,11 +107,6 @@ export enum MenuAction {
   Delete
 }
 
-export enum TabId {
-  Transcript,
-  Structures
-}
-
 export interface TypeOfPoeticStructure {
   id: string;
   displayName: string;
@@ -150,6 +145,11 @@ export interface ValidationResult {
   hasOrderingError: boolean;
 }
 
+export interface StylableProps {
+  className?: string | undefined;
+  style?: CSSProperties | undefined;
+}
+
 export enum PersistenceMethod {
   SessionOnly = 'SessionOnly',
   BrowserLocal = 'BrowserLocal',
@@ -172,13 +172,18 @@ export type PersistenceErrorStatus =
   | PersistenceStatus.ErrorData;
 
 export enum PersistenceEvent {
-  Loaded = 'Loaded',
-  Saved = 'Saved',
-  RecoveryTempStored = 'RecoveryTempStored',
-  Recovered = 'Recovered',
-  RecoveredAndSaved = 'RecoveredAndSaved',
-  NotFound = 'NotFound',
+  Authorized = 'Authorized',
+  RevokedAuth = 'RevokedAuth',
+  Initialized = 'Initialized',
+  ProjectLoaded = 'ProjectLoaded',
+  ProjectSaved = 'ProjectSaved',
+  ProjectNotFound = 'ProjectNotFound',
   Error = 'Error'
+}
+
+export interface PersistenceResult {
+  persistenceStatus: PersistenceStatus;
+  lastPersistenceEvent: PersistenceEvent;
 }
 
 export enum ProjectDataVersion {
@@ -201,6 +206,7 @@ export interface AppSettings {
   persistenceMethod: PersistenceMethod;
   persistenceRememberMe: boolean;
   persistenceFolderName: string | null;
+  persistenceHasAuthorized: boolean;
   lastProjectName: string | null;
   readonly dataVersion: AppSettingsDataVersion;
 }

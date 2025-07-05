@@ -45,17 +45,7 @@ export const authorize = () => {
   GoogleUserManager.signinRedirect();
 };
 
-export const completeAuthorize = async (rememberMe: boolean): Promise<string> => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const code = urlParams.get('code');
-  const state = urlParams.get('state');
-
-  if (!code) {
-    console.error(`Google OIDC oauth completion: No code found in URL:`, window.location.href);
-    console.debug('sessionStorage', sessionStorage);
-    throw 401;
-  }
-
+export const completeAuthorize = async (code: string, state: string, rememberMe: boolean): Promise<string> => {
   const s = sessionStorage.getItem(`${STATE_KEY_PREFIX}${state}`);
   const codeVerifier = JSON.parse(s || '{}')?.code_verifier || null;
   
@@ -65,7 +55,8 @@ export const completeAuthorize = async (rememberMe: boolean): Promise<string> =>
     throw 401;
   }
 
-  // cleanup PKCE flow state entry - cloud function will complete the PKCE flow from here
+  // cleanup PKCE flow state entry - code verifier is no longer needed
+  // (cloud function will complete the PKCE flow from here)
   GoogleUserManager.clearStaleState();
 
   const request: OauthExchangeRequest = {

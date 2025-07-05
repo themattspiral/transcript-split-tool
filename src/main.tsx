@@ -1,5 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+
 import 'react-contexify/dist/ReactContexify.css';
 
 import './main.css';
@@ -12,26 +14,34 @@ import { StructureEditProvider } from 'context/structure-edit-provider';
 import { TranscriptInteractionProvider } from 'context/transcript-interaction-provider';
 import { PersistenceProvider } from 'context/persistence/persistence-provider';
 import { AppSettingsProvider } from 'context/app-settings-provider';
-import { App } from './app';
 
-// reference
-// import reactLogo from './assets/react.svg' // src
-// import viteLogo from '/vite.svg'           // public
+import { ModalWindow } from 'components/modal-window';
+import { AppRoutes } from './routes';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ViewStateProvider>
-      <ProjectDataProvider>
-        <StructureEditProvider>
-          <TranscriptInteractionProvider>
-            <PersistenceProvider>
-              <AppSettingsProvider>
-                <App />
-              </AppSettingsProvider>
-            </PersistenceProvider>
-          </TranscriptInteractionProvider>
-        </StructureEditProvider>
-      </ProjectDataProvider>
-    </ViewStateProvider>
+
+    <BrowserRouter>
+
+      <ViewStateProvider>
+        <ProjectDataProvider>
+          <StructureEditProvider>
+            <TranscriptInteractionProvider>
+              <PersistenceProvider>
+                <AppSettingsProvider>
+
+                  <ModalWindow />
+
+                  <AppRoutes />
+
+                </AppSettingsProvider>
+              </PersistenceProvider>
+            </TranscriptInteractionProvider>
+          </StructureEditProvider>
+        </ProjectDataProvider>
+      </ViewStateProvider>
+
+    </BrowserRouter>
+
   </StrictMode>
 );

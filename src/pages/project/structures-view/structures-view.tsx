@@ -1,17 +1,11 @@
-import { useMemo, CSSProperties } from 'react';
+import { useMemo } from 'react';
+import classNames from 'classnames';
 
-import { HEADER_ROW_ID, PoeticStructureRelationshipType, getPhraseText, sortPoeticStructures } from 'data';
-import { getGridColumnAttributes  } from '../shared/util';
-import { useViewState } from 'context/view-state-context';
+import { HEADER_ROW_ID, PoeticStructureRelationshipType, StylableProps, getPhraseText, sortPoeticStructures } from 'data';
+import { getGridColumnAttributes  } from '../../../shared/util';
 import { useProjectData } from 'context/project-data-context';
 
-interface StructuresGridProps {
-  style?: CSSProperties | undefined;
-}
-
-const StructuresGrid: React.FC<StructuresGridProps> = props => {
-  const { style } = props;
-  
+export const StructuresView: React.FC<StylableProps> = ({ style, className }) => {
   const { transcriptLines, poeticStructures } = useProjectData();
   // const { show: showContextMenu } = useContextMenu();
   // const { confirmModal } = useViewState();
@@ -208,9 +202,9 @@ const StructuresGrid: React.FC<StructuresGridProps> = props => {
 
   return sortedPoeticStructures?.length ? (
     <div
-      className="flex flex-col overflow-auto box-border w-full"
-      onContextMenu={handleGridContextMenu}
+      className={classNames('flex flex-col overflow-auto box-border w-full', className)}
       style={style}
+      onContextMenu={handleGridContextMenu}
     >
       
       { headerRow }
@@ -229,5 +223,3 @@ const StructuresGrid: React.FC<StructuresGridProps> = props => {
     </div>
   );
 };
-
-export { StructuresGrid };

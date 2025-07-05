@@ -1,16 +1,14 @@
-import { CSSProperties } from 'react';
 import classNames from 'classnames';
 
+import { StylableProps } from 'data';
 import { CustomCSSVariables, useViewState } from 'context/view-state-context';
 
-interface CurverdArrowProps {
+interface CurverdArrowProps extends StylableProps {
   size?: number;
   direction?: 'left-up' | 'down-right';
   mirrorX?: boolean;
   mirrorY?: boolean;
   color?: string;
-  className?: string | undefined;
-  style?: CSSProperties | undefined,
   mode?: 'general' | 'phrase-link'
 }
 
