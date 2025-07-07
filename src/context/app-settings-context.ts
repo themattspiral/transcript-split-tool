@@ -4,11 +4,15 @@ import { AppSettings, PersistenceMethod } from 'data';
 
 interface AppSettingsContextProps {
   appSettings: AppSettings | null;
+  loadedAppSettings: () => Promise<AppSettings | null>;
+  hasSavedAppSettings: () => boolean;
   savePersistenceMethod: (persistenceMethod: PersistenceMethod, persistenceRememberMe?: boolean) => void;
 }
 
 export const AppSettingsContext = createContext<AppSettingsContextProps>({
   appSettings: null,
+  loadedAppSettings: () => Promise.reject(0),
+  hasSavedAppSettings: () => false,
   savePersistenceMethod: () => {}
 });
 

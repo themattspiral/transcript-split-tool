@@ -10,11 +10,11 @@ interface PersistenceContextProps {
   isPersistenceMethodExternal: boolean;
   isPathOauthCallback: boolean;
   lastPersistenceEvent: PersistenceEvent | null;
-  lastPersistenceHash: string | null;
   persistenceStatus: PersistenceStatus;
 
   loadProject: (projectName: string) => Promise<PersistenceResult>;
   createProject: (project: Project) => Promise<void>;
+  listProjects: (nextPageToken?: string | null) => Promise<PersistenceProjectFilesResponse>;
 
   // rename
   // list, search
@@ -34,11 +34,11 @@ export const PersistenceContext = createContext<PersistenceContextProps>({
   isPersistenceMethodExternal: false,
   isPathOauthCallback: false,
   lastPersistenceEvent: null,
-  lastPersistenceHash: null,
   persistenceStatus: PersistenceStatus.Initializing,
 
   loadProject: () => Promise.reject(0),
   createProject: () => Promise.reject(0),
+  listProjects: () => Promise.reject(0),
 
   authorizeExternal: () => {},
   completeAuthorizeExternal: () => Promise.reject(0),
@@ -57,9 +57,11 @@ export interface PersistenceStore {
   readonly isExternal: boolean;
   isInitialized: boolean;
   initialize: () => Promise<void>;
-  fetchProject: (projectName: string) => Promise<{ project: Project, hash: string} | null>;
-  createProject: (project: Project) => Promise<string>;
-  updateProject: (project: Project) => Promise<string>;
+  fetchProject: (projectName: string) => Promise<Project | null>;
+  createProject: (project: Project) => Promise<void>;
+  updateProject: (project: Project) => Promise<void>;
+  
+  listProjects: (nextPageToken?: string | null) => Promise<PersistenceProjectFilesResponse>;
 
   // rename
   // list, search
@@ -71,4 +73,16 @@ export interface ExternalPersistenceStore extends PersistenceStore {
   authorizeExternal: () => void;
   completeAuthorizeExternal: (code: string, state: string, rememberMe: boolean) => Promise<void>;
   revokeAuthorizeExternal: () => Promise<void>;
+}
+
+export interface ProjectFile {
+  fileName: string;
+  projectName: string;
+  createdTime: string;
+  modifiedTime: string;
+  version: number;
+}
+export interface PersistenceProjectFilesResponse {
+  projectFiles: ProjectFile[];
+  nextPageToken: string | null;
 }

@@ -1,9 +1,10 @@
 import { PersistenceStatus, Project } from 'data';
-import { ExternalPersistenceStore } from '../persistence-context';
+import { ExternalPersistenceStore, PersistenceProjectFilesResponse, ProjectFile } from '../persistence-context';
 import { authorize, completeAuthorize, refreshAuthorize, revoke } from './google-oidc-oauth';
 import {
   getFolderInfo, getJSONFileInfo, getJSONFileContents,
-  createFolder, createJSONFile, updateJSONFile, PARSE_ERROR
+  createFolder, createJSONFile, updateJSONFile, listJSONFilesInfo, PARSE_ERROR,
+  GoogleDriveFile
 } from './google-drive-api';
 
 export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
@@ -104,7 +105,7 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     }
   }
   
-  async fetchProject(projectName: string): Promise<{ project: Project, hash: string} | null> {
+  async fetchProject(projectName: string): Promise<Project | null> {
     const fetch = async () => {
       console.log('store fetching project file');
       const projectFileInfo = await getJSONFileInfo(this.#accessToken, `${projectName}.json`, this.#folderId || '');
@@ -112,10 +113,10 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
       if (projectFileInfo?.id) {
         console.log('found project file:', projectFileInfo.id);
 
-        const projectFileContents = await getJSONFileContents(this.#accessToken, projectFileInfo.id);
+        const project = await getJSONFileContents(this.#accessToken, projectFileInfo.id);
         console.log('fetched project file contents');
 
-        return { project: projectFileContents as Project, hash: projectFileInfo.sha256Checksum };
+        return project;
       } else {
         return null;
       }
@@ -130,13 +131,11 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     }
   }
   
-  async createProject(project: Project): Promise<string> {
+  async createProject(project: Project): Promise<void> {
     const create = async () => {
-      console.log('creating manually');
+      console.log('creating project file...');
       const projectFile = await createJSONFile(this.#accessToken, `${project.projectName}.json`, this.#folderId || '', project);
       console.log('created project file:', projectFile.id);
-
-      return projectFile.sha256Checksum;
     };
 
     try {
@@ -148,7 +147,7 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     }
   }
   
-  async updateProject(project: Project): Promise<string> {
+  async updateProject(project: Project): Promise<void> {
     const update = async () => {
       console.log('store updating ', project.projectName);
 
@@ -157,15 +156,13 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
         console.log('project file exists, update it:', projectFile.id);
 
         projectFile = await updateJSONFile(this.#accessToken, projectFile.id, project);
-        console.log('updated. hash:', projectFile.sha256Checksum);
+        console.log('updated project file:', projectFile.name);
       } else {
-        // TODO - remove this - it must be explicitly created (when possible)
-        console.log('gotta create');
-        projectFile = await createJSONFile(this.#accessToken, `${project.projectName}.json`, this.#folderId || '', project);
-        console.log('created project file:', projectFile.id);
-      }
+        console.log('could not locate existing project file for:', project.projectName);
 
-      return projectFile.sha256Checksum;
+        // trigger a DataError throw
+        throw PARSE_ERROR;
+      }
     };
 
     try {
@@ -174,6 +171,31 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
       // will either return the result of the retry after reauth if successful,
       // or throw the appropriate PersistenceStatus for the error
       return await this.#handleApiError(statusCode as number, update);
+    }
+  }
+
+  async listProjects(nextPageToken?: string | null): Promise<PersistenceProjectFilesResponse> {
+    const list = async (nextPageToken?: string | null) => {
+      console.log('store listing');
+      return await listJSONFilesInfo(this.#accessToken, this.#folderId || '', nextPageToken);
+    };
+
+    try {
+      const filesResponse = await list(nextPageToken);
+      return {
+        nextPageToken: filesResponse.nextPageToken,
+        projectFiles: filesResponse.files.map((f: GoogleDriveFile) => ({
+          fileName: f.name,
+          projectName: f.name.split('.json')[0],
+          createdTime: f.createdTime,
+          modifiedTime: f.modifiedTime,
+          version: f.version
+        }))
+      };
+    } catch (statusCode) {
+      // will either return the result of the retry after reauth if successful,
+      // or throw the appropriate PersistenceStatus for the error
+      return await this.#handleApiError(statusCode as number, list);
     }
   }
 

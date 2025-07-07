@@ -7,34 +7,51 @@ import { usePersistence } from 'context/persistence/persistence-context';
 import { useEffect } from 'react';
 import { useViewState } from 'context/view-state-context';
 import { PersistenceEvent, PersistenceResult } from 'data';
+import { useLocation } from 'react-router';
 
 export const ProjectPage: React.FC = () => {
-  const { appSettings } = useAppSettings();
+  const { loadedAppSettings } = useAppSettings();
   const { projectName } = useProjectData();
   const { loadProject } = usePersistence();
   const { busyModal, infoModal, hideModals } = useViewState();
+  const location = useLocation();
 
   useEffect(() => {
-    if (!projectName && appSettings?.lastProjectName) {
-      console.log('project page - LOADING LAST PROJECT:', appSettings.lastProjectName);
-      busyModal(`Loading last project [${appSettings.lastProjectName}]...`);
+    console.log('project page - waiting on loaded app settings');
+    loadedAppSettings().then(appSettings => {
+    console.log('project page - got loaded app settings');
+      let projectToLoad: string | null = null;
 
-      loadProject(appSettings.lastProjectName).then(() => {
-        console.log('project page - loaded project!');
-        hideModals();
-      }).catch((result: PersistenceResult) => {
-        if (result.lastPersistenceEvent === PersistenceEvent.ProjectNotFound) {
-          infoModal(`Last project [${appSettings.lastProjectName}] was not found.`)
-          console.log('project page - not found!');
-        } else {
-          console.log('project page - error:', result);
-          infoModal(`An error was encountered while loading last project [${appSettings.lastProjectName}]: ${result.persistenceStatus}`)
-        }
-      });
-    } else {
-      // console.log('project page - NO ACTION', projectName, appSettings?.lastProjectName);
-    }
-  }, [projectName, appSettings]);
+      if (appSettings && location.state?.projectName) {
+        projectToLoad = location.state.projectName;
+        console.log('project page - LOADING PROJECT from STATE param:', location.state.projectName);
+      } else if (!projectName && appSettings?.lastProjectName) {
+        projectToLoad = appSettings.lastProjectName;
+        console.log('project page - LOADING LAST PROJECT from settings:', appSettings.lastProjectName);
+      }
+
+      if (projectToLoad) {
+        busyModal(`Loading project [${projectToLoad}]...`);
+
+        loadProject(projectToLoad).then(() => {
+          console.log('project page - loaded project!');
+          hideModals();
+        }).catch((result: PersistenceResult) => {
+          if (result.lastPersistenceEvent === PersistenceEvent.ProjectNotFound) {
+            infoModal(`Project [${projectToLoad}] was not found.`)
+            console.log('project page - not found!');
+          } else {
+            console.log('project page - error:', result);
+            infoModal(`An error was encountered while loading project [${projectToLoad}]: ${result.persistenceStatus}`)
+          }
+        });
+      } else {
+        // console.log('project page - NO ACTION', projectName, appSettings?.lastProjectName);
+      }
+    });
+  }, [
+    // intentionally empty
+  ]);
 
   return (
     <main className="flex flex-col p-2 overflow-hidden">

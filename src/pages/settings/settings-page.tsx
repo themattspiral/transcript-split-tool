@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import classNames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleArrowLeft, faHouseChimney, faGear } from '@fortawesome/free-solid-svg-icons';
@@ -17,10 +17,10 @@ export const SettingsPage: React.FC = () => {
       <section className='w-[75%] h-dvh border-l-1 border-r-1 border-grey-600 p-2'>
 
         <h1 className="flex items-center mb-8">
-          <NavLink to="/" className="text-xl text-gray-600">
+          <Link to="/" className="text-xl text-gray-600">
             <FontAwesomeIcon icon={faCircleArrowLeft} className="mr-1" size="lg" />
             <FontAwesomeIcon icon={faHouseChimney} size="lg" />
-          </NavLink>
+          </Link>
 
           <div className="grow-1 text-2xl text-gray-600 flex justify-center items-center">
             <FontAwesomeIcon icon={faGear} className="mr-2" size="lg" />

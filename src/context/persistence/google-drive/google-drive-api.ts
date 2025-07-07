@@ -18,12 +18,23 @@ export interface GoogleDriveFile {
   id: string;
   name: string;
   mimeType: string;
-  sha256Checksum: string;
+  createdTime: string;
+  modifiedTime: string;
+  version: number;
+}
+
+export interface GoogleDriveFilesResponse {
+  files: GoogleDriveFile[];
+  nextPageToken: string | null;
 }
 
 const escapeFilename = (name: string): string | null => {
   return name.replace('\\', '\\\\').replace("'", "\\'");
 }
+
+const FILE_FIELDS_UNENCODED = 'id,name,mimeType,createdTime,modifiedTime,version';
+const FILE_FIELDS = encodeURIComponent(FILE_FIELDS_UNENCODED);
+const FILE_LIST_FIELDS = encodeURIComponent(`nextPageToken,files(${FILE_FIELDS_UNENCODED})`);
 
 export const getFolderInfo = async (token: string | null, folderName: string): Promise<GoogleDriveFolder | null> => {
   if (!token) {
@@ -54,7 +65,34 @@ export const getFolderInfo = async (token: string | null, folderName: string): P
   return folder;
 };
 
-export const getJSONFileInfo = async (token: string| null, fileName: string, parentFolderId: string): Promise<GoogleDriveFile | null> => {
+export const listJSONFilesInfo = async (token: string | null, parentFolderId: string, nextPageToken?: string | null): Promise<GoogleDriveFilesResponse> => {
+  if (!token) {
+    throw 401;
+  }
+
+  const searchQuery = encodeURIComponent(
+    `mimeType='${JSON_MIME_TYPE}' and trashed=false and '${parentFolderId}' in parents`
+  );
+  const tokenQuery = nextPageToken ? `&pageToken=${encodeURIComponent(nextPageToken)}` : '';
+  const url = `${API_BASE}/drive/v3/files?q=${searchQuery}&fields=${FILE_LIST_FIELDS}${tokenQuery}`
+
+  const filesResponse = await fetch(url, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+
+  if (!filesResponse.ok) {
+    throw filesResponse.status;
+  }
+
+  const filesBody = await filesResponse.json();
+  
+  return {
+    files: filesBody.files,
+    nextPageToken: filesBody.nextPageToken || null
+  }
+};
+
+export const getJSONFileInfo = async (token: string | null, fileName: string, parentFolderId: string): Promise<GoogleDriveFile | null> => {
   if (!token) {
     throw 401;
   }
@@ -62,8 +100,7 @@ export const getJSONFileInfo = async (token: string| null, fileName: string, par
   const searchQuery = encodeURIComponent(
     `mimeType='${JSON_MIME_TYPE}' and trashed=false and name='${escapeFilename(fileName)}' and '${parentFolderId}' in parents`
   );
-  const fields = encodeURIComponent('files(id,name,mimeType,sha256Checksum)');
-  const url = `${API_BASE}/drive/v3/files?q=${searchQuery}&fields=${fields}`
+  const url = `${API_BASE}/drive/v3/files?q=${searchQuery}&fields=${FILE_LIST_FIELDS}`;
 
   const filesResponse = await fetch(url, {
     headers: { 'Authorization': `Bearer ${token}` }
@@ -168,8 +205,7 @@ export const updateJSONFile = async (token: string | null, fileId: string, fileC
     throw 401;
   }
   
-  const fields = encodeURIComponent('id,name,mimeType,sha256Checksum');
-  const url = `${API_BASE}/upload/drive/v3/files/${fileId}?uploadType=media&fields=${fields}`;
+  const url = `${API_BASE}/upload/drive/v3/files/${fileId}?uploadType=media&fields=${FILE_FIELDS}`;
 
   const updateResponse = await fetch(url, {
     method: 'PATCH',

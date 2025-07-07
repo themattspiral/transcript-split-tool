@@ -126,7 +126,7 @@ const ControlBar: React.FC = () => {
 
         <div className="flex gap-2 font-medium grow-1 items-end">
           <NavLink
-            to="/transcript"
+            to="transcript"
             className={({ isActive }) => isActive ? activeTabClasses : otherTabClasses}
             style={({ isActive }) => isActive ? activeBoxShadow : {}}
           >
@@ -134,7 +134,7 @@ const ControlBar: React.FC = () => {
           </NavLink>
           
           <NavLink
-            to="/structures"
+            to="structures"
             className={({ isActive }) => isActive ? activeTabClasses : otherTabClasses}
             style={({ isActive }) => isActive ? activeBoxShadow : {}}
           >

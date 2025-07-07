@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMatch } from 'react-router';
 
 import { PersistenceErrorStatus, PersistenceEvent, PersistenceMethod, PersistenceStatus, PersistenceResult, Project, ProjectDataVersion } from 'data';
-import { ExternalPersistenceStore, PersistenceContext, PersistenceStore } from './persistence-context';
+import { ExternalPersistenceStore, PersistenceContext, PersistenceProjectFilesResponse, PersistenceStore } from './persistence-context';
 import { useProjectData } from 'context/project-data-context';
 import { GoogleDrivePersistenceStore } from './google-drive/google-drive-persistence-store';
 import { LocalStoragePersistenceStore } from './local-storage-persistence-store';
@@ -16,13 +16,12 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [persistenceMethod, setPersistenceMethod] = useState<PersistenceMethod | null>(null);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(PersistenceStatus.Initializing);
   const [lastPersistenceEvent, setLastPersistenceEvent] = useState<PersistenceEvent | null>(null);
-  const [lastPersistenceHash, setLastPersistenceHash] = useState<string | null>(null);
   
   const storeRef = useRef<PersistenceStore | null>(null);
   const isPersistenceMethodExternal = storeRef.current?.isExternal || false;
   const isPathOauthCallback = !!useMatch(import.meta.env.TST_OAUTH_GOOGLE_REDIRECT_PATH);
   
-  const initializingRef = useRef<{
+  const initializingPromiseRef = useRef<{
     promise: Promise<void> | null,
     resolve: (() => void) | null;
     reject: ((reason: PersistenceResult) => void) | null;
@@ -32,15 +31,25 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     reject: null
   });
 
+  const createInitPromise = (): Promise<void> => {
+    const promise = new Promise<void>((resolve, reject) => {
+      initializingPromiseRef.current.resolve = resolve;
+      initializingPromiseRef.current.reject = reject;
+    });
+    initializingPromiseRef.current.promise = promise;
+    return promise;
+  };
+
   const setPersistenceMethodPublic = useCallback((method: PersistenceMethod, persistenceFolderName: string | null) => {
     setPersistenceMethod(method);
     setPersistenceStatus(PersistenceStatus.Initializing);
 
-    const promise = new Promise<void>((resolve, reject) => {
-      initializingRef.current.resolve = resolve;
-      initializingRef.current.reject = reject;
-    });
-    initializingRef.current.promise = promise;
+    if (storeRef.current || !initializingPromiseRef.current.promise) {
+      console.log('persistence: setPersistenceMethod is setting or replacing the init promise. current:', initializingPromiseRef.current.promise);
+      createInitPromise();
+    } else {
+      console.log('persistence: setPersistenceMethod is using the init promise already present (no store, and promise exists [must have been created by someone waiting]):', initializingPromiseRef.current.promise);
+    }
 
     if (method === PersistenceMethod.SessionOnly) {
       // todo
@@ -95,8 +104,8 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setPersistenceStatus(PersistenceStatus.Idle);
       setLastPersistenceEvent(PersistenceEvent.Initialized);
 
-      if (initializingRef.current.resolve) {
-        initializingRef.current.resolve();
+      if (initializingPromiseRef.current.resolve) {
+        initializingPromiseRef.current.resolve();
       }
 
       return {
@@ -107,8 +116,8 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setPersistenceStatus(err as PersistenceErrorStatus);
       setLastPersistenceEvent(PersistenceEvent.Error);
 
-      if (initializingRef.current.reject) {
-        initializingRef.current.reject({
+      if (initializingPromiseRef.current.reject) {
+        initializingPromiseRef.current.reject({
           persistenceStatus: err as PersistenceErrorStatus,
           lastPersistenceEvent: PersistenceEvent.Error
         });
@@ -127,14 +136,14 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return;
     }
 
-    if (initializingRef.current.promise) {
-      console.log('waitForInit - returning exisiting promise', initializingRef.current.promise);
-      return initializingRef.current.promise;
+    if (initializingPromiseRef.current.promise) {
+      console.log('waitForInit - returning exisiting init promise', initializingPromiseRef.current.promise);
+      return initializingPromiseRef.current.promise;
     } else {
-      console.error('waitForInit: no promise to return!');
-      throw new Error('waitForInit: No Promise to return in initializingRef.current.promise.');
+      console.log('waitForInit: no init promise to return! (must be a very early call) - creating one (setPersistenceMethod will use this)');
+      return createInitPromise();
     }
-  }, [persistenceStatus, lastPersistenceEvent]);
+  }, [createInitPromise]);
 
   const loadProject = useCallback((projectName: string): Promise<PersistenceResult> => {
     return new Promise(async (resolve, reject) => {
@@ -151,9 +160,9 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.log('load: pausing persistence');
       
       try {
-        const projectResponse = await storeRef.current?.fetchProject(projectName);
+        const project = await storeRef.current?.fetchProject(projectName);
 
-        if (!projectResponse) {
+        if (!project) {
           console.log('load: no existing project found with name:', projectName);
           setPersistenceStatus(PersistenceStatus.Idle);
           setLastPersistenceEvent(PersistenceEvent.ProjectNotFound);
@@ -163,9 +172,6 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
             lastPersistenceEvent: PersistenceEvent.ProjectNotFound
           });
         }
-
-        const { project, hash } = projectResponse;
-        setLastPersistenceHash(hash);
 
         try {
           console.log('load: putting fetched data into current project context');
@@ -196,17 +202,15 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         });
       }
     });
-  }, [waitForInit, setPersistenceStatus, setLastPersistenceHash, loadDeserializedProjectData, setLastPersistenceEvent]);
+  }, [waitForInit, setPersistenceStatus, loadDeserializedProjectData, setLastPersistenceEvent]);
 
   const createProject = useCallback(async (project: Project): Promise<void> => {
     if (persistenceStatus === PersistenceStatus.Idle) {
       setPersistenceStatus(PersistenceStatus.Paused);
 
       try {
-        const hash = await storeRef.current?.createProject(project);
-        if (hash) {
-          setLastPersistenceHash(hash);
-        }
+        await storeRef.current?.createProject(project);
+
         setPersistenceStatus(PersistenceStatus.Idle);
         setLastPersistenceEvent(PersistenceEvent.ProjectSaved);
       } catch (err) {
@@ -216,9 +220,45 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         throw(err);
       }
     }
-  }, [persistenceStatus, setPersistenceStatus, setLastPersistenceHash]);
+  }, [persistenceStatus, setPersistenceStatus]);
 
+  const listProjects = useCallback((nextPageToken?: string | null): Promise<PersistenceProjectFilesResponse> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        console.log('list: waiting for init to complete');
+        await waitForInit();
+        console.log('list: done waiting');
+      } catch (err) {
+        console.log('list: rejecting with init error');
+        return reject(err as PersistenceResult);
+      }
 
+      try {
+        const projectsResponse = await storeRef.current?.listProjects(nextPageToken);
+
+        if (projectsResponse) {
+          resolve(projectsResponse);
+        } else {
+          setPersistenceStatus(PersistenceStatus.ErrorData);
+          setLastPersistenceEvent(PersistenceEvent.Error);
+          
+          reject({
+            persistenceStatus: PersistenceStatus.ErrorData,
+            lastPersistenceEvent: PersistenceEvent.Error
+          });
+        }
+      } catch (err) {
+        console.log('list: error:', err);
+        setPersistenceStatus(err as PersistenceErrorStatus);
+        setLastPersistenceEvent(PersistenceEvent.Error);
+        
+        reject({
+          persistenceStatus: err as PersistenceErrorStatus,
+          lastPersistenceEvent: PersistenceEvent.Error
+        });
+      }
+    });
+  }, [waitForInit, setPersistenceStatus, setLastPersistenceEvent, GoogleDrivePersistenceStore]);
 
 
   // temp
@@ -236,10 +276,8 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setPersistenceStatus(PersistenceStatus.Saving);
 
       try {
-        const hash = await storeRef.current?.updateProject(project);
-        if (hash) {
-          setLastPersistenceHash(hash);
-        }
+        await storeRef.current?.updateProject(project);
+
         setPersistenceStatus(PersistenceStatus.Idle);
         setLastPersistenceEvent(PersistenceEvent.ProjectSaved);
       } catch (err) {
@@ -250,7 +288,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } else {
       console.log('persistence: skipping update save - status:', persistenceStatus);
     }
-  }, [persistenceStatus, setPersistenceStatus, setLastPersistenceHash, setLastPersistenceEvent]);
+  }, [persistenceStatus, setPersistenceStatus, setLastPersistenceEvent]);
 
   // save project when any changes occur
   useEffect(() => {
@@ -273,14 +311,14 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const value = useMemo(() => ({
     persistenceMethod, setPersistenceMethod: setPersistenceMethodPublic, initializePersistence,
     isPersistenceMethodExternal, isPathOauthCallback,
-    lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
-    loadProject, createProject,
+    persistenceStatus, lastPersistenceEvent,
+    loadProject, createProject, listProjects,
     authorizeExternal, completeAuthorizeExternal, revokeAuthorizeExternal
   }), [
     persistenceMethod, setPersistenceMethodPublic, initializePersistence,
     isPersistenceMethodExternal, isPathOauthCallback,
-    lastPersistenceHash, persistenceStatus, lastPersistenceEvent,
-    loadProject, createProject,
+    persistenceStatus, lastPersistenceEvent,
+    loadProject, createProject, listProjects,
     authorizeExternal, completeAuthorizeExternal, revokeAuthorizeExternal
   ]);
 

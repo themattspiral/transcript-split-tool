@@ -74,8 +74,27 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
+  const hasSavedAppSettings = useCallback(() => !!loadFromLocalStorage(), []);
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
-  const settingsLoadedRef = useRef<boolean>(false);
+  const loadedFlagRef = useRef<boolean>(false);
+  const loadingPromiseRef = useRef<{
+    promise: Promise<AppSettings | null> | null,
+    resolve: ((settings: AppSettings | null) => void) | null;
+    reject: (() => void) | null;
+  }>({
+    promise: null,
+    resolve: null,
+    reject: null
+  });
+
+  const createLoadingPromise = (): Promise<AppSettings | null> => {
+    const promise = new Promise<AppSettings | null>((resolve, reject) => {
+      loadingPromiseRef.current.resolve = resolve;
+      loadingPromiseRef.current.reject = reject;
+    });
+    loadingPromiseRef.current.promise = promise;
+    return promise;
+  };
 
   const completeOauthAndInitialize = useCallback(async (rememberMe: boolean, lastProjectName: string | null): Promise<void> => {
     busyModal(`Finishing Google Drive Setup...`);
@@ -131,7 +150,7 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     if (lastProjectName) {
       console.log('settings: navigate to /transcript for last project load');
-      navigate('/transcript', { replace: true });
+      navigate('/project/transcript', { replace: true });
     } else {
       // align react router state with the history we changed above
       console.log('settings: navigate to /settings (align router with url cleanup)');
@@ -184,10 +203,28 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
   }, [setAppSettings]);
 
+  const loadedAppSettings = async (): Promise<AppSettings | null> => {
+    if (loadingPromiseRef.current.promise) {
+      console.log('settings: loadedAppSettings returning existing loading promise');
+      return loadingPromiseRef.current.promise;
+    } else {
+      console.log('settings: loadedAppSettings found no promise to return! (must be a very early call) - creating one');
+      return createLoadingPromise();
+    }
+  };
+
   // restore local settings on mount and initialize persistence
   useEffect(() => {
-    if (!settingsLoadedRef.current) {
-      settingsLoadedRef.current = true;
+    if (!loadedFlagRef.current) {
+      loadedFlagRef.current = true;
+      
+      if (!loadingPromiseRef.current.promise) {
+        createLoadingPromise();
+        console.log('settings: mount effect is setting the init promise');
+      } else {
+        console.log('settings: mount effect is using existing init promise (must have been created by someone waiting)');
+      }
+
       console.log('settings: not yet loaded');
 
       const settings = loadFromLocalStorage();
@@ -212,6 +249,10 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
       } else {
         console.log('settings: no app settings defined yet (initial use)');
+      }
+
+      if (loadingPromiseRef.current.resolve) {
+        loadingPromiseRef.current.resolve(settings);
       }
     }
   }, [isPathOauthCallback, initializePersistence, completeOauthAndInitialize, setAppSettings, setPersistenceMethod]);
@@ -241,9 +282,9 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [appSettings]);
   
   const value = useMemo(() => ({
-    appSettings, savePersistenceMethod
+    appSettings, loadedAppSettings, hasSavedAppSettings, savePersistenceMethod
   }), [
-    appSettings, savePersistenceMethod
+    appSettings, loadedAppSettings, hasSavedAppSettings, savePersistenceMethod
   ]);
 
   return (
