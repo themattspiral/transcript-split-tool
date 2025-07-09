@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router';
 
 import { AppSettings, AppSettingsDataVersion, PersistenceEvent, PersistenceMethod, PersistenceResult } from 'data';
 import { AppSettingsContext } from './app-settings-context';
-import { useProjectData } from './project-data-context';
 import { usePersistence } from './persistence/persistence-context';
 import { useViewState } from './view-state-context';
 
@@ -46,8 +45,7 @@ const loadFromLocalStorage = (): AppSettings | null => {
         persistenceMethod: parsedSettings.persistenceMethod,
         persistenceRememberMe: parseBoolean(parsedSettings.persistenceRememberMe),
         persistenceFolderName: parsedSettings.persistenceFolderName || null,
-        persistenceHasAuthorized: parseBoolean(parsedSettings.persistenceHasAuthorized),
-        lastProjectName: parsedSettings.lastProjectName || null
+        persistenceHasAuthorized: parseBoolean(parsedSettings.persistenceHasAuthorized)
       };
     } catch (err) {
       console.error('Error parsing appSettings:', err);
@@ -64,7 +62,6 @@ const saveToLocalStorage = (settings: AppSettings) => {
 };
 
 export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { projectName } = useProjectData();
   const {
     setPersistenceMethod, completeAuthorizeExternal, initializePersistence,
     isPathOauthCallback, lastPersistenceEvent
@@ -96,7 +93,7 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return promise;
   };
 
-  const completeOauthAndInitialize = useCallback(async (rememberMe: boolean, lastProjectName: string | null): Promise<void> => {
+  const completeOauthAndInitialize = useCallback(async (rememberMe: boolean): Promise<void> => {
     busyModal(`Finishing Google Drive Setup...`);
     console.log('settings: completing external authorization');
 
@@ -148,14 +145,9 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     console.log('settings: persistence initialized!');
     hideModals();
 
-    if (lastProjectName) {
-      console.log('settings: navigate to /transcript for last project load');
-      navigate('/project/transcript', { replace: true });
-    } else {
-      // align react router state with the history we changed above
-      console.log('settings: navigate to /settings (align router with url cleanup)');
-      navigate('/settings', { replace: true });
-    }
+    // align react router state with the history we changed above
+    console.log('settings: navigate to /settings (align router with url cleanup)');
+    navigate('/settings', { replace: true });
   }, [searchParams, busyModal, infoModal, hideModals, completeAuthorizeExternal, initializePersistence, navigate]);
 
   const savePersistenceMethod = useCallback((
@@ -178,7 +170,6 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
           persistenceRememberMe: persistenceRememberMe || false,
           persistenceFolderName: persistenceFolderName || null,
           persistenceHasAuthorized: false,
-          lastProjectName: null,
           dataVersion: AppSettingsDataVersion.v1
         };
       }
@@ -238,7 +229,7 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
         if (isPathOauthCallback) {
           console.log('settings: on Oauth callback path - complete authorization then initialize persistence');
-          completeOauthAndInitialize(settings.persistenceRememberMe, settings.lastProjectName);
+          completeOauthAndInitialize(settings.persistenceRememberMe);
         } else {
           console.log('settings: initializing persistence');
           initializePersistence().then(() => {
@@ -256,14 +247,6 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
     }
   }, [isPathOauthCallback, initializePersistence, completeOauthAndInitialize, setAppSettings, setPersistenceMethod]);
-
-  // save project name
-  useEffect(() => {
-    // todo - clear it also when project flows exist
-    if (projectName && projectName !== '') {
-      saveSetting('lastProjectName', projectName);
-    }
-  }, [saveSetting, projectName]);
 
   // save persistenceHasAuthorized
   useEffect(() => {

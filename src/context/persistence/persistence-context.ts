@@ -1,6 +1,9 @@
 import { createContext, useContext } from 'react';
 
-import { PersistenceEvent, PersistenceMethod, PersistenceResult, PersistenceStatus, Project } from 'data';
+import {
+  PersistenceEvent, PersistenceMethod, PersistenceProjectFile, PersistenceProjectFilesResponse,
+  PersistenceResult, PersistenceStatus, Project
+} from 'data';
 
 interface PersistenceContextProps {
   persistenceMethod: PersistenceMethod | null;
@@ -12,9 +15,10 @@ interface PersistenceContextProps {
   lastPersistenceEvent: PersistenceEvent | null;
   persistenceStatus: PersistenceStatus;
 
-  loadProject: (projectName: string) => Promise<PersistenceResult>;
-  createProject: (project: Project) => Promise<void>;
+  loadProject: (projectFileId: string) => Promise<PersistenceResult>;
+  createProject: (project: Project) => Promise<PersistenceProjectFile>;
   listProjects: (nextPageToken?: string | null) => Promise<PersistenceProjectFilesResponse>;
+  deleteProject: (projectFileId: string) => Promise<void>;
 
   // rename
   // list, search
@@ -24,6 +28,8 @@ interface PersistenceContextProps {
   authorizeExternal: () => void;
   completeAuthorizeExternal: (code: string, state: string, rememberMe: boolean) => Promise<PersistenceResult>;
   revokeAuthorizeExternal: () => Promise<void>;
+
+  garbleAccessToken?: any;
 }
 
 export const PersistenceContext = createContext<PersistenceContextProps>({
@@ -39,6 +45,7 @@ export const PersistenceContext = createContext<PersistenceContextProps>({
   loadProject: () => Promise.reject(0),
   createProject: () => Promise.reject(0),
   listProjects: () => Promise.reject(0),
+  deleteProject: () => Promise.reject(0),
 
   authorizeExternal: () => {},
   completeAuthorizeExternal: () => Promise.reject(0),
@@ -55,34 +62,26 @@ export const usePersistence = () => {
 
 export interface PersistenceStore {
   readonly isExternal: boolean;
+  readonly requiresUniqueNames: boolean;
   isInitialized: boolean;
   initialize: () => Promise<void>;
-  fetchProject: (projectName: string) => Promise<Project | null>;
-  createProject: (project: Project) => Promise<void>;
-  updateProject: (project: Project) => Promise<void>;
+  fetchProject: (projectFileId: string) => Promise<Project | null>;
+  createProject: (project: Project) => Promise<PersistenceProjectFile>;
+  updateProject: (projectFileId: string, project: Project) => Promise<PersistenceProjectFile>;
   
   listProjects: (nextPageToken?: string | null) => Promise<PersistenceProjectFilesResponse>;
+  deleteProject: (projectFileId: string) => Promise<void>;
 
   // rename
   // list, search
   // delete
   // check name uniqueness
+
+  garbleAccessToken?: any;
 }
 
 export interface ExternalPersistenceStore extends PersistenceStore {
   authorizeExternal: () => void;
   completeAuthorizeExternal: (code: string, state: string, rememberMe: boolean) => Promise<void>;
   revokeAuthorizeExternal: () => Promise<void>;
-}
-
-export interface ProjectFile {
-  fileName: string;
-  projectName: string;
-  createdTime: string;
-  modifiedTime: string;
-  version: number;
-}
-export interface PersistenceProjectFilesResponse {
-  projectFiles: ProjectFile[];
-  nextPageToken: string | null;
 }

@@ -1,8 +1,9 @@
 import { CSSProperties, useMemo, useRef } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { extractRawText } from 'mammoth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord, faFileExcel } from '@fortawesome/free-regular-svg-icons';
+import { faCircleArrowLeft, faHouseChimney, faGears } from '@fortawesome/free-solid-svg-icons';
 
 import { TranscriptLine } from 'data';
 import { useProjectData } from 'context/project-data-context';
@@ -11,7 +12,7 @@ import { usePersistence } from 'context/persistence/persistence-context';
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
 const ControlBar: React.FC = () => {
-  const { transcriptLines, setNewTranscript, poeticStructures } = useProjectData();
+  const { projectName, transcriptLines, setNewTranscript, poeticStructures } = useProjectData();
   const { persistenceStatus, lastPersistenceEvent } = usePersistence();
   const psCount = useMemo(() => Object.keys(poeticStructures).length, [poeticStructures])
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -86,35 +87,54 @@ const ControlBar: React.FC = () => {
       />
 
       {/* Left Side Container */}
-      <div className="pb-2 h-full grow-1 flex gap-2">
-        
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer flex items-center"
-          >
-            Import New Transcript
-            <FontAwesomeIcon icon={faFileWord} className="ml-2" size="lg" />
-          </button>
+      <div className="pb-2 h-full grow-1 flex gap-2 items-center">
 
-          <button
-            type="button"
-            onClick={() => {}}
-            disabled={transcriptLines.length === 0}
-            className={`px-4 py-2 rounded flex items-center ${
-              transcriptLines.length === 0 
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                : 'bg-green-500 text-white hover:bg-green-600 cursor-pointer'
-            }`}
-          >
-            Export Grid
-            <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
-          </button>
+        <Link to="/" className="text-xl text-gray-600 hover:text-blue-400 shrink-0">
+          <FontAwesomeIcon icon={faCircleArrowLeft} className="mr-1" size="lg" />
+          <FontAwesomeIcon icon={faHouseChimney} size="lg" />
+        </Link>
 
-          <div className='flex flex-col'>
-            <span>Persistence Status: { persistenceStatus?.toString() }</span>
-            <span>Last Persistence Event: { lastPersistenceEvent }</span>
-          </div>
+        <div className="basis-2 shrink-1" />
+      
+        <h1 className="grow-1 text-xl text-gray-600 font-semibold text-ellipsis overflow-hidden whitespace-nowrap">{ projectName }</h1>
+
+        <div className="basis-2 shrink-1" />
+
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="shrink-0 bg-blue-500 text-white px-2 py-2 rounded hover:bg-blue-600 cursor-pointer flex items-center"
+        >
+          Import Transcript
+          <FontAwesomeIcon icon={faFileWord} className="ml-2" size="lg" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {}}
+          disabled={transcriptLines.length === 0}
+          className={`shrink-0 px-4 py-2 rounded flex items-center ${
+            transcriptLines.length === 0 
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+              : 'bg-green-500 text-white hover:bg-green-600 cursor-pointer'
+          }`}
+        >
+          Export Grid
+          <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
+        </button>
+
+        <div className='flex flex-col shrink-0'>
+          <span>Persistence Status: { persistenceStatus?.toString() }</span>
+          <span>Last Persistence Event: { lastPersistenceEvent }</span>
+        </div>
+
+        <Link
+          to="settings"
+          className="shrink-0 bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 cursor-pointer flex items-center"
+        >
+          Project Settings
+          <FontAwesomeIcon icon={faGears} size="lg" className="ml-1" />
+        </Link>
         
       </div>
 

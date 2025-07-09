@@ -1,14 +1,15 @@
-import { PersistenceStatus, Project } from 'data';
-import { ExternalPersistenceStore, PersistenceProjectFilesResponse, ProjectFile } from '../persistence-context';
+import { PersistenceProjectFile, PersistenceProjectFilesResponse, PersistenceStatus, Project } from 'data';
+import { ExternalPersistenceStore } from '../persistence-context';
 import { authorize, completeAuthorize, refreshAuthorize, revoke } from './google-oidc-oauth';
 import {
-  getFolderInfo, getJSONFileInfo, getJSONFileContents,
+  getFolderInfo, getJSONFileContents,
   createFolder, createJSONFile, updateJSONFile, listJSONFilesInfo, PARSE_ERROR,
-  GoogleDriveFile
+  GoogleDriveFilesResponse, GoogleDriveFile, trashFile
 } from './google-drive-api';
 
 export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
-  isExternal: boolean = true;
+  readonly isExternal: boolean = true;
+  readonly requiresUniqueNames: boolean = false;
 
   #authError: boolean = false;
   #accessToken: string | null = null;
@@ -23,35 +24,35 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
       
       if (this.#authError || !retryOnReauth) {
         // don't try refresh auth again if we're already in auth error state (or no retry function provided)
-        console.log('store-handleAptError - 401 from API (authError already True) - Unauthorized');
+        console.log('store-handleApiError - 401 from API (authError already True) - Unauthorized');
         throw PersistenceStatus.ErrorUnauthorized;
       } else {
-        console.log('store-handleAptError - 401 from API (authError False) - Trying to Refresh Access Token');
+        console.log('store-handleApiError - 401 from API (authError False) - Trying to Refresh Access Token');
 
         try {
           this.#accessToken = await refreshAuthorize();
-          console.log('store-handleAptError - Refresh Successful');
+          console.log('store-handleApiError - Refresh Successful');
         } catch (statusCode) {
           if (statusCode === 401 || statusCode === 403) {
-            console.log('store-handleAptError - Refresh Failed - Unauthorized (setting authError True)');
+            console.log('store-handleApiError - Refresh Failed - Unauthorized (setting authError True)');
             this.#authError = true;
             throw PersistenceStatus.ErrorUnauthorized;
           } else {
-            console.log('store-handleAptError - Error during auth refresh:', statusCode);
+            console.log('store-handleApiError - Error during auth refresh:', statusCode);
             throw PersistenceStatus.ErrorConnect;
           }
         }
 
         try {
-          console.log('store-handleAptError - Retrying operation that failed');
+          console.log('store-handleApiError - Retrying operation that failed');
           return await retryOnReauth();
         } catch (statusCode) {
           if (statusCode === 401 || statusCode === 403) {
-            console.log('store-handleAptError - Auth error again after refresh - Unauthorized (Setting authError True)');
+            console.log('store-handleApiError - Auth error again after refresh - Unauthorized (Setting authError True)');
             this.#authError = true;
             throw PersistenceStatus.ErrorUnauthorized;
           } else {
-            console.log('store-handleAptError - Error during retry operation:', statusCode);
+            console.log('store-handleApiError - Error during retry operation:', statusCode);
             throw PersistenceStatus.ErrorConnect;
           }
         }
@@ -63,6 +64,10 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
 
   constructor(folderName: string) {
     this.#folderName = folderName;
+  }
+
+  garbleAccessToken() {
+    this.#accessToken += 'test_forcing_auth_error_';
   }
 
   // check for project folder, create if needed, and cache id
@@ -105,86 +110,86 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     }
   }
   
-  async fetchProject(projectName: string): Promise<Project | null> {
-    const fetch = async () => {
-      console.log('store fetching project file');
-      const projectFileInfo = await getJSONFileInfo(this.#accessToken, `${projectName}.json`, this.#folderId || '');
-
-      if (projectFileInfo?.id) {
-        console.log('found project file:', projectFileInfo.id);
-
-        const project = await getJSONFileContents(this.#accessToken, projectFileInfo.id);
-        console.log('fetched project file contents');
-
-        return project;
-      } else {
-        return null;
-      }
+  async fetchProject(projectFileId: string): Promise<Project | null> {
+    const fetchProj = async () => {
+      console.log('store fetching project file by id');
+      const project = await getJSONFileContents(this.#accessToken, projectFileId);
+      console.log('fetched project file contents (by id)');
+      return project;
     };
     
     try {
-      return await fetch();
+      return await fetchProj();
     } catch (statusCode) {
       // will either return the result of the retry after reauth if successful,
       // or throw the appropriate PersistenceStatus for the error
-      return await this.#handleApiError(statusCode as number, fetch);
+      return await this.#handleApiError(statusCode as number, fetchProj);
     }
   }
   
-  async createProject(project: Project): Promise<void> {
-    const create = async () => {
+  async createProject(project: Project): Promise<PersistenceProjectFile> {
+    const createProj = async (): Promise<PersistenceProjectFile> => {
       console.log('creating project file...');
       const projectFile = await createJSONFile(this.#accessToken, `${project.projectName}.json`, this.#folderId || '', project);
       console.log('created project file:', projectFile.id);
+
+      return {
+        fileId: projectFile.id,
+        fileName: projectFile.name,
+        projectName: projectFile.name.split('.json')[0],
+        createdTime: projectFile.createdTime,
+        modifiedTime: projectFile.modifiedTime,
+        version: projectFile.version
+      };
     };
 
     try {
-      return await create();
+      return await createProj();
     } catch (statusCode) {
       // will either return the result of the retry after reauth if successful,
       // or throw the appropriate PersistenceStatus for the error
-      return await this.#handleApiError(statusCode as number, create);
+      return await this.#handleApiError(statusCode as number, createProj);
     }
   }
   
-  async updateProject(project: Project): Promise<void> {
-    const update = async () => {
+  async updateProject(projectFileId: string, project: Project): Promise<PersistenceProjectFile> {
+    const updateProj = async (): Promise<PersistenceProjectFile> => {
       console.log('store updating ', project.projectName);
+      const projectFile = await updateJSONFile(this.#accessToken, projectFileId, project);
+      console.log('updated project file:', projectFile);
 
-      let projectFile = await getJSONFileInfo(this.#accessToken, `${project.projectName}.json`, this.#folderId || '');
-      if (projectFile) {
-        console.log('project file exists, update it:', projectFile.id);
+      return {
+        fileId: projectFile.id,
+        fileName: projectFile.name,
+        projectName: projectFile.name.split('.json')[0],
+        createdTime: projectFile.createdTime,
+        modifiedTime: projectFile.modifiedTime,
+        version: projectFile.version
+      };
+      // console.log('could not locate existing project file for:', project.projectName);
 
-        projectFile = await updateJSONFile(this.#accessToken, projectFile.id, project);
-        console.log('updated project file:', projectFile.name);
-      } else {
-        console.log('could not locate existing project file for:', project.projectName);
-
-        // trigger a DataError throw
-        throw PARSE_ERROR;
-      }
+      // // trigger a DataError throw
+      // throw PARSE_ERROR;
     };
 
     try {
-      return await update();
+      return await updateProj();
     } catch (statusCode) {
       // will either return the result of the retry after reauth if successful,
       // or throw the appropriate PersistenceStatus for the error
-      return await this.#handleApiError(statusCode as number, update);
+      return await this.#handleApiError(statusCode as number, updateProj);
     }
   }
 
   async listProjects(nextPageToken?: string | null): Promise<PersistenceProjectFilesResponse> {
-    const list = async (nextPageToken?: string | null) => {
+    const listProj = async (nextPageToken?: string | null): Promise<PersistenceProjectFilesResponse> => {
       console.log('store listing');
-      return await listJSONFilesInfo(this.#accessToken, this.#folderId || '', nextPageToken);
-    };
-
-    try {
-      const filesResponse = await list(nextPageToken);
+      const filesResponse: GoogleDriveFilesResponse = await listJSONFilesInfo(this.#accessToken, this.#folderId || '', nextPageToken);
+      console.log('store listing fetched');
       return {
         nextPageToken: filesResponse.nextPageToken,
         projectFiles: filesResponse.files.map((f: GoogleDriveFile) => ({
+          fileId: f.id,
           fileName: f.name,
           projectName: f.name.split('.json')[0],
           createdTime: f.createdTime,
@@ -192,10 +197,31 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
           version: f.version
         }))
       };
+    };
+
+    try {
+      return await listProj(nextPageToken);
     } catch (statusCode) {
       // will either return the result of the retry after reauth if successful,
       // or throw the appropriate PersistenceStatus for the error
-      return await this.#handleApiError(statusCode as number, list);
+      return await this.#handleApiError(statusCode as number, listProj);
+    }
+  }
+
+  async deleteProject(projectFileId: string): Promise<void> {
+    const deleteProj = async () => {
+      console.log('store deleting project file by id');
+      await trashFile(this.#accessToken, projectFileId);
+      console.log('deleting project file');
+      return;
+    };
+    
+    try {
+      return await deleteProj();
+    } catch (statusCode) {
+      // will either return the result of the retry after reauth if successful,
+      // or throw the appropriate PersistenceStatus for the error
+      return await this.#handleApiError(statusCode as number, deleteProj);
     }
   }
 

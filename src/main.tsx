@@ -19,7 +19,7 @@ import { ModalWindow } from 'components/modal-window';
 import { AppRoutes } from './routes';
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  // <StrictMode>
 
     <BrowserRouter>
 
@@ -43,5 +43,5 @@ createRoot(document.getElementById('root')!).render(
 
     </BrowserRouter>
 
-  </StrictMode>
+  // </StrictMode>
 );

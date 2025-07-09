@@ -186,6 +186,19 @@ export interface PersistenceResult {
   lastPersistenceEvent: PersistenceEvent;
 }
 
+export interface PersistenceProjectFile {
+  fileId: string;
+  fileName: string;
+  projectName: string;
+  createdTime: string;
+  modifiedTime: string;
+  version: number;
+}
+export interface PersistenceProjectFilesResponse {
+  projectFiles: PersistenceProjectFile[];
+  nextPageToken: string | null;
+}
+
 export enum ProjectDataVersion {
   v1 = 'v1'
 }
@@ -207,7 +220,6 @@ export interface AppSettings {
   persistenceRememberMe: boolean;
   persistenceFolderName: string | null;
   persistenceHasAuthorized: boolean;
-  lastProjectName: string | null;
   readonly dataVersion: AppSettingsDataVersion;
 }
 

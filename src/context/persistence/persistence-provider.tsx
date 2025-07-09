@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMatch } from 'react-router';
 
-import { PersistenceErrorStatus, PersistenceEvent, PersistenceMethod, PersistenceStatus, PersistenceResult, Project, ProjectDataVersion } from 'data';
-import { ExternalPersistenceStore, PersistenceContext, PersistenceProjectFilesResponse, PersistenceStore } from './persistence-context';
+import {
+  PersistenceErrorStatus, PersistenceEvent, PersistenceMethod, PersistenceStatus, 
+  PersistenceResult, Project, ProjectDataVersion, PersistenceProjectFilesResponse,
+  PersistenceProjectFile
+} from 'data';
+import { ExternalPersistenceStore, PersistenceContext, PersistenceStore } from './persistence-context';
 import { useProjectData } from 'context/project-data-context';
 import { GoogleDrivePersistenceStore } from './google-drive/google-drive-persistence-store';
 import { LocalStoragePersistenceStore } from './local-storage-persistence-store';
@@ -11,7 +15,7 @@ const DEFAULT_EXTERNAL_STORE_FOLDER_NAME = 'TST Projects';
 
 export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
-    projectName, transcriptLines, poeticStructures, topsOptions, loadDeserializedProjectData
+    projectFileId, projectName, transcriptLines, poeticStructures, topsOptions, loadDeserializedProjectData, setProjectFileId
   } = useProjectData();
   const [persistenceMethod, setPersistenceMethod] = useState<PersistenceMethod | null>(null);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(PersistenceStatus.Initializing);
@@ -38,6 +42,10 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
     initializingPromiseRef.current.promise = promise;
     return promise;
+  };
+
+  const garbleAccessToken = () => {
+    storeRef.current?.garbleAccessToken();
   };
 
   const setPersistenceMethodPublic = useCallback((method: PersistenceMethod, persistenceFolderName: string | null) => {
@@ -145,7 +153,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [createInitPromise]);
 
-  const loadProject = useCallback((projectName: string): Promise<PersistenceResult> => {
+  const loadProject = useCallback((fileId: string): Promise<PersistenceResult> => {
     return new Promise(async (resolve, reject) => {
       try {
         console.log('load: waiting for init to complete');
@@ -160,10 +168,10 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.log('load: pausing persistence');
       
       try {
-        const project = await storeRef.current?.fetchProject(projectName);
+        const project = await storeRef.current?.fetchProject(fileId);
 
         if (!project) {
-          console.log('load: no existing project found with name:', projectName);
+          console.log(`load: no existing project found with fileId:`, fileId);
           setPersistenceStatus(PersistenceStatus.Idle);
           setLastPersistenceEvent(PersistenceEvent.ProjectNotFound);
 
@@ -176,6 +184,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         try {
           console.log('load: putting fetched data into current project context');
           loadDeserializedProjectData(project);
+          setProjectFileId(fileId);
 
           setTimeout(() => {
             console.log('load: done - success');
@@ -204,23 +213,44 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
   }, [waitForInit, setPersistenceStatus, loadDeserializedProjectData, setLastPersistenceEvent]);
 
-  const createProject = useCallback(async (project: Project): Promise<void> => {
-    if (persistenceStatus === PersistenceStatus.Idle) {
-      setPersistenceStatus(PersistenceStatus.Paused);
+  const createProject = useCallback(async (project: Project): Promise<PersistenceProjectFile> => {
+    try {
+      const file = await storeRef.current?.createProject(project);
 
-      try {
-        await storeRef.current?.createProject(project);
-
-        setPersistenceStatus(PersistenceStatus.Idle);
+      if (file) {
         setLastPersistenceEvent(PersistenceEvent.ProjectSaved);
-      } catch (err) {
-        setPersistenceStatus(err as PersistenceErrorStatus);
+        return file;
+      } else {
+        setPersistenceStatus(PersistenceStatus.ErrorData);
         setLastPersistenceEvent(PersistenceEvent.Error);
-        // todo update to behave like load
-        throw(err);
+
+        throw {
+          persistenceStatus: PersistenceStatus.ErrorData,
+          lastPersistenceEvent: PersistenceEvent.Error
+        }
       }
+    } catch (err) {
+      setPersistenceStatus(err as PersistenceErrorStatus);
+      setLastPersistenceEvent(PersistenceEvent.Error);
+      throw({
+        persistenceStatus: err as PersistenceErrorStatus,
+        lastPersistenceEvent: PersistenceEvent.Error
+      });
     }
-  }, [persistenceStatus, setPersistenceStatus]);
+  }, [setPersistenceStatus, setLastPersistenceEvent]);
+
+  const deleteProject = useCallback(async (projectFileId: string): Promise<void> => {
+    try {
+      await storeRef.current?.deleteProject(projectFileId);
+    } catch (err) {
+      setPersistenceStatus(err as PersistenceErrorStatus);
+      setLastPersistenceEvent(PersistenceEvent.Error);
+      throw({
+        persistenceStatus: err as PersistenceErrorStatus,
+        lastPersistenceEvent: PersistenceEvent.Error
+      });
+    }
+  }, [persistenceStatus, setPersistenceStatus, setLastPersistenceEvent]);
 
   const listProjects = useCallback((nextPageToken?: string | null): Promise<PersistenceProjectFilesResponse> => {
     return new Promise(async (resolve, reject) => {
@@ -260,23 +290,12 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
   }, [waitForInit, setPersistenceStatus, setLastPersistenceEvent, GoogleDrivePersistenceStore]);
 
-
-  // temp
-  useEffect(() => {
-    console.log('INFO persistenceStatus changed:', persistenceStatus);
-  }, [persistenceStatus]);
-
-  // temp
-  useEffect(() => {
-    console.log('INFO lastPersistenceEvent changed:', lastPersistenceEvent);
-  }, [lastPersistenceEvent]);
-
-  const saveUpdate = useCallback(async (project: Project): Promise<void> => {
+  const saveUpdate = useCallback(async (projectFileId: string, project: Project): Promise<void> => {
     if (persistenceStatus === PersistenceStatus.Idle) {
       setPersistenceStatus(PersistenceStatus.Saving);
 
       try {
-        await storeRef.current?.updateProject(project);
+        await storeRef.current?.updateProject(projectFileId, project);
 
         setPersistenceStatus(PersistenceStatus.Idle);
         setLastPersistenceEvent(PersistenceEvent.ProjectSaved);
@@ -290,12 +309,24 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [persistenceStatus, setPersistenceStatus, setLastPersistenceEvent]);
 
+
+
+  // temp
+  useEffect(() => {
+    console.log('INFO persistenceStatus changed:', persistenceStatus);
+  }, [persistenceStatus]);
+
+  // temp
+  useEffect(() => {
+    console.log('INFO lastPersistenceEvent changed:', lastPersistenceEvent);
+  }, [lastPersistenceEvent]);
+
   // save project when any changes occur
   useEffect(() => {
-    if (projectName) {
+    if (projectName && projectFileId) {
       console.log('persistence: triggering project save...');
 
-      saveUpdate({
+      saveUpdate(projectFileId, {
         projectName,
         transcriptLines,
         poeticStructures: Object.values(poeticStructures),
@@ -312,13 +343,13 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     persistenceMethod, setPersistenceMethod: setPersistenceMethodPublic, initializePersistence,
     isPersistenceMethodExternal, isPathOauthCallback,
     persistenceStatus, lastPersistenceEvent,
-    loadProject, createProject, listProjects,
-    authorizeExternal, completeAuthorizeExternal, revokeAuthorizeExternal
+    loadProject, createProject, listProjects, deleteProject,
+    authorizeExternal, completeAuthorizeExternal, revokeAuthorizeExternal, garbleAccessToken
   }), [
     persistenceMethod, setPersistenceMethodPublic, initializePersistence,
     isPersistenceMethodExternal, isPathOauthCallback,
     persistenceStatus, lastPersistenceEvent,
-    loadProject, createProject, listProjects,
+    loadProject, createProject, listProjects, deleteProject,
     authorizeExternal, completeAuthorizeExternal, revokeAuthorizeExternal
   ]);
 

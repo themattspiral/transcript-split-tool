@@ -175,8 +175,7 @@ export const createJSONFile = async (token: string | null, fileName: string, par
     throw 401;
   }
   
-  const fields = encodeURIComponent('id,name,mimeType,sha256Checksum');
-  const url = `${API_BASE}/upload/drive/v3/files?uploadType=multipart&fields=${fields}`;
+  const url = `${API_BASE}/upload/drive/v3/files?uploadType=multipart&fields=${FILE_FIELDS}`;
 
   const metadata = {
     name: `${fileName}`,
@@ -214,6 +213,27 @@ export const updateJSONFile = async (token: string | null, fileId: string, fileC
       'Content-Type': JSON_MIME_TYPE
     },
     body: new Blob([persistenceSerialize(fileContents)], { type: JSON_MIME_TYPE })
+  });
+
+  if (!updateResponse.ok) {
+     throw updateResponse.status;
+  }
+
+  return await updateResponse.json();
+};
+
+export const trashFile = async (token: string | null, fileId: string): Promise<GoogleDriveFile> => {
+  if (!token) {
+    throw 401;
+  }
+  
+  const url = `${API_BASE}/drive/v3/files/${fileId}`;
+  const updateResponse = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: new Blob([JSON.stringify({ trashed: true })], { type: JSON_MIME_TYPE })
   });
 
   if (!updateResponse.ok) {
