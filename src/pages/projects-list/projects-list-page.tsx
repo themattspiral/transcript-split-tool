@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import classNames from 'classnames';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRotate } from '@fortawesome/free-solid-svg-icons';
 
 import { DefaultTOPSValues, PersistenceProjectFile, PersistenceResult, ProjectDataVersion } from 'data';
 import { usePersistence } from 'context/persistence/persistence-context';
@@ -131,32 +133,44 @@ export const ProjectsListPage: React.FC = () => {
         >
           New Project...
         </button>
+
+        <h2 className="text-lg text-gray-500 font-semibold flex gap-2 items-center mb-2">
+          Projects List:
+
+          <button
+            className="flex items-center justify-center hover:bg-gray-300 cursor-pointer p-1 w-[30px] h-[30px] rounded-full overflow-hidden"
+            type="button"
+            onClick={() => fetchList()}
+          >
+            <FontAwesomeIcon icon={faRotate} className="w-4 h-4" />
+          </button>  
+        </h2>
         
         <section className="ml-4 mr-4">
-          <h2 className="text-lg text-gray-600 font-semibold flex gap-2 items-center mb-2">
-            Projects List:
-
-            <button
-              className="block bg-yellow-500 hover:bg-yellow-600 cursor-pointer p-1 text-sm"
-              type="button"
-              onClick={() => fetchList()}
-            >
-              Refresh
-            </button>  
-          </h2>
-
           <div>
+            
+            <div
+              className="grid font-semibold text-gray-600 border-b-1 border-gray-600 pb-1 mb-2"
+              style={{ gridTemplateColumns: '2fr 1fr 1fr 0.25fr' }}
+            >
+              <div>Project Name</div>
+              <div>Created</div>
+              <div>Last Modified</div>
+              <div>Rev #</div>
+            </div>
+
             { projectFiles?.map(file => {
               const isSelected = file.fileId === selectedProjectFile?.fileId;
               return (
                 <div
                   key={file.fileId}
                   className={classNames(
-                    'pb-1 pt-1 pl-2 pr-2 cursor-pointer',
+                    'pb-1 pt-1 cursor-pointer grid [&:not(:last-child)]:border-b-1 border-gray-300',
                     { 'bg-blue-200': isSelected,
                       'hover:bg-gray-300': !isSelected
                     }
                   )}
+                  style={{ gridTemplateColumns: '2fr 1fr 1fr 0.25fr' }}
                   onClick={() => {
                     setSelectedProjectFile(selFile => selFile?.fileId === file.fileId ? null : file);
                   }}
@@ -164,7 +178,10 @@ export const ProjectsListPage: React.FC = () => {
                     navigate(`/project/${file.fileId}/transcript`);
                   }}
                 >
-                  <span className="font-semibold">{ file.projectName } --</span> created: { file.createdTime } modified: { file.modifiedTime } version: { file.version }
+                  <div className="font-semibold">{ file.projectName }</div>
+                  <div>{ new Date(file.createdTime).toLocaleString() }</div>
+                  <div>{ new Date(file.modifiedTime).toLocaleString() }</div>
+                  <div>{ file.version }</div>
                 </div>
               );
             })}
@@ -181,25 +198,27 @@ export const ProjectsListPage: React.FC = () => {
             </button>
           }
 
-          <button
-            className={classNames('block bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-default text-white cursor-pointer p-2 mt-4')}
-            type="button"
-            disabled={!selectedProjectFile}
-            onClick={() => {
-              navigate(`/project/${selectedProjectFile?.fileId}/transcript`);
-            }}
-          >
-            Open Project
-          </button>
+          <div className="flex gap-4 mt-4">
+            <button
+              className={classNames('block bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-default text-white cursor-pointer p-2')}
+              type="button"
+              disabled={!selectedProjectFile}
+              onClick={() => {
+                navigate(`/project/${selectedProjectFile?.fileId}/transcript`);
+              }}
+            >
+              Open Project
+            </button>
 
-          <button
-            className={classNames('block bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-default text-white cursor-pointer p-2 mt-4')}
-            type="button"
-            disabled={!selectedProjectFile}
-            onClick={() => deleteProj(selectedProjectFile)}
-          >
-            Delete
-          </button>
+            <button
+              className={classNames('block bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-default text-white cursor-pointer p-2')}
+              type="button"
+              disabled={!selectedProjectFile}
+              onClick={() => deleteProj(selectedProjectFile)}
+            >
+              Delete
+            </button>
+          </div>
 
           <button
             className="bg-red-400 cursor-pointer hover:bg-red-500 p-1 mt-10"
