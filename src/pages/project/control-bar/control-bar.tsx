@@ -2,18 +2,22 @@ import { CSSProperties, useMemo, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { extractRawText } from 'mammoth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileWord, faFileExcel } from '@fortawesome/free-regular-svg-icons';
-import { faCircleArrowLeft, faHouseChimney, faGears } from '@fortawesome/free-solid-svg-icons';
+import { faFileWord } from '@fortawesome/free-regular-svg-icons';
+import { faCircleArrowLeft, faHouseChimney, faGears, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 import { TranscriptLine } from 'data';
 import { useProjectData } from 'context/project-data-context';
 import { usePersistence } from 'context/persistence/persistence-context';
+import { useViewState } from 'context/view-state-context';
+import { ProjectNameModalContent } from 'components/project-name-modal-content';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
 const ControlBar: React.FC = () => {
-  const { projectName, transcriptLines, setNewTranscript, poeticStructures } = useProjectData();
+  const { projectName, transcriptLines, setNewTranscript, poeticStructures, setProjectName } = useProjectData();
   const { persistenceStatus, lastPersistenceEvent } = usePersistence();
+  const { busyModal, hideModals } = useViewState();
+
   const psCount = useMemo(() => Object.keys(poeticStructures).length, [poeticStructures])
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -89,38 +93,43 @@ const ControlBar: React.FC = () => {
       {/* Left Side Container */}
       <div className="pb-2 h-full grow-1 flex gap-2 items-center">
 
-        <Link to="/" className="text-xl text-gray-600 hover:text-blue-400 shrink-0">
+        <Link to="/" className="text-xl text-gray-600 hover:text-blue-400 ml-2 mr-2 shrink-0">
           <FontAwesomeIcon icon={faCircleArrowLeft} className="mr-1" size="lg" />
           <FontAwesomeIcon icon={faHouseChimney} size="lg" />
         </Link>
-
-        <div className="basis-2 shrink-1" />
       
-        <h1 className="grow-1 text-xl text-gray-600 font-semibold text-ellipsis overflow-hidden whitespace-nowrap">{ projectName }</h1>
+        <div className="min-w-20 grow-1 shrink-1 flex items-center">
+          <h1 className="text-xl text-gray-600 font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
+            { projectName }
+          </h1>
 
-        <div className="basis-2 shrink-1" />
+          <button
+            className="shrink-0 ml-1 flex items-center justify-center hover:bg-gray-300 text-gray-500 cursor-pointer p-1 w-[30px] h-[30px] rounded-full overflow-hidden"
+            type="button"
+            onClick={() => busyModal(
+              <ProjectNameModalContent
+                mode='rename-loaded'
+                onComplete={projectFile => {
+                  setProjectName(projectFile.projectName);
+                  hideModals();
+                }}
+                onCancel={hideModals}
+              />
+            )}
+          >
+            <FontAwesomeIcon icon={faPenToSquare} className="w-4 h-4" />
+          </button> 
+        </div>
+
+        <div className="basis-2 grow-1 shrink-2" />
 
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="shrink-0 bg-blue-500 text-white px-2 py-2 rounded hover:bg-blue-600 cursor-pointer flex items-center"
+          className="shrink-0 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer flex items-center"
         >
           Import Transcript
           <FontAwesomeIcon icon={faFileWord} className="ml-2" size="lg" />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {}}
-          disabled={transcriptLines.length === 0}
-          className={`shrink-0 px-4 py-2 rounded flex items-center ${
-            transcriptLines.length === 0 
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-              : 'bg-green-500 text-white hover:bg-green-600 cursor-pointer'
-          }`}
-        >
-          Export Grid
-          <FontAwesomeIcon icon={faFileExcel}  className="ml-2" size="lg" />
         </button>
 
         <div className='flex flex-col shrink-0'>

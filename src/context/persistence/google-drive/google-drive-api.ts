@@ -222,7 +222,7 @@ export const updateJSONFile = async (token: string | null, fileId: string, fileC
   return await updateResponse.json();
 };
 
-export const trashFile = async (token: string | null, fileId: string): Promise<GoogleDriveFile> => {
+const updateFileMetadata = async (token: string | null, fileId: string, metadata: any): Promise<GoogleDriveFile> => {
   if (!token) {
     throw 401;
   }
@@ -233,7 +233,7 @@ export const trashFile = async (token: string | null, fileId: string): Promise<G
     headers: {
       'Authorization': `Bearer ${token}`
     },
-    body: new Blob([JSON.stringify({ trashed: true })], { type: JSON_MIME_TYPE })
+    body: new Blob([JSON.stringify(metadata)], { type: JSON_MIME_TYPE })
   });
 
   if (!updateResponse.ok) {
@@ -241,4 +241,12 @@ export const trashFile = async (token: string | null, fileId: string): Promise<G
   }
 
   return await updateResponse.json();
+};
+
+export const trashFile = async (token: string | null, fileId: string): Promise<GoogleDriveFile> => {
+  return updateFileMetadata(token, fileId, { trashed: true });
+};
+
+export const renameFile = async (token: string | null, fileId: string, name: string): Promise<GoogleDriveFile> => {
+  return updateFileMetadata(token, fileId, { name });
 };

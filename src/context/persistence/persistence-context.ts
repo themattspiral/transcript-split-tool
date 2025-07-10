@@ -15,20 +15,16 @@ interface PersistenceContextProps {
   lastPersistenceEvent: PersistenceEvent | null;
   persistenceStatus: PersistenceStatus;
 
-  loadProject: (projectFileId: string) => Promise<PersistenceResult>;
   createProject: (project: Project) => Promise<PersistenceProjectFile>;
-  listProjects: (nextPageToken?: string | null) => Promise<PersistenceProjectFilesResponse>;
+  loadProject: (projectFileId: string) => Promise<void>;
   deleteProject: (projectFileId: string) => Promise<void>;
-
-  // rename
-  // list, search
-  // delete
-  // check name uniqueness
+  renameProject: (projectFileId: string, name: string) => Promise<PersistenceProjectFile>;
+  renameLoadedProject: (name: string) => Promise<PersistenceProjectFile>;
+  listProjects: (nextPageToken?: string | null) => Promise<PersistenceProjectFilesResponse>;
 
   authorizeExternal: () => void;
   completeAuthorizeExternal: (code: string, state: string, rememberMe: boolean) => Promise<PersistenceResult>;
   revokeAuthorizeExternal: () => Promise<void>;
-
   garbleAccessToken?: any;
 }
 
@@ -42,10 +38,12 @@ export const PersistenceContext = createContext<PersistenceContextProps>({
   lastPersistenceEvent: null,
   persistenceStatus: PersistenceStatus.Initializing,
 
-  loadProject: () => Promise.reject(0),
   createProject: () => Promise.reject(0),
-  listProjects: () => Promise.reject(0),
+  loadProject: () => Promise.reject(0),
   deleteProject: () => Promise.reject(0),
+  renameProject: () => Promise.reject(0),
+  renameLoadedProject: () => Promise.reject(0),
+  listProjects: () => Promise.reject(0),
 
   authorizeExternal: () => {},
   completeAuthorizeExternal: () => Promise.reject(0),
@@ -62,21 +60,14 @@ export const usePersistence = () => {
 
 export interface PersistenceStore {
   readonly isExternal: boolean;
-  readonly requiresUniqueNames: boolean;
   isInitialized: boolean;
   initialize: () => Promise<void>;
-  fetchProject: (projectFileId: string) => Promise<Project | null>;
-  createProject: (project: Project) => Promise<PersistenceProjectFile>;
-  updateProject: (projectFileId: string, project: Project) => Promise<PersistenceProjectFile>;
-  
-  listProjects: (nextPageToken?: string | null) => Promise<PersistenceProjectFilesResponse>;
-  deleteProject: (projectFileId: string) => Promise<void>;
-
-  // rename
-  // list, search
-  // delete
-  // check name uniqueness
-
+  createProjectFile: (project: Project) => Promise<PersistenceProjectFile>;
+  fetchProjectContents: (projectFileId: string) => Promise<Project | null>;
+  updateProjectFile: (projectFileId: string, project: Project) => Promise<PersistenceProjectFile>;
+  deleteProjectFile: (projectFileId: string) => Promise<void>;
+  renameProjectFile: (projectFileId: string, name: string) => Promise<PersistenceProjectFile>;
+  listProjectFiles: (nextPageToken?: string | null) => Promise<PersistenceProjectFilesResponse>;
   garbleAccessToken?: any;
 }
 

@@ -4,13 +4,14 @@ import classNames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRotate } from '@fortawesome/free-solid-svg-icons';
 
-import { DefaultTOPSValues, PersistenceProjectFile, PersistenceResult, ProjectDataVersion } from 'data';
+import { PersistenceProjectFile, PersistenceResult } from 'data';
 import { usePersistence } from 'context/persistence/persistence-context';
 import { useViewState } from 'context/view-state-context';
 import { useProjectData } from 'context/project-data-context';
+import { ProjectNameModalContent } from 'components/project-name-modal-content';
 
 export const ProjectsListPage: React.FC = () => {
-  const { listProjects, deleteProject, createProject, garbleAccessToken } = usePersistence();
+  const { listProjects, deleteProject, garbleAccessToken } = usePersistence();
   const { confirmModal, busyModal, infoModal, hideModals } = useViewState();
   const { unloadProjectData } = useProjectData();
   const navigate = useNavigate();
@@ -19,61 +20,9 @@ export const ProjectsListPage: React.FC = () => {
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [selectedProjectFile, setSelectedProjectFile] = useState<PersistenceProjectFile | null>(null);
 
-  const NewProjectModalContents: React.FC = () => {
-    const [newProjectName, setNewProjectName] = useState<string>('');
-
-    return (
-      <div>
-        <h2>Create New Project!</h2>
-
-        <label className="block mb-1" htmlFor="new-project-name">
-          Name: 
-          <input
-            type="text" id="new-project-name"
-            className="ml-2 border-1 border-gray-600 p-1 w-full"
-            onChange={event => {
-              setNewProjectName(event.target.value);
-            }}
-          />
-        </label>
-
-        <div className="flex gap-2">
-          <button
-            type="button"
-            className="bg-gray-400 px-2 py-1"
-            onClick={hideModals}
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            className="bg-gray-400 px-2 py-1"
-            onClick={() => {
-              createProject({
-                projectName: newProjectName,
-                transcriptLines: [],
-                poeticStructures: [],
-                topsOptions: DefaultTOPSValues,
-                dataVersion: ProjectDataVersion.v1
-              }).then(projectFile => {
-                hideModals();
-                navigate(`/project/${projectFile.fileId}/transcript`);
-              }).catch((err: PersistenceResult) => {
-                infoModal(`An error occurred creating the new project file. Status: ${err.persistenceStatus}`)
-              });
-            }}
-          >
-            Create
-          </button>
-        </div>
-      </div>
-    );
-  };
-
   const fetchList = useCallback(async (isNextPageFetch?: boolean, token?: string): Promise<void> => {
     if (!isNextPageFetch) {
-      console.log('projects list page: clearing all data');
+      console.log('projects list page: clearing list data');
       setProjectFiles([]);
       setNextPageToken(null);
       setSelectedProjectFile(null);
@@ -127,9 +76,18 @@ export const ProjectsListPage: React.FC = () => {
         </h1>
 
         <button
-          className={classNames('block bg-green-400 hover:bg-green-500 text-white cursor-pointer p-2 mb-4')}
+          className={classNames('block bg-green-400 hover:bg-green-500 text-white cursor-pointer px-4 py-2 mb-4 rounded-xl font-medium')}
           type="button"
-          onClick={() => busyModal(<NewProjectModalContents />)}
+          onClick={() => busyModal(
+            <ProjectNameModalContent
+              mode='new'
+              onComplete={(file) => {
+                hideModals();
+                navigate(`/project/${file.fileId}/transcript`);
+              }}
+              onCancel={hideModals}
+            />
+          )}
         >
           New Project...
         </button>
@@ -150,7 +108,7 @@ export const ProjectsListPage: React.FC = () => {
           <div>
             
             <div
-              className="grid font-semibold text-gray-600 border-b-1 border-gray-600 pb-1 mb-2"
+              className="grid font-semibold text-gray-600 border-b-1 border-gray-600 pb-1 mb-2 px-4"
               style={{ gridTemplateColumns: '2fr 1fr 1fr 0.25fr' }}
             >
               <div>Project Name</div>
@@ -163,25 +121,29 @@ export const ProjectsListPage: React.FC = () => {
               const isSelected = file.fileId === selectedProjectFile?.fileId;
               return (
                 <div
-                  key={file.fileId}
-                  className={classNames(
-                    'pb-1 pt-1 cursor-pointer grid [&:not(:last-child)]:border-b-1 border-gray-300',
-                    { 'bg-blue-200': isSelected,
-                      'hover:bg-gray-300': !isSelected
-                    }
-                  )}
-                  style={{ gridTemplateColumns: '2fr 1fr 1fr 0.25fr' }}
-                  onClick={() => {
-                    setSelectedProjectFile(selFile => selFile?.fileId === file.fileId ? null : file);
-                  }}
-                  onDoubleClick={() => {
-                    navigate(`/project/${file.fileId}/transcript`);
-                  }}
+                  className="[&:not(:last-child)]:border-b-1 border-gray-300 py-[2px]"
                 >
-                  <div className="font-semibold">{ file.projectName }</div>
-                  <div>{ new Date(file.createdTime).toLocaleString() }</div>
-                  <div>{ new Date(file.modifiedTime).toLocaleString() }</div>
-                  <div>{ file.version }</div>
+                  <div
+                    key={file.fileId}
+                    className={classNames(
+                      'pb-1 pt-1 cursor-pointer grid px-4 rounded-2xl select-none',
+                      { 'bg-blue-400 text-white': isSelected,
+                        'hover:bg-gray-300': !isSelected
+                      }
+                    )}
+                    style={{ gridTemplateColumns: '2fr 1fr 1fr 0.25fr' }}
+                    onClick={() => {
+                      setSelectedProjectFile(selFile => selFile?.fileId === file.fileId ? null : file);
+                    }}
+                    onDoubleClick={() => {
+                      navigate(`/project/${file.fileId}/transcript`);
+                    }}
+                  >
+                    <div className="font-semibold">{ file.projectName }</div>
+                    <div>{ new Date(file.createdTime).toLocaleString() }</div>
+                    <div>{ new Date(file.modifiedTime).toLocaleString() }</div>
+                    <div>{ file.version }</div>
+                  </div>
                 </div>
               );
             })}
@@ -200,7 +162,7 @@ export const ProjectsListPage: React.FC = () => {
 
           <div className="flex gap-4 mt-4">
             <button
-              className={classNames('block bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-default text-white cursor-pointer p-2')}
+              className={classNames('block bg-blue-400 hover:bg-blue-500 disabled:bg-gray-300 disabled:cursor-default text-white cursor-pointer px-4 py-2 rounded-xl font-medium')}
               type="button"
               disabled={!selectedProjectFile}
               onClick={() => {
@@ -211,12 +173,40 @@ export const ProjectsListPage: React.FC = () => {
             </button>
 
             <button
-              className={classNames('block bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-default text-white cursor-pointer p-2')}
+              className={classNames('block bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-default text-white cursor-pointer px-4 py-2 rounded-xl font-medium')}
               type="button"
               disabled={!selectedProjectFile}
               onClick={() => deleteProj(selectedProjectFile)}
             >
-              Delete
+              Delete Project
+            </button>
+
+            <button
+              className={classNames('block bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-300 disabled:cursor-default text-white cursor-pointer px-4 py-2 rounded-xl font-medium')}
+              type="button"
+              disabled={!selectedProjectFile}
+              onClick={() => busyModal(
+                <ProjectNameModalContent
+                  mode='rename'
+                  currentName={selectedProjectFile?.projectName}
+                  projectFileId={selectedProjectFile?.fileId}
+                  onComplete={projectFile => {
+                    setProjectFiles(pf => {
+                      if (!pf) return pf;
+                      const idx = pf.findIndex(f => f.fileId === selectedProjectFile?.fileId);
+                      if (idx >= 0) {
+                        pf[idx] = projectFile
+                      }
+                      return pf;
+                    });
+                    setSelectedProjectFile(null);
+                    hideModals();
+                  }}
+                  onCancel={hideModals}
+                />
+              )}
+            >
+              Rename Project
             </button>
           </div>
 

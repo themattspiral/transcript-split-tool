@@ -4,7 +4,7 @@ import { authorize, completeAuthorize, refreshAuthorize, revoke } from './google
 import {
   getFolderInfo, getJSONFileContents,
   createFolder, createJSONFile, updateJSONFile, listJSONFilesInfo, PARSE_ERROR,
-  GoogleDriveFilesResponse, GoogleDriveFile, trashFile
+  GoogleDriveFilesResponse, GoogleDriveFile, trashFile, renameFile
 } from './google-drive-api';
 
 export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
@@ -110,7 +110,7 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     }
   }
   
-  async fetchProject(projectFileId: string): Promise<Project | null> {
+  async fetchProjectContents(projectFileId: string): Promise<Project | null> {
     const fetchProj = async () => {
       console.log('store fetching project file by id');
       const project = await getJSONFileContents(this.#accessToken, projectFileId);
@@ -127,7 +127,7 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     }
   }
   
-  async createProject(project: Project): Promise<PersistenceProjectFile> {
+  async createProjectFile(project: Project): Promise<PersistenceProjectFile> {
     const createProj = async (): Promise<PersistenceProjectFile> => {
       console.log('creating project file...');
       const projectFile = await createJSONFile(this.#accessToken, `${project.projectName}.json`, this.#folderId || '', project);
@@ -152,12 +152,11 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     }
   }
   
-  async updateProject(projectFileId: string, project: Project): Promise<PersistenceProjectFile> {
+  async updateProjectFile(projectFileId: string, project: Project): Promise<PersistenceProjectFile> {
     const updateProj = async (): Promise<PersistenceProjectFile> => {
       console.log('store updating ', project.projectName);
       const projectFile = await updateJSONFile(this.#accessToken, projectFileId, project);
       console.log('updated project file:', projectFile);
-
       return {
         fileId: projectFile.id,
         fileName: projectFile.name,
@@ -166,10 +165,6 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
         modifiedTime: projectFile.modifiedTime,
         version: projectFile.version
       };
-      // console.log('could not locate existing project file for:', project.projectName);
-
-      // // trigger a DataError throw
-      // throw PARSE_ERROR;
     };
 
     try {
@@ -181,7 +176,7 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     }
   }
 
-  async listProjects(nextPageToken?: string | null): Promise<PersistenceProjectFilesResponse> {
+  async listProjectFiles(nextPageToken?: string | null): Promise<PersistenceProjectFilesResponse> {
     const listProj = async (nextPageToken?: string | null): Promise<PersistenceProjectFilesResponse> => {
       console.log('store listing');
       const filesResponse: GoogleDriveFilesResponse = await listJSONFilesInfo(this.#accessToken, this.#folderId || '', nextPageToken);
@@ -208,11 +203,11 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
     }
   }
 
-  async deleteProject(projectFileId: string): Promise<void> {
+  async deleteProjectFile(projectFileId: string): Promise<void> {
     const deleteProj = async () => {
       console.log('store deleting project file by id');
       await trashFile(this.#accessToken, projectFileId);
-      console.log('deleting project file');
+      console.log('deleted project file');
       return;
     };
     
@@ -222,6 +217,30 @@ export class GoogleDrivePersistenceStore implements ExternalPersistenceStore {
       // will either return the result of the retry after reauth if successful,
       // or throw the appropriate PersistenceStatus for the error
       return await this.#handleApiError(statusCode as number, deleteProj);
+    }
+  }
+  
+  async renameProjectFile(projectFileId: string, name: string): Promise<PersistenceProjectFile> {
+    const renameProj = async (): Promise<PersistenceProjectFile> => {
+      console.log('store renaming project file by id');
+      const projectFile = await renameFile(this.#accessToken, projectFileId, name);
+      console.log('renamed project file');
+      return {
+        fileId: projectFile.id,
+        fileName: projectFile.name,
+        projectName: projectFile.name.split('.json')[0],
+        createdTime: projectFile.createdTime,
+        modifiedTime: projectFile.modifiedTime,
+        version: projectFile.version
+      };
+    };
+    
+    try {
+      return await renameProj();
+    } catch (statusCode) {
+      // will either return the result of the retry after reauth if successful,
+      // or throw the appropriate PersistenceStatus for the error
+      return await this.#handleApiError(statusCode as number, renameProj);
     }
   }
 

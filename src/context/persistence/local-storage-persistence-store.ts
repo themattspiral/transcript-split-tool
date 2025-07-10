@@ -17,7 +17,7 @@ export class LocalStoragePersistenceStore implements PersistenceStore {
   async initialize(): Promise<void> {}
   
   // todo - decide how to handle project file id in localstorage
-  async fetchProject(projectFileId: string): Promise<Project | null> {
+  async fetchProjectContents(projectFileId: string): Promise<Project | null> {
     try {
       const projectStr = localStorage.getItem(this.#projectKey(projectFileId));
       
@@ -28,7 +28,7 @@ export class LocalStoragePersistenceStore implements PersistenceStore {
     }
   }
   
-  async createProject(project: Project): Promise<PersistenceProjectFile> {
+  async createProjectFile(project: Project): Promise<PersistenceProjectFile> {
     const projectStr = persistenceSerialize(project);
     localStorage.setItem(this.#projectKey(project.projectName), projectStr);
     return {
@@ -41,11 +41,11 @@ export class LocalStoragePersistenceStore implements PersistenceStore {
     };
   }
   
-  async updateProject(projectFileId: string, project: Project): Promise<PersistenceProjectFile> {
-    return this.createProject(project);
+  async updateProjectFile(projectFileId: string, project: Project): Promise<PersistenceProjectFile> {
+    return this.createProjectFile(project);
   }
 
-  async listProjects(): Promise<PersistenceProjectFilesResponse> {
+  async listProjectFiles(): Promise<PersistenceProjectFilesResponse> {
     // TODO, add required fields
     return {
       nextPageToken: null,
@@ -54,8 +54,19 @@ export class LocalStoragePersistenceStore implements PersistenceStore {
   }
 
   // todo - decide how to handle project file id in localstorage
-  async deleteProject(projectFileId: string): Promise<void> {
+  async deleteProjectFile(projectFileId: string): Promise<void> {
     localStorage.removeItem(this.#projectKey(projectFileId));
+  }
+
+  async renameProjectFile(projectFileId: string, name: string): Promise<PersistenceProjectFile> {
+    return {
+      fileId: 'todo',
+      fileName: 'todo',
+      projectName: 'todo',
+      createdTime: 'todo',
+      modifiedTime: 'todo',
+      version: 1
+    };
   }
 
   get isInitialized(): boolean {

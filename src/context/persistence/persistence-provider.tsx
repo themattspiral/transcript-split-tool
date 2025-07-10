@@ -153,7 +153,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [createInitPromise]);
 
-  const loadProject = useCallback((fileId: string): Promise<PersistenceResult> => {
+  const loadProject = useCallback((fileId: string): Promise<void> => {
     return new Promise(async (resolve, reject) => {
       try {
         console.log('load: waiting for init to complete');
@@ -168,7 +168,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.log('load: pausing persistence');
       
       try {
-        const project = await storeRef.current?.fetchProject(fileId);
+        const project = await storeRef.current?.fetchProjectContents(fileId);
 
         if (!project) {
           console.log(`load: no existing project found with fileId:`, fileId);
@@ -191,10 +191,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
             setPersistenceStatus(PersistenceStatus.Idle);
             setLastPersistenceEvent(PersistenceEvent.ProjectLoaded);
 
-            resolve({
-              persistenceStatus: PersistenceStatus.Idle,
-              lastPersistenceEvent: PersistenceEvent.ProjectLoaded
-            });
+            resolve();
           }, 1000);
         } catch (err) {
           console.log('load: data error');
@@ -215,7 +212,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const createProject = useCallback(async (project: Project): Promise<PersistenceProjectFile> => {
     try {
-      const file = await storeRef.current?.createProject(project);
+      const file = await storeRef.current?.createProjectFile(project);
 
       if (file) {
         setLastPersistenceEvent(PersistenceEvent.ProjectSaved);
@@ -239,9 +236,28 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [setPersistenceStatus, setLastPersistenceEvent]);
 
+  const saveUpdate = useCallback(async (projectFileId: string, project: Project): Promise<void> => {
+    if (persistenceStatus === PersistenceStatus.Idle) {
+      setPersistenceStatus(PersistenceStatus.Saving);
+
+      try {
+        await storeRef.current?.updateProjectFile(projectFileId, project);
+
+        setPersistenceStatus(PersistenceStatus.Idle);
+        setLastPersistenceEvent(PersistenceEvent.ProjectSaved);
+      } catch (err) {
+        setPersistenceStatus(err as PersistenceErrorStatus);
+        setLastPersistenceEvent(PersistenceEvent.Error);
+        console.error('persistence: project update save failed - status:', err);
+      }
+    } else {
+      console.log('persistence: skipping update save - status:', persistenceStatus);
+    }
+  }, [persistenceStatus, setPersistenceStatus, setLastPersistenceEvent]);
+
   const deleteProject = useCallback(async (projectFileId: string): Promise<void> => {
     try {
-      await storeRef.current?.deleteProject(projectFileId);
+      await storeRef.current?.deleteProjectFile(projectFileId);
     } catch (err) {
       setPersistenceStatus(err as PersistenceErrorStatus);
       setLastPersistenceEvent(PersistenceEvent.Error);
@@ -250,7 +266,93 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         lastPersistenceEvent: PersistenceEvent.Error
       });
     }
-  }, [persistenceStatus, setPersistenceStatus, setLastPersistenceEvent]);
+  }, [setPersistenceStatus, setLastPersistenceEvent]);
+  
+  const renameProject = useCallback(async (projectFileId: string, name: string): Promise<PersistenceProjectFile> => {
+    try {
+      const project = await storeRef.current?.fetchProjectContents(projectFileId);
+
+      if (project) {
+        const fileRename = storeRef.current?.renameProjectFile(projectFileId, name);
+        const projectRename = storeRef.current?.updateProjectFile(projectFileId, {
+          ...project,
+          projectName: name
+        });
+
+        const [fileResponse, projectResponse] = await Promise.all([fileRename, projectRename]);
+        
+        if (fileResponse && projectResponse) {
+          return fileResponse.modifiedTime > projectResponse?.modifiedTime ? fileResponse : projectResponse;
+        } else {
+          setPersistenceStatus(PersistenceStatus.ErrorData);
+          setLastPersistenceEvent(PersistenceEvent.Error);
+          throw({
+            persistenceStatus: PersistenceStatus.ErrorData,
+            lastPersistenceEvent: PersistenceEvent.Error
+          });
+        }
+      } else {
+        setPersistenceStatus(PersistenceStatus.ErrorData);
+        setLastPersistenceEvent(PersistenceEvent.Error);
+        throw({
+          persistenceStatus: PersistenceStatus.ErrorData,
+          lastPersistenceEvent: PersistenceEvent.Error
+        });
+      }
+    } catch (err) {
+      setPersistenceStatus(err as PersistenceErrorStatus);
+      setLastPersistenceEvent(PersistenceEvent.Error);
+      throw({
+        persistenceStatus: err as PersistenceErrorStatus,
+        lastPersistenceEvent: PersistenceEvent.Error
+      });
+    }
+  }, [setPersistenceStatus, setLastPersistenceEvent]);
+
+  const renameLoadedProject = useCallback(async (name: string): Promise<PersistenceProjectFile> => {
+    try {
+      if (projectFileId) {
+        const fileRename = storeRef.current?.renameProjectFile(projectFileId, name);
+        const projectRename = storeRef.current?.updateProjectFile(projectFileId, {
+          projectName: name,
+          transcriptLines,
+          poeticStructures: Object.values(poeticStructures),
+          topsOptions,
+          dataVersion: ProjectDataVersion.v1
+        });
+
+        const [fileResponse, projectResponse] = await Promise.all([fileRename, projectRename]);
+
+        if (fileResponse && projectResponse) {
+          return fileResponse.modifiedTime > projectResponse?.modifiedTime ? fileResponse : projectResponse;
+        } else {
+          setPersistenceStatus(PersistenceStatus.ErrorData);
+          setLastPersistenceEvent(PersistenceEvent.Error);
+          throw({
+            persistenceStatus: PersistenceStatus.ErrorData,
+            lastPersistenceEvent: PersistenceEvent.Error
+          });
+        }
+      } else {
+        setPersistenceStatus(PersistenceStatus.ErrorData);
+        setLastPersistenceEvent(PersistenceEvent.Error);
+        throw({
+          persistenceStatus: PersistenceStatus.ErrorData,
+          lastPersistenceEvent: PersistenceEvent.Error
+        });
+      }
+    } catch (err) {
+      setPersistenceStatus(err as PersistenceErrorStatus);
+      setLastPersistenceEvent(PersistenceEvent.Error);
+      throw({
+        persistenceStatus: err as PersistenceErrorStatus,
+        lastPersistenceEvent: PersistenceEvent.Error
+      });
+    }
+  }, [
+    projectFileId, transcriptLines, poeticStructures, topsOptions, 
+    setPersistenceStatus, setLastPersistenceEvent
+  ]);
 
   const listProjects = useCallback((nextPageToken?: string | null): Promise<PersistenceProjectFilesResponse> => {
     return new Promise(async (resolve, reject) => {
@@ -264,7 +366,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
 
       try {
-        const projectsResponse = await storeRef.current?.listProjects(nextPageToken);
+        const projectsResponse = await storeRef.current?.listProjectFiles(nextPageToken);
 
         if (projectsResponse) {
           resolve(projectsResponse);
@@ -289,25 +391,6 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
     });
   }, [waitForInit, setPersistenceStatus, setLastPersistenceEvent, GoogleDrivePersistenceStore]);
-
-  const saveUpdate = useCallback(async (projectFileId: string, project: Project): Promise<void> => {
-    if (persistenceStatus === PersistenceStatus.Idle) {
-      setPersistenceStatus(PersistenceStatus.Saving);
-
-      try {
-        await storeRef.current?.updateProject(projectFileId, project);
-
-        setPersistenceStatus(PersistenceStatus.Idle);
-        setLastPersistenceEvent(PersistenceEvent.ProjectSaved);
-      } catch (err) {
-        setPersistenceStatus(err as PersistenceErrorStatus);
-        setLastPersistenceEvent(PersistenceEvent.Error);
-        console.error('persistence: project update save failed - status:', err);
-      }
-    } else {
-      console.log('persistence: skipping update save - status:', persistenceStatus);
-    }
-  }, [persistenceStatus, setPersistenceStatus, setLastPersistenceEvent]);
 
 
 
@@ -343,13 +426,13 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     persistenceMethod, setPersistenceMethod: setPersistenceMethodPublic, initializePersistence,
     isPersistenceMethodExternal, isPathOauthCallback,
     persistenceStatus, lastPersistenceEvent,
-    loadProject, createProject, listProjects, deleteProject,
+    loadProject, createProject, deleteProject, renameProject, renameLoadedProject, listProjects,
     authorizeExternal, completeAuthorizeExternal, revokeAuthorizeExternal, garbleAccessToken
   }), [
     persistenceMethod, setPersistenceMethodPublic, initializePersistence,
     isPersistenceMethodExternal, isPathOauthCallback,
     persistenceStatus, lastPersistenceEvent,
-    loadProject, createProject, listProjects, deleteProject,
+    loadProject, createProject, deleteProject, renameProject, renameLoadedProject, listProjects,
     authorizeExternal, completeAuthorizeExternal, revokeAuthorizeExternal
   ]);
 
