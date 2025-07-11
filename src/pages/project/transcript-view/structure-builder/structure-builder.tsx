@@ -6,6 +6,7 @@ import { faCheck, faX, faTrash, faCircleXmark } from '@fortawesome/free-solid-sv
 import { getPhraseText, PoeticStructureRelationshipType, SpanType, StylableProps } from 'data';
 import { useProjectData } from 'context/project-data-context';
 import { useViewState } from 'context/view-state-context';
+import { useTranscriptInteraction } from 'context/transcript-interaction-context';
 import { EditState, useStructureEdit } from 'context/structure-edit-context';
 import { SimpleSpanBubble } from 'components/simple-span-bubble';
 import { Badge } from 'components/badge';
@@ -18,7 +19,8 @@ const CONTAINER_CLASSES = 'pl-5 pr-6 pt-6 pb-6 flex flex-col justify-center item
 
 export const StructureBuilder: React.FC<StylableProps> = ({ className, style }) => {
   const { confirmModal } = useViewState();
-  const { transcriptLines, topsMap } = useProjectData();
+  const { topsMap } = useProjectData();
+  const { selectedTranscript } = useTranscriptInteraction();
   const {
     editState, editInfo, editValidity, removeSourceFromStructureUnderEdit,
     clearAllPending, savePendingStructureEdit, deleteStructureUnderEdit, setPendingTops
@@ -41,7 +43,7 @@ export const StructureBuilder: React.FC<StylableProps> = ({ className, style }) 
     }));
   }, [topsMap]);
   
-  const repetitionText = getPhraseText(editInfo.repetitionToShow, transcriptLines) || PENDING_TEXT;
+  const repetitionText = getPhraseText(editInfo.repetitionToShow, selectedTranscript?.lines) || PENDING_TEXT;
   
   let submitEnabled = editValidity.isCompleteStructure && !editValidity.hasOrderingError;
   if (editState === EditState.EditingExisting) {
@@ -137,7 +139,7 @@ export const StructureBuilder: React.FC<StylableProps> = ({ className, style }) 
                       style={{ padding: isMultiSource ? '5px 10px' : '10px 20px' }}
                       showEmphasized={true}
                       >
-                      { getPhraseText(source, transcriptLines) }
+                      { getPhraseText(source, selectedTranscript?.lines) }
                     </SimpleSpanBubble>
 
                     { isMultiSource &&

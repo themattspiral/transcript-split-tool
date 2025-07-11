@@ -6,16 +6,23 @@ export interface TranscriptLine {
   text: string;
 }
 
+export interface Transcript {
+  id: string;
+  name: string;
+  lines: TranscriptLine[];
+}
+
 // follows String.substring() behavior - start is inclusive, end is exclusive
 export class Phrase {
   constructor(
+    public transcriptId: string,
     public lineNumber: number,
     public start: number,
     public end: number
   ) {}
 
   get id() {
-    return `${this.lineNumber}_${this.start}:${this.end}`;
+    return `${this.transcriptId}_${this.lineNumber}_${this.start}:${this.end}`;
   }
 }
 
@@ -204,7 +211,7 @@ export enum ProjectDataVersion {
 
 export interface Project {
   projectName: string;
-  transcriptLines: TranscriptLine[];
+  transcripts: Transcript[];
   poeticStructures: PoeticStructure[];
   topsOptions: TypeOfPoeticStructure[];
   readonly dataVersion: ProjectDataVersion;

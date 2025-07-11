@@ -1,9 +1,11 @@
 import { createContext, useContext } from 'react';
 
-import { MenuAction, Phrase, PhraseAction, PhraseRole, PhraseViewState } from 'data';
+import { MenuAction, Phrase, PhraseAction, PhraseRole, PhraseViewState, Transcript } from 'data';
 import { TranscriptMenuId } from 'pages/project/transcript-view/menus/transcript-menus';
 
 interface TranscriptInteractionContextProps {
+  selectedTranscript: Transcript | null;
+  setSelectedTranscriptId: (transcriptId: string) => void;
   phraseViewStates: { [phraseId: string]: PhraseViewState };
   handlePhraseAction: (event: React.MouseEvent, phraseIds: string[], action: PhraseAction) => void;
   handleStructureSelectMenuAction: (structureOrPhraseId: string, action: MenuAction) => void;
@@ -15,6 +17,8 @@ interface TranscriptInteractionContextProps {
 }
 
 export const TranscriptInteractionContext = createContext<TranscriptInteractionContextProps>({
+  selectedTranscript: null,
+  setSelectedTranscriptId: () => {},
   phraseViewStates: {},
   handlePhraseAction: () => {},
   handleStructureSelectMenuAction: () => {},

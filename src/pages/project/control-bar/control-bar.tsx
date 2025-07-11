@@ -5,18 +5,28 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileWord } from '@fortawesome/free-regular-svg-icons';
 import { faCircleArrowLeft, faHouseChimney, faGears, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
-import { TranscriptLine } from 'data';
+import { DropdownOption, TranscriptLine } from 'data';
 import { useProjectData } from 'context/project-data-context';
 import { usePersistence } from 'context/persistence/persistence-context';
+import { useTranscriptInteraction } from 'context/transcript-interaction-context';
 import { useViewState } from 'context/view-state-context';
+import { Dropdown } from 'components/dropdown';
 import { ProjectNameModalContent } from 'components/project-name-modal-content';
 
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
 const ControlBar: React.FC = () => {
-  const { projectName, setNewTranscript, poeticStructures, setProjectName } = useProjectData();
+  const { projectName, transcripts, addTranscript, poeticStructures, setProjectName } = useProjectData();
+  const { selectedTranscript, setSelectedTranscriptId } = useTranscriptInteraction();
   const { persistenceStatus, lastPersistenceEvent } = usePersistence();
   const { busyModal, hideModals } = useViewState();
+
+  const transcriptOptions: DropdownOption[] = useMemo(() => {
+    return transcripts.map(t => ({
+      id: t.id,
+      textLabel: t.name,
+    }));
+  }, [transcripts]);
 
   const psCount = useMemo(() => Object.keys(poeticStructures).length, [poeticStructures])
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +69,11 @@ const ControlBar: React.FC = () => {
         // empty placeholder in index 0, to make all lineNumber values match index
         lines.unshift({} as TranscriptLine);
 
-        setNewTranscript(lines);
+        addTranscript({
+          id: 'todo',
+          name: 'todo',
+          lines
+        });
 
       if (result.messages?.length) {
         console.log('Document Parsing Messages:', result.messages);
@@ -122,6 +136,13 @@ const ControlBar: React.FC = () => {
         </div>
 
         <div className="basis-2 grow-1 shrink-2" />
+
+        <Dropdown
+          className="z-6"
+          options={transcriptOptions}
+          selectedId={selectedTranscript?.id || ''}
+          onChange={(id: string) => setSelectedTranscriptId(id)}
+        />
 
         <button
           type="button"

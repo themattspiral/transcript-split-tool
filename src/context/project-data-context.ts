@@ -1,14 +1,14 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseLink, PhraseLinkInfo, PoeticStructure, Project, TranscriptLine, TypeOfPoeticStructure } from 'data';
+import { Phrase, PhraseLink, PhraseLinkInfo, PoeticStructure, Project, Transcript, TypeOfPoeticStructure } from 'data';
 
 interface ProjectDataContextProps {
   projectFileId: string | null;
   setProjectFileId: (projectFileId: string | null) => void;
   projectName: string | null;
   setProjectName: (name: string | null) => void;
-  transcriptLines: TranscriptLine[];
-  setNewTranscript: (lines: TranscriptLine[]) => void;
+  transcripts: Transcript[];
+  addTranscript: (transcript: Transcript) => void;
   poeticStructures: { [structureId: string]: PoeticStructure };
   addPoeticStructure: (structure: PoeticStructure) => void;
   replacePoeticStructure: (oldStructureId: string, newStructure: PoeticStructure) => void;
@@ -30,8 +30,8 @@ export const ProjectDataContext = createContext<ProjectDataContextProps>({
   setProjectFileId: () => {},
   projectName: null,
   setProjectName: () => {},
-  transcriptLines: [],
-  setNewTranscript: () => {},
+  transcripts: [],
+  addTranscript: () => {},
   poeticStructures: {},
   addPoeticStructure: () => {},
   replacePoeticStructure: () => {},

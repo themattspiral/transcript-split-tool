@@ -14,7 +14,7 @@ const DEFAULT_EXTERNAL_STORE_FOLDER_NAME = 'TST Projects';
 
 export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
-    projectFileId, projectName, transcriptLines, poeticStructures, topsOptions, loadDeserializedProjectData, setProjectFileId
+    projectFileId, projectName, transcripts, poeticStructures, topsOptions, loadDeserializedProjectData, setProjectFileId
   } = useProjectData();
   const [persistenceMethod, setPersistenceMethod] = useState<PersistenceMethod | null>(null);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(PersistenceStatus.Initializing);
@@ -339,7 +339,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         const fileRename = storeRef.current?.renameProjectFile(projectFileId, name);
         const projectRename = storeRef.current?.updateProjectFile(projectFileId, {
           projectName: name,
-          transcriptLines,
+          transcripts,
           poeticStructures: Object.values(poeticStructures),
           topsOptions,
           dataVersion: ProjectDataVersion.v1
@@ -386,7 +386,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       });
     }
   }, [
-    projectFileId, transcriptLines, poeticStructures, topsOptions, 
+    projectFileId, transcripts, poeticStructures, topsOptions, 
     setPersistenceStatus, setLastPersistenceEvent, setProjectFilesList
   ]);
 
@@ -457,7 +457,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       saveUpdate(projectFileId, {
         projectName,
-        transcriptLines,
+        transcripts,
         poeticStructures: Object.values(poeticStructures),
         topsOptions,
         dataVersion: ProjectDataVersion.v1
@@ -465,7 +465,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [
     // intentionally incomplete
-    transcriptLines, poeticStructures, topsOptions
+    transcripts, poeticStructures, topsOptions
   ]);
 
   const value = useMemo(() => ({
