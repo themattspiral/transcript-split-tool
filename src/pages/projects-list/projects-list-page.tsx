@@ -7,35 +7,21 @@ import { faRotate } from '@fortawesome/free-solid-svg-icons';
 import { PersistenceProjectFile, PersistenceResult } from 'data';
 import { usePersistence } from 'context/persistence/persistence-context';
 import { useViewState } from 'context/view-state-context';
-import { useProjectData } from 'context/project-data-context';
 import { ProjectNameModalContent } from 'components/project-name-modal-content';
 
 export const ProjectsListPage: React.FC = () => {
-  const { listProjects, deleteProject, garbleAccessToken } = usePersistence();
+  const { listProjects, deleteProject, projectFilesList, hasMoreProjectFiles, garbleAccessToken } = usePersistence();
   const { confirmModal, busyModal, infoModal, hideModals } = useViewState();
-  const { unloadProjectData } = useProjectData();
   const navigate = useNavigate();
   
-  const [projectFiles, setProjectFiles] = useState<PersistenceProjectFile[] | null>(null);
-  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [selectedProjectFile, setSelectedProjectFile] = useState<PersistenceProjectFile | null>(null);
 
-  const fetchList = useCallback(async (isNextPageFetch?: boolean, token?: string): Promise<void> => {
-    if (!isNextPageFetch) {
-      console.log('projects list page: clearing list data');
-      setProjectFiles([]);
-      setNextPageToken(null);
-      setSelectedProjectFile(null);
-    }
-    
+  const loadList = useCallback(async (isNextPageFetch: boolean = false): Promise<void> => {
     console.log('projects list page: calling listProjects()');
-    listProjects(isNextPageFetch && token ? token : null).then(({ projectFiles: files, nextPageToken: npt }) => {
-      setProjectFiles(pf => isNextPageFetch && pf ? pf.concat(files) : files);
-      setNextPageToken(npt);
-    }).catch((err) => {
+    listProjects(isNextPageFetch).then(() => {}).catch((err) => {
       console.error('error fetching projects list:', err);
     });
-  }, [listProjects, setProjectFiles, setNextPageToken, setSelectedProjectFile]);
+  }, [listProjects, setSelectedProjectFile]);
 
   const deleteProj = useCallback(async (projectFile: PersistenceProjectFile | null): Promise<void> => {
     if (!projectFile) {
@@ -48,21 +34,26 @@ export const ProjectsListPage: React.FC = () => {
       return;
     }
 
+    busyModal(`Deleting project "${projectFile.projectName}"...`);
     deleteProject(projectFile.fileId).then(() => {
       console.log('deleted', projectFile);
-      setProjectFiles(pf => (pf || []).filter(file => file.fileId !== projectFile.fileId));
       setSelectedProjectFile(null);
+      hideModals();
     }).catch((err: PersistenceResult) => {
       console.error(err);
       infoModal(`An error occurred deleting project file. Status: ${err.persistenceStatus}`);
     });
-  }, [deleteProject, setProjectFiles, setSelectedProjectFile]);
+  }, [deleteProject, setSelectedProjectFile]);
 
   useEffect(() => {
-    unloadProjectData();
-    fetchList();
+    setSelectedProjectFile(null);
+
+    if (!projectFilesList) {
+      loadList();
+    }
   }, [
-    // intentionally empty
+    // intentionally incomplete
+    projectFilesList
   ]);
 
   return (
@@ -98,7 +89,7 @@ export const ProjectsListPage: React.FC = () => {
           <button
             className="flex items-center justify-center hover:bg-gray-300 cursor-pointer p-1 w-[30px] h-[30px] rounded-full overflow-hidden"
             type="button"
-            onClick={() => fetchList()}
+            onClick={() => loadList()}
           >
             <FontAwesomeIcon icon={faRotate} className="w-4 h-4" />
           </button>  
@@ -117,14 +108,14 @@ export const ProjectsListPage: React.FC = () => {
               <div>Rev #</div>
             </div>
 
-            { projectFiles?.map(file => {
+            { projectFilesList?.map(file => {
               const isSelected = file.fileId === selectedProjectFile?.fileId;
               return (
                 <div
+                  key={file.fileId}
                   className="[&:not(:last-child)]:border-b-1 border-gray-300 py-[2px]"
                 >
                   <div
-                    key={file.fileId}
                     className={classNames(
                       'pb-1 pt-1 cursor-pointer grid px-4 rounded-2xl select-none',
                       { 'bg-blue-400 text-white': isSelected,
@@ -148,13 +139,12 @@ export const ProjectsListPage: React.FC = () => {
               );
             })}
           </div>
-          <div>{ projectFiles === undefined ? 'undefined' : '' }</div>
           
-          { nextPageToken &&
+          { hasMoreProjectFiles &&
             <button
               className="block text-blue-500 p-1 mt-1 hover:font-semibold cursor-pointer"
               type="button"
-              onClick={() => fetchList(true, nextPageToken)}
+              onClick={() => loadList(true)}
             >
               See More
             </button>
@@ -190,15 +180,7 @@ export const ProjectsListPage: React.FC = () => {
                   mode='rename'
                   currentName={selectedProjectFile?.projectName}
                   projectFileId={selectedProjectFile?.fileId}
-                  onComplete={projectFile => {
-                    setProjectFiles(pf => {
-                      if (!pf) return pf;
-                      const idx = pf.findIndex(f => f.fileId === selectedProjectFile?.fileId);
-                      if (idx >= 0) {
-                        pf[idx] = projectFile
-                      }
-                      return pf;
-                    });
+                  onComplete={() => {
                     setSelectedProjectFile(null);
                     hideModals();
                   }}

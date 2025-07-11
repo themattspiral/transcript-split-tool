@@ -20,7 +20,10 @@ interface PersistenceContextProps {
   deleteProject: (projectFileId: string) => Promise<void>;
   renameProject: (projectFileId: string, name: string) => Promise<PersistenceProjectFile>;
   renameLoadedProject: (name: string) => Promise<PersistenceProjectFile>;
-  listProjects: (nextPageToken?: string | null) => Promise<PersistenceProjectFilesResponse>;
+  listProjects: (useNextPageToken: boolean) => Promise<void>;
+
+  projectFilesList: PersistenceProjectFile[] | null;
+  hasMoreProjectFiles: boolean;
 
   authorizeExternal: () => void;
   completeAuthorizeExternal: (code: string, state: string, rememberMe: boolean) => Promise<PersistenceResult>;
@@ -44,6 +47,9 @@ export const PersistenceContext = createContext<PersistenceContextProps>({
   renameProject: () => Promise.reject(0),
   renameLoadedProject: () => Promise.reject(0),
   listProjects: () => Promise.reject(0),
+
+  projectFilesList: null,
+  hasMoreProjectFiles: false,
 
   authorizeExternal: () => {},
   completeAuthorizeExternal: () => Promise.reject(0),

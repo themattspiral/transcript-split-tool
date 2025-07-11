@@ -3,8 +3,7 @@ import { useMatch } from 'react-router';
 
 import {
   PersistenceErrorStatus, PersistenceEvent, PersistenceMethod, PersistenceStatus, 
-  PersistenceResult, Project, ProjectDataVersion, PersistenceProjectFilesResponse,
-  PersistenceProjectFile
+  PersistenceResult, Project, ProjectDataVersion, PersistenceProjectFile
 } from 'data';
 import { ExternalPersistenceStore, PersistenceContext, PersistenceStore } from './persistence-context';
 import { useProjectData } from 'context/project-data-context';
@@ -20,6 +19,9 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [persistenceMethod, setPersistenceMethod] = useState<PersistenceMethod | null>(null);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(PersistenceStatus.Initializing);
   const [lastPersistenceEvent, setLastPersistenceEvent] = useState<PersistenceEvent | null>(null);
+  const [projectFilesList, setProjectFilesList] = useState<PersistenceProjectFile[] | null>(null);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const hasMoreProjectFiles = !!nextPageToken;
   
   const storeRef = useRef<PersistenceStore | null>(null);
   const isPersistenceMethodExternal = storeRef.current?.isExternal || false;
@@ -59,9 +61,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.log('persistence: setPersistenceMethod is using the init promise already present (no store, and promise exists [must have been created by someone waiting]):', initializingPromiseRef.current.promise);
     }
 
-    if (method === PersistenceMethod.SessionOnly) {
-      // todo
-    } else if (method === PersistenceMethod.BrowserLocal) {
+    if (method === PersistenceMethod.BrowserLocal) {
       storeRef.current = new LocalStoragePersistenceStore();
     } else if (method === PersistenceMethod.GoogleDrive) {
       storeRef.current = new GoogleDrivePersistenceStore(persistenceFolderName || DEFAULT_EXTERNAL_STORE_FOLDER_NAME);
@@ -212,11 +212,15 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const createProject = useCallback(async (project: Project): Promise<PersistenceProjectFile> => {
     try {
-      const file = await storeRef.current?.createProjectFile(project);
+      const fileResponse = await storeRef.current?.createProjectFile(project);
 
-      if (file) {
+      if (fileResponse) {
+        setProjectFilesList(pf => {
+          if (!pf || !fileResponse) return pf;
+          return [fileResponse].concat(pf);
+        });
         setLastPersistenceEvent(PersistenceEvent.ProjectSaved);
-        return file;
+        return fileResponse;
       } else {
         setPersistenceStatus(PersistenceStatus.ErrorData);
         setLastPersistenceEvent(PersistenceEvent.Error);
@@ -241,8 +245,15 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setPersistenceStatus(PersistenceStatus.Saving);
 
       try {
-        await storeRef.current?.updateProjectFile(projectFileId, project);
-
+        const fileResponse = await storeRef.current?.updateProjectFile(projectFileId, project);
+        setProjectFilesList(pf => {
+          if (!pf || !fileResponse) return pf;
+          const idx = pf.findIndex(f => f.fileId === projectFileId);
+          if (idx >= 0) {
+            pf[idx] = fileResponse;
+          }
+          return pf.concat([]);
+        });
         setPersistenceStatus(PersistenceStatus.Idle);
         setLastPersistenceEvent(PersistenceEvent.ProjectSaved);
       } catch (err) {
@@ -253,11 +264,12 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } else {
       console.log('persistence: skipping update save - status:', persistenceStatus);
     }
-  }, [persistenceStatus, setPersistenceStatus, setLastPersistenceEvent]);
+  }, [persistenceStatus, setPersistenceStatus, setLastPersistenceEvent, setProjectFilesList]);
 
   const deleteProject = useCallback(async (projectFileId: string): Promise<void> => {
     try {
       await storeRef.current?.deleteProjectFile(projectFileId);
+      setProjectFilesList(pf => (pf || []).filter(file => file.fileId !== projectFileId));
     } catch (err) {
       setPersistenceStatus(err as PersistenceErrorStatus);
       setLastPersistenceEvent(PersistenceEvent.Error);
@@ -266,7 +278,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         lastPersistenceEvent: PersistenceEvent.Error
       });
     }
-  }, [setPersistenceStatus, setLastPersistenceEvent]);
+  }, [setPersistenceStatus, setLastPersistenceEvent, setProjectFilesList]);
   
   const renameProject = useCallback(async (projectFileId: string, name: string): Promise<PersistenceProjectFile> => {
     try {
@@ -282,7 +294,19 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         const [fileResponse, projectResponse] = await Promise.all([fileRename, projectRename]);
         
         if (fileResponse && projectResponse) {
-          return fileResponse.modifiedTime > projectResponse?.modifiedTime ? fileResponse : projectResponse;
+          const newerResponse = fileResponse.modifiedTime > projectResponse?.modifiedTime
+            ? fileResponse : projectResponse;
+          
+          setProjectFilesList(pf => {
+            if (!pf) return pf;
+            const idx = pf.findIndex(f => f.fileId === projectFileId);
+            if (idx >= 0) {
+              pf[idx] = newerResponse;
+            }
+            return pf.concat([]);
+          });
+
+          return newerResponse;
         } else {
           setPersistenceStatus(PersistenceStatus.ErrorData);
           setLastPersistenceEvent(PersistenceEvent.Error);
@@ -307,7 +331,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         lastPersistenceEvent: PersistenceEvent.Error
       });
     }
-  }, [setPersistenceStatus, setLastPersistenceEvent]);
+  }, [setPersistenceStatus, setLastPersistenceEvent, setProjectFilesList]);
 
   const renameLoadedProject = useCallback(async (name: string): Promise<PersistenceProjectFile> => {
     try {
@@ -324,7 +348,19 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         const [fileResponse, projectResponse] = await Promise.all([fileRename, projectRename]);
 
         if (fileResponse && projectResponse) {
-          return fileResponse.modifiedTime > projectResponse?.modifiedTime ? fileResponse : projectResponse;
+          const newerResponse = fileResponse.modifiedTime > projectResponse?.modifiedTime
+            ? fileResponse : projectResponse;
+          
+          setProjectFilesList(pf => {
+            if (!pf) return pf;
+            const idx = pf.findIndex(f => f.fileId === projectFileId);
+            if (idx >= 0) {
+              pf[idx] = newerResponse;
+            }
+            return pf.concat([]);
+          });
+
+          return newerResponse;
         } else {
           setPersistenceStatus(PersistenceStatus.ErrorData);
           setLastPersistenceEvent(PersistenceEvent.Error);
@@ -351,10 +387,10 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [
     projectFileId, transcriptLines, poeticStructures, topsOptions, 
-    setPersistenceStatus, setLastPersistenceEvent
+    setPersistenceStatus, setLastPersistenceEvent, setProjectFilesList
   ]);
 
-  const listProjects = useCallback((nextPageToken?: string | null): Promise<PersistenceProjectFilesResponse> => {
+  const listProjects = useCallback((useNextPageToken: boolean): Promise<void> => {
     return new Promise(async (resolve, reject) => {
       try {
         console.log('list: waiting for init to complete');
@@ -366,10 +402,17 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
 
       try {
-        const projectsResponse = await storeRef.current?.listProjectFiles(nextPageToken);
+        const filesResponse = await storeRef.current?.listProjectFiles(
+          useNextPageToken && nextPageToken ? nextPageToken : null
+        );
 
-        if (projectsResponse) {
-          resolve(projectsResponse);
+        if (filesResponse) {
+          setProjectFilesList(pf => nextPageToken && pf
+            ? pf.concat(filesResponse.projectFiles)
+            : filesResponse.projectFiles
+          );
+          setNextPageToken(filesResponse.nextPageToken);
+          resolve();
         } else {
           setPersistenceStatus(PersistenceStatus.ErrorData);
           setLastPersistenceEvent(PersistenceEvent.Error);
@@ -390,7 +433,10 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         });
       }
     });
-  }, [waitForInit, setPersistenceStatus, setLastPersistenceEvent, GoogleDrivePersistenceStore]);
+  }, [
+    nextPageToken, waitForInit, setProjectFilesList, setNextPageToken, 
+    setPersistenceStatus, setLastPersistenceEvent
+  ]);
 
 
 
@@ -418,7 +464,7 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       });
     }
   }, [
-    // intentionally limited
+    // intentionally incomplete
     transcriptLines, poeticStructures, topsOptions
   ]);
 
@@ -427,12 +473,14 @@ export const PersistenceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     isPersistenceMethodExternal, isPathOauthCallback,
     persistenceStatus, lastPersistenceEvent,
     loadProject, createProject, deleteProject, renameProject, renameLoadedProject, listProjects,
+    projectFilesList, hasMoreProjectFiles,
     authorizeExternal, completeAuthorizeExternal, revokeAuthorizeExternal, garbleAccessToken
   }), [
     persistenceMethod, setPersistenceMethodPublic, initializePersistence,
     isPersistenceMethodExternal, isPathOauthCallback,
     persistenceStatus, lastPersistenceEvent,
     loadProject, createProject, deleteProject, renameProject, renameLoadedProject, listProjects,
+    projectFilesList, hasMoreProjectFiles,
     authorizeExternal, completeAuthorizeExternal, revokeAuthorizeExternal
   ]);
 

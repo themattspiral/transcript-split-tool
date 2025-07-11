@@ -12,7 +12,6 @@ interface ProjectNameModalContentProps extends StylableProps {
   onCancel: () => void;
 }
 
-// todo use this as a template
 export const ProjectNameModalContent: React.FC<ProjectNameModalContentProps> = props => {
   const { mode, currentName, projectFileId, onComplete, onCancel, className, style } = props;
   const { projectName } = useProjectData();

@@ -246,7 +246,10 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         loadingPromiseRef.current.resolve(settings);
       }
     }
-  }, [isPathOauthCallback, initializePersistence, completeOauthAndInitialize, setAppSettings, setPersistenceMethod]);
+  }, [
+    // intentionally incomplete
+    isPathOauthCallback
+  ]);
 
   // save persistenceHasAuthorized
   useEffect(() => {

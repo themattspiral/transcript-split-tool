@@ -151,7 +151,6 @@ export interface StylableProps {
 }
 
 export enum PersistenceMethod {
-  SessionOnly = 'SessionOnly',
   BrowserLocal = 'BrowserLocal',
   GoogleDrive = 'GoogleDrive'
 }

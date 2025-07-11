@@ -55,7 +55,7 @@ export const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [setDisplayedModalId, setModalContent, setIsModalCancellable, modalResolve, modalReject]);
 
   const infoModal = useCallback(async (content: ReactNode): Promise<void> => {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>((resolve, _reject) => {
       setModalContent(content);
       setIsModalCancellable(true);
       setDisplayedModalId(INFO_MODAL_ID);
