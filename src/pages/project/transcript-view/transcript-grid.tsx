@@ -5,7 +5,6 @@ import classNames from 'classnames';
 import { Badge } from 'components/badge';
 import { Phrase, StylableProps } from 'data';
 import { getGridColumnAttributes, getSelectionRangeContainerAttribute } from '../../../shared/util';
-import { useProjectData } from 'context/project-data-context';
 import { EditState, useStructureEdit } from 'context/structure-edit-context';
 import { useTranscriptInteraction } from 'context/transcript-interaction-context';
 import { TranscriptMenuId } from './menus/transcript-menus';
@@ -16,9 +15,8 @@ import { StructureSelectMenu } from './menus/structure-select-menu/structure-sel
 
 const TranscriptGrid: React.FC<StylableProps> = ({ className, style }) => {
   const { show: showContextMenu } = useContextMenu();
-  const { transcriptLines } = useProjectData();
   const { editState } = useStructureEdit();
-  const { setHighlightedPhrase } = useTranscriptInteraction();
+  const { setHighlightedPhrase, selectedTranscript } = useTranscriptInteraction();
 
   const handleGridAction = useCallback((event: React.MouseEvent, handleAsPrimaryClick: boolean): void => {
     // using handler for onClick event, button was right click
@@ -63,9 +61,10 @@ const TranscriptGrid: React.FC<StylableProps> = ({ className, style }) => {
     if (hasMultiLineSelection) {
       if (event.preventDefault) event.preventDefault();
       showContextMenu({ event, id: TranscriptMenuId.ErrorMultipleLinesMenu });
-    } else if (hasSelection && range) {
+    } else if (hasSelection && range && selectedTranscript) {
       if (event.preventDefault) event.preventDefault();
       setHighlightedPhrase(new Phrase(
+        selectedTranscript.id,
         lineNumber,
         (range.startOffset + beginPhraseLineStartIdx) || 0,
         (range.endOffset + endPhraseLineStartIdx) || 0
@@ -88,7 +87,7 @@ const TranscriptGrid: React.FC<StylableProps> = ({ className, style }) => {
     </div>
   ), []);
 
-  const dataRows = useMemo(() => transcriptLines.map((line, idx) => idx === 0 ? null : (
+  const dataRows = useMemo(() => selectedTranscript?.lines.map((line, idx) => idx === 0 ? null : (
     <div key={line.lineNumber} className={classNames('flex', { ['bg-gray-100']: line.lineNumber % 2 === 0 })}>
 
       <div className="px-2 py-2 border-b-1 border-gray-400 flex justify-center items-center basis-[65px] shrink-0">
@@ -111,9 +110,9 @@ const TranscriptGrid: React.FC<StylableProps> = ({ className, style }) => {
       />
 
     </div>
-  )), [transcriptLines]);
+  )), [selectedTranscript]);
 
-  return transcriptLines?.length ? (
+  return selectedTranscript?.lines?.length ? (
     <div
       className={classNames('flex flex-col overflow-auto box-border w-full', className)}
       onClick={event => handleGridAction(event, true)}
@@ -132,7 +131,7 @@ const TranscriptGrid: React.FC<StylableProps> = ({ className, style }) => {
   ) : (
     <div className={classNames('flex flex-col justify-center', className)} style={style}>
       <h1 className="flex justify-center text-2xl text-gray-600 p-2">
-        Please import a transcript to get started.
+        Please import a Word document to get started on this transcript.
       </h1>
     </div>
   );

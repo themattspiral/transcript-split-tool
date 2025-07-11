@@ -2,8 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 
 import {
   DefaultTOPSValues, OverallPhraseRole, Phrase, PhraseLink, PhraseLinkInfo, PhraseRole, 
-  PoeticStructure, PoeticStructureRelationshipType, Project, ProjectDataVersion, sortPhrases, TranscriptLine,
-  TypeOfPoeticStructure
+  PoeticStructure, PoeticStructureRelationshipType, Project, ProjectDataVersion, sortPhrases,
+  Transcript, TypeOfPoeticStructure
 } from 'data';
 import { ProjectDataContext } from './project-data-context';
 
@@ -27,13 +27,13 @@ const flattenTops = (option: TypeOfPoeticStructure, level: number, parentHierarc
 export const ProjectDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [projectFileId, setProjectFileId] = useState<string | null>(null);
   const [projectName, setProjectName] = useState<string | null>(null);
-  const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
+  const [transcripts, setTranscripts] = useState<Transcript[]>([]);
   const [poeticStructures, setPoeticStructures] = useState<{ [structureId: string]: PoeticStructure }>({});
   const [topsOptions, setTopsOptions] = useState<TypeOfPoeticStructure[]>(DefaultTOPSValues);
 
   // calculated values:
   //   phraseLinks: mapping from phrase.id (for all defined phrases) to an array
-  //                of PhraseLink objects, which each describe 1the associated PoeticStructure
+  //                of PhraseLink objects, which each describe the associated PoeticStructure
   //                and the role the mapped phrase plays in that structure
   //   
   //   linePhrases: mapping from lineNumber (for all lines with defined phrases)
@@ -140,10 +140,6 @@ export const ProjectDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [poeticStructures]);
 
-  const setNewTranscript = useCallback((lines: TranscriptLine[]) => {
-    setTranscriptLines(lines);
-  }, [setTranscriptLines]);
-
   const addPoeticStructure = useCallback((newStructure: PoeticStructure) => {
     setPoeticStructures(structures => ({
       ...structures,
@@ -188,17 +184,19 @@ export const ProjectDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
     
     setProjectName(deserializedProject.projectName);
-    setNewTranscript(deserializedProject.transcriptLines);
+    setTranscripts(deserializedProject.transcripts);
     setTopsOptions(deserializedProject.topsOptions);
 
     deserializedProject.poeticStructures.forEach(nonClassStructure => {
       const repetition = new Phrase(
+        nonClassStructure.repetition.transcriptId,
         nonClassStructure.repetition.lineNumber,
         nonClassStructure.repetition.start,
         nonClassStructure.repetition.end
       );
       const sources = nonClassStructure.sources.map(source => {
         return new Phrase(
+          source.transcriptId,
           source.lineNumber,
           source.start,
           source.end
@@ -212,26 +210,30 @@ export const ProjectDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
       
       addPoeticStructure(structure);
     });
-  }, [setProjectName, setNewTranscript, setTopsOptions, addPoeticStructure]);
+  }, [setProjectName, setTranscripts, setTopsOptions, addPoeticStructure]);
+
+  const addTranscript = useCallback((transcript: Transcript) => {
+    setTranscripts(t => t.concat(transcript));
+  }, [setTranscripts]);
 
   const unloadProjectData = useCallback(() => {
     setPoeticStructures({});
-    setTranscriptLines([]);
+    setTranscripts([]);
     setTopsOptions([]);
     setProjectName(null);
     setProjectFileId(null);
-  }, [setProjectFileId, setProjectName, setTranscriptLines, setPoeticStructures, setTopsOptions]);
+  }, [setProjectFileId, setProjectName, setTranscripts, setPoeticStructures, setTopsOptions]);
   
   const value = useMemo(() => ({
     projectFileId, setProjectFileId, projectName, setProjectName,
-    transcriptLines, setNewTranscript,
+    transcripts, addTranscript,
     poeticStructures, addPoeticStructure, replacePoeticStructure, removePoeticStructure,
     phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
     linePhrases, topsOptions, setTopsOptions, topsMap,
     loadDeserializedProjectData, unloadProjectData
   }), [
     projectFileId, setProjectFileId, projectName, setProjectName,
-    transcriptLines, setNewTranscript,
+    transcripts, addTranscript,
     poeticStructures, addPoeticStructure, replacePoeticStructure, removePoeticStructure,
     phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
     linePhrases, topsOptions, setTopsOptions, topsMap,

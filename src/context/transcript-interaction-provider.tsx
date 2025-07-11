@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useContextMenu } from 'react-contexify';
 
 import { TranscriptInteractionContext } from './transcript-interaction-context';
-import { MenuAction, Phrase, PhraseAction, PhraseRole, PhraseViewState } from 'data';
+import { MenuAction, Phrase, PhraseAction, PhraseRole, PhraseViewState, Transcript } from 'data';
 import { useProjectData } from './project-data-context';
 import { EditState, useStructureEdit } from './structure-edit-context';
 import { TranscriptMenuId } from 'pages/project/transcript-view/menus/transcript-menus';
@@ -13,9 +13,20 @@ interface TranscriptHoverState {
 }
 
 export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { phraseLinks, getAllLinkedPhraseIds, getAllStructurePhraseIds, removePoeticStructure } = useProjectData();
+  const { phraseLinks, transcripts, getAllLinkedPhraseIds, getAllStructurePhraseIds, removePoeticStructure } = useProjectData();
   const { editState, editInfo, setPendingPhrase, beginStructureEdit } = useStructureEdit();
   const { show: showContextMenu } = useContextMenu();
+
+  const [selectedTranscriptId, setSelectedTranscriptId] = useState<string | null>(null);
+  const selectedTranscript: Transcript | null = useMemo(() => {
+    if (!transcripts) {
+      return null;
+    } else if (!selectedTranscriptId) {
+      return transcripts[0];
+    } else {
+      return transcripts.find(t => t.id === selectedTranscriptId) || null;
+    }
+  }, [selectedTranscriptId, transcripts]);
 
   // phrase ids associated with right-clicked span (all phrases associated via current poetic structures)
   const [contextPhraseIds, setContextPhraseIds] = useState<string[]>([]);
@@ -169,9 +180,11 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
   }, [allTranscriptMenusClosed, setHoverState, setContextPhraseIds, lme]);
 
   const value = useMemo(() => ({
+    selectedTranscript, setSelectedTranscriptId,
     phraseViewStates, handlePhraseAction, handleStructureSelectMenuAction, updateMenuVisibility,
     contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending
   }), [
+    selectedTranscript, setSelectedTranscriptId,
     phraseViewStates, handlePhraseAction, handleStructureSelectMenuAction, updateMenuVisibility,
     contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending
   ]);

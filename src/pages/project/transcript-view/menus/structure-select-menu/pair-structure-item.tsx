@@ -13,8 +13,8 @@ interface PairStructureItemProps {
 }
 
 export const PairStructureItem: React.FC<PairStructureItemProps> = ({ link }) => {
-  const { transcriptLines, topsMap } = useProjectData();
-  const { handleStructureSelectMenuAction } = useTranscriptInteraction();
+  const { topsMap } = useProjectData();
+  const { selectedTranscript, handleStructureSelectMenuAction } = useTranscriptInteraction();
 
   return (
     <Submenu
@@ -35,7 +35,7 @@ export const PairStructureItem: React.FC<PairStructureItemProps> = ({ link }) =>
               <Badge mode="line-number">{ link.structure.sources[0].lineNumber }</Badge>
 
               <SimpleSpanBubble mode="menu" spanType={SpanType.Source}>
-                { getPhraseText(link.structure.sources[0], transcriptLines) }
+                { getPhraseText(link.structure.sources[0], selectedTranscript?.lines) }
               </SimpleSpanBubble>
             </div>
           }
@@ -48,7 +48,7 @@ export const PairStructureItem: React.FC<PairStructureItemProps> = ({ link }) =>
             <Badge mode="line-number">{ link.structure.repetition.lineNumber }</Badge>
             
             <SimpleSpanBubble mode="menu" spanType={SpanType.Repetition}>
-              { getPhraseText(link.structure.repetition, transcriptLines) }
+              { getPhraseText(link.structure.repetition, selectedTranscript?.lines) }
             </SimpleSpanBubble>
           </div>
           

@@ -3,17 +3,17 @@ import classNames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 
-import { DropdownOption } from 'data';
+import { DropdownOption, StylableProps } from 'data';
 import { useViewState } from 'context/view-state-context';
 import { Badge } from './badge';
 
-interface DropdownProps {
+interface DropdownProps extends StylableProps {
   options: DropdownOption[];
   selectedId: string;
   onChange: (optionId: string) => void;
 }
 
-export const Dropdown: React.FC<DropdownProps> = ({ options, selectedId, onChange}) => {
+export const Dropdown: React.FC<DropdownProps> = ({ options, selectedId, onChange, className, style}) => {
   const { registerOutsideClick, unregisterOutsideClick } = useViewState();
   const containerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -31,7 +31,8 @@ export const Dropdown: React.FC<DropdownProps> = ({ options, selectedId, onChang
   return (
     <div
       ref={containerRef}
-      className="dropdown relative p-1 rounded-sm border-1 border-transparent hover:border-gray-600"
+      className={classNames('dropdown relative p-1 rounded-sm border-1 border-transparent hover:border-gray-600', className)}
+      style={style}
     > 
 
       <button
@@ -39,7 +40,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ options, selectedId, onChang
         className="dropdown-button flex items-center cursor-pointer"
         onClick={() => setIsOpen(o => !o)}
       >
-        <Badge size="large">{ selectedItem.textLabel }</Badge>
+        <Badge size="large">{ selectedItem?.textLabel }</Badge>
         <FontAwesomeIcon icon={faCaretDown} size="sm" className={classNames('caret ml-2', { open: isOpen })} />
       </button>
 

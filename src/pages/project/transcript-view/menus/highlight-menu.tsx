@@ -7,16 +7,14 @@ import { getPhraseText, PhraseRole, PoeticStructureRelationshipType, SpanType } 
 import { SimpleSpanBubble } from 'components/simple-span-bubble';
 import { clearDocumentTextSelection } from '../../../../shared/util';
 import { EditState, useStructureEdit } from 'context/structure-edit-context';
-import { useProjectData } from 'context/project-data-context';
 import { useTranscriptInteraction } from 'context/transcript-interaction-context';
 import { TranscriptMenuId } from './transcript-menus';
 
 export const HighlightMenu: React.FC = () => {
-  const { transcriptLines } = useProjectData();
-  const { highlightedPhrase, makeHighlightedPhrasePending, updateMenuVisibility } = useTranscriptInteraction();
+  const { selectedTranscript, highlightedPhrase, makeHighlightedPhrasePending, updateMenuVisibility } = useTranscriptInteraction();
   const { editState, editInfo } = useStructureEdit();
 
-  const highlightedText = useMemo(() => getPhraseText(highlightedPhrase, transcriptLines), [highlightedPhrase, transcriptLines]);
+  const highlightedText = useMemo(() => getPhraseText(highlightedPhrase, selectedTranscript?.lines), [highlightedPhrase, selectedTranscript]);
   const showEditHeader = editState === EditState.EditingExisting;
   const isMultiSource = editInfo.topsToShow?.relationshipType === PoeticStructureRelationshipType.MultipleSource;
   const showReplace = !isMultiSource && editInfo.sourcesToShow;

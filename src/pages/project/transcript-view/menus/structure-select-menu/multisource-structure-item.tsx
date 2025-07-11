@@ -13,8 +13,8 @@ interface MultisourceStructureItemProps {
 }
 
 export const MultisourceStructureItem: React.FC<MultisourceStructureItemProps> = ({ link }) => {
-  const { transcriptLines, topsMap } = useProjectData();
-  const { handleStructureSelectMenuAction } = useTranscriptInteraction();
+  const { topsMap } = useProjectData();
+  const { selectedTranscript, handleStructureSelectMenuAction } = useTranscriptInteraction();
 
   return (
     <Submenu
@@ -36,7 +36,7 @@ export const MultisourceStructureItem: React.FC<MultisourceStructureItemProps> =
                 <Badge className="shrink-0" mode="line-number">{ source.lineNumber }</Badge>
 
                 <SimpleSpanBubble className="text-ellipsis overflow-hidden" mode="menu" spanType={SpanType.Source}>
-                  { getPhraseText(source, transcriptLines) }
+                  { getPhraseText(source, selectedTranscript?.lines) }
                 </SimpleSpanBubble>
               </div>
             )) }
@@ -50,7 +50,7 @@ export const MultisourceStructureItem: React.FC<MultisourceStructureItemProps> =
             <Badge mode="line-number" className="shrink-0">{ link.structure.repetition.lineNumber }</Badge>
             
             <SimpleSpanBubble mode="menu" spanType={SpanType.Repetition}>
-              { getPhraseText(link.structure.repetition, transcriptLines) }
+              { getPhraseText(link.structure.repetition, selectedTranscript?.lines) }
             </SimpleSpanBubble>
           </div>
           

@@ -4,9 +4,12 @@ import classNames from 'classnames';
 import { HEADER_ROW_ID, PoeticStructureRelationshipType, StylableProps, getPhraseText, sortPoeticStructures } from 'data';
 import { getGridColumnAttributes  } from '../../../shared/util';
 import { useProjectData } from 'context/project-data-context';
+import { useTranscriptInteraction } from 'context/transcript-interaction-context';
 
 export const StructuresView: React.FC<StylableProps> = ({ style, className }) => {
-  const { transcriptLines, poeticStructures } = useProjectData();
+  const { poeticStructures } = useProjectData();
+  const { selectedTranscript } = useTranscriptInteraction();
+
   // const { show: showContextMenu } = useContextMenu();
   // const { confirmModal } = useViewState();
 
@@ -127,11 +130,11 @@ export const StructuresView: React.FC<StylableProps> = ({ style, className }) =>
       return null;
     }
 
-    const repetitionLine = transcriptLines[structure.repetition.lineNumber];
-    const repetitionText = getPhraseText(structure.repetition, transcriptLines);
+    const repetitionLine = selectedTranscript?.lines[structure.repetition.lineNumber];
+    const repetitionText = getPhraseText(structure.repetition, selectedTranscript?.lines);
 
-    const sourceLine = transcriptLines[structure.sources[0].lineNumber];
-    const sourceText = getPhraseText(structure.sources[0], transcriptLines);
+    const sourceLine = selectedTranscript?.lines[structure.sources[0].lineNumber];
+    const sourceText = getPhraseText(structure.sources[0], selectedTranscript?.lines);
 
     return (
       <div className="flex" key={structure.id} data-phrase-rep-idx={idx}>
@@ -141,13 +144,13 @@ export const StructuresView: React.FC<StylableProps> = ({ style, className }) =>
           className="px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
           data-phrase-rep-idx={idx}
         >
-          { repetitionLine.lineNumber }
+          { repetitionLine?.lineNumber }
         </div>
         <div
           className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[100px] shrink-0`}
           data-phrase-rep-idx={idx}
         >
-          { repetitionLine.speaker }
+          { repetitionLine?.speaker }
         </div>
         <div
           className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[30%] grow-1`}
@@ -161,13 +164,13 @@ export const StructuresView: React.FC<StylableProps> = ({ style, className }) =>
           className="px-2 py-2 border-r-1 border-b-1 border-gray-400 flex justify-end basis-[60px] shrink-0 text-ellipsis overflow-hidden"
           data-phrase-rep-idx={idx}
         >
-          { sourceLine.lineNumber }
+          { sourceLine?.lineNumber }
         </div>
         <div
           className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[100px] shrink-0`}
           data-phrase-rep-idx={idx}
         >
-          { sourceLine.speaker }
+          { sourceLine?.speaker }
         </div>
         <div
           className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[30%] grow-1`}
@@ -187,7 +190,7 @@ export const StructuresView: React.FC<StylableProps> = ({ style, className }) =>
           className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[75px] shrink-0`}
           data-phrase-rep-idx={idx}
         >
-          { repetitionLine.lineNumber === sourceLine.lineNumber ? 'Internal' : 'Across' }
+          { repetitionLine?.lineNumber === sourceLine?.lineNumber ? 'Internal' : 'Across' }
         </div>
         <div
           className={`px-2 py-2 border-r-1 border-b-1 border-gray-400 basis-[10%] grow-1`}
@@ -198,7 +201,7 @@ export const StructuresView: React.FC<StylableProps> = ({ style, className }) =>
 
       </div>
     );
-  }), [transcriptLines, sortedPoeticStructures]);
+  }), [selectedTranscript, sortedPoeticStructures]);
 
   return sortedPoeticStructures?.length ? (
     <div

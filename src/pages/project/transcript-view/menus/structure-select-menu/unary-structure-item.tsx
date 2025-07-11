@@ -12,8 +12,8 @@ interface UnaryStructureItemProps {
 }
 
 export const UnaryStructureItem: React.FC<UnaryStructureItemProps> = ({ link }) => {
-  const { transcriptLines, topsMap } = useProjectData();
-  const { handleStructureSelectMenuAction } = useTranscriptInteraction();
+  const { topsMap } = useProjectData();
+  const { selectedTranscript, handleStructureSelectMenuAction } = useTranscriptInteraction();
 
   return (
     <Submenu
@@ -32,7 +32,7 @@ export const UnaryStructureItem: React.FC<UnaryStructureItemProps> = ({ link }) 
             <Badge className="shrink-0" mode="line-number">{ link.structure.repetition.lineNumber }</Badge>
             
             <SimpleSpanBubble mode="menu" spanType={SpanType.Repetition}>
-              { getPhraseText(link.structure.repetition, transcriptLines) }
+              { getPhraseText(link.structure.repetition, selectedTranscript?.lines) }
             </SimpleSpanBubble>
           </div>
         </div>
