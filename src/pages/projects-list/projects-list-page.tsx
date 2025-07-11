@@ -78,7 +78,7 @@ export const ProjectsListPage: React.FC = () => {
         <button
           className={classNames('block bg-green-400 hover:bg-green-500 text-white cursor-pointer px-4 py-2 mb-4 rounded-xl font-medium')}
           type="button"
-          onClick={() => busyModal(
+          onClick={() => busyModal((
             <ProjectNameModalContent
               mode='new'
               onComplete={(file) => {
@@ -87,7 +87,7 @@ export const ProjectsListPage: React.FC = () => {
               }}
               onCancel={hideModals}
             />
-          )}
+          ), true)}
         >
           New Project...
         </button>
@@ -185,7 +185,7 @@ export const ProjectsListPage: React.FC = () => {
               className={classNames('block bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-300 disabled:cursor-default text-white cursor-pointer px-4 py-2 rounded-xl font-medium')}
               type="button"
               disabled={!selectedProjectFile}
-              onClick={() => busyModal(
+              onClick={() => busyModal((
                 <ProjectNameModalContent
                   mode='rename'
                   currentName={selectedProjectFile?.projectName}
@@ -204,7 +204,7 @@ export const ProjectsListPage: React.FC = () => {
                   }}
                   onCancel={hideModals}
                 />
-              )}
+              ), true)}
             >
               Rename Project
             </button>

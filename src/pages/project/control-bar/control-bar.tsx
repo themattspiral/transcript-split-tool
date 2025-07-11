@@ -14,7 +14,7 @@ import { ProjectNameModalContent } from 'components/project-name-modal-content';
 const AUTHOR_RE = new RegExp(/^[a-zA-Z]{1,20}:\s/);
 
 const ControlBar: React.FC = () => {
-  const { projectName, transcriptLines, setNewTranscript, poeticStructures, setProjectName } = useProjectData();
+  const { projectName, setNewTranscript, poeticStructures, setProjectName } = useProjectData();
   const { persistenceStatus, lastPersistenceEvent } = usePersistence();
   const { busyModal, hideModals } = useViewState();
 
@@ -106,7 +106,7 @@ const ControlBar: React.FC = () => {
           <button
             className="shrink-0 ml-1 flex items-center justify-center hover:bg-gray-300 text-gray-500 cursor-pointer p-1 w-[30px] h-[30px] rounded-full overflow-hidden"
             type="button"
-            onClick={() => busyModal(
+            onClick={() => busyModal((
               <ProjectNameModalContent
                 mode='rename-loaded'
                 onComplete={projectFile => {
@@ -115,7 +115,7 @@ const ControlBar: React.FC = () => {
                 }}
                 onCancel={hideModals}
               />
-            )}
+            ), true)}
           >
             <FontAwesomeIcon icon={faPenToSquare} className="w-4 h-4" />
           </button> 

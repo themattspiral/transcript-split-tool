@@ -13,6 +13,7 @@ interface OutsideClickContext {
 
 export const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [displayedModalId, setDisplayedModalId] = useState<string | null>(null);
+  const [isModalCancellable, setIsModalCancellable] = useState<boolean>(false);
   const isModalShowing = !!displayedModalId;
   const [modalContent, setModalContent] = useState<ReactNode | null>(null);
   const outsideClickContextsRef = useRef<Set<OutsideClickContext>>(new Set());
@@ -23,9 +24,10 @@ export const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const hideModals = useCallback(() => {
     setDisplayedModalId(null);
     setModalContent(null);
+    setIsModalCancellable(false);
     modalResolve.current = null;
     modalReject.current = null;
-  }, [setDisplayedModalId, setModalContent, modalResolve, modalReject]);
+  }, [setDisplayedModalId, setModalContent, setIsModalCancellable, modalResolve, modalReject]);
 
   // called by modal buttons
   const handleModalConfirm = useCallback(() => {
@@ -45,24 +47,27 @@ export const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const confirmModal = useCallback(async (content: ReactNode): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
       setModalContent(content);
+      setIsModalCancellable(true);
       setDisplayedModalId(CONFIRM_MODAL_ID);
       modalResolve.current = resolve;
       modalReject.current = reject;
     });
-  }, [setDisplayedModalId, setModalContent, modalResolve, modalReject]);
+  }, [setDisplayedModalId, setModalContent, setIsModalCancellable, modalResolve, modalReject]);
 
   const infoModal = useCallback(async (content: ReactNode): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
       setModalContent(content);
+      setIsModalCancellable(true);
       setDisplayedModalId(INFO_MODAL_ID);
       modalResolve.current = resolve;
     });
-  }, [setDisplayedModalId, setModalContent, modalResolve]);
+  }, [setDisplayedModalId, setModalContent, setIsModalCancellable, modalResolve]);
 
-  const busyModal = useCallback((content: ReactNode) => {
+  const busyModal = useCallback((content: ReactNode, cancellable: boolean = false) => {
     setModalContent(content);
+    setIsModalCancellable(cancellable);
     setDisplayedModalId(BUSY_MODAL_ID);
-  }, [setDisplayedModalId, setModalContent]);
+  }, [setDisplayedModalId, setModalContent, setIsModalCancellable]);
 
   // fetch custom CSS variables that we may want to use programatically
   const cssVariables = useMemo(() => {
@@ -101,13 +106,13 @@ export const ViewStateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [handleOutsideClick]);
 
   const value = useMemo(() => ({
-    displayedModalId, isModalShowing, modalContent,
+    displayedModalId, isModalCancellable, isModalShowing, modalContent,
     confirmModal, infoModal, busyModal,
     handleModalConfirm, handleModalCancel, hideModals,
     registerOutsideClick, unregisterOutsideClick,
     cssVariables
   }), [
-    displayedModalId, isModalShowing, modalContent,
+    displayedModalId, isModalCancellable, isModalShowing, modalContent,
     confirmModal, infoModal, busyModal,
     handleModalConfirm, handleModalCancel, hideModals,
     registerOutsideClick, unregisterOutsideClick,

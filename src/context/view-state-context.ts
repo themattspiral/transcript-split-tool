@@ -19,9 +19,10 @@ export enum CustomCSSVariables {
 interface ViewStateContextProps {
   displayedModalId: string | null;
   isModalShowing: boolean;
+  isModalCancellable: boolean;
   confirmModal: (content: ReactNode) => Promise<void>;
   infoModal: (content: ReactNode) => Promise<void>;
-  busyModal: (content: ReactNode) => void;
+  busyModal: (content: ReactNode, cancellable?: boolean) => void;
   handleModalConfirm: () => void;
   handleModalCancel: () => void;
   hideModals: () => void;
@@ -34,6 +35,7 @@ interface ViewStateContextProps {
 export const ViewStateContext = createContext<ViewStateContextProps>({
   displayedModalId: null,
   isModalShowing: false,
+  isModalCancellable: false,
   confirmModal: () => Promise.reject(0),
   infoModal: () => Promise.reject(0),
   busyModal: () => {},
