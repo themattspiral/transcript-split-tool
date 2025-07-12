@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { Phrase, PhraseLink, PhraseLinkInfo, PoeticStructure, Project, Transcript, TypeOfPoeticStructure } from 'data';
+import { PoeticStructure, Project, Transcript, TypeOfPoeticStructure } from 'data';
 
 interface ProjectDataContextProps {
   projectFileId: string | null;
@@ -13,11 +13,7 @@ interface ProjectDataContextProps {
   addPoeticStructure: (structure: PoeticStructure) => void;
   replacePoeticStructure: (oldStructureId: string, newStructure: PoeticStructure) => void;
   removePoeticStructure: (structureId: string) => void;
-  phraseLinks: { [phraseId: string]: PhraseLinkInfo };
-  getAllLinkedPhraseIds: (phraseIds: string[]) => string[];
-  getAllPhraseLinks: (phraseIds: string[]) => PhraseLink[];
   getAllStructurePhraseIds: (structureId: string) => string[];
-  linePhrases: { [lineNumber: string]: Phrase[] };
   topsOptions: TypeOfPoeticStructure[];
   setTopsOptions: (options: TypeOfPoeticStructure[]) => void;
   topsMap: { [topsId: string]: { type: TypeOfPoeticStructure, level: number } };
@@ -36,11 +32,7 @@ export const ProjectDataContext = createContext<ProjectDataContextProps>({
   addPoeticStructure: () => {},
   replacePoeticStructure: () => {},
   removePoeticStructure: () => {},
-  phraseLinks: {},
-  getAllLinkedPhraseIds: () => [],
-  getAllPhraseLinks: () => [],
   getAllStructurePhraseIds: () => [],
-  linePhrases: {},
   topsOptions: [],
   setTopsOptions: () => {},
   topsMap: {},

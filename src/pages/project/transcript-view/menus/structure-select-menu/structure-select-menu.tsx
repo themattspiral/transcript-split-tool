@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 import { PoeticStructureRelationshipType } from 'data';
-import { useProjectData } from 'context/project-data-context';
 import { useTranscriptInteraction } from 'context/transcript-interaction-context';
 import { StructureActionItems } from './structure-action-items';
 import { TranscriptMenuId } from '../transcript-menus';
@@ -27,8 +26,7 @@ const HEADER = (
 // allows users to choose which poetic structure to edit,
 // from those associated with the context-clicked span bubble
 export const StructureSelectMenu: React.FC = () => {
-  const { phraseLinks } = useProjectData();
-  const { contextPhraseIds, updateMenuVisibility } = useTranscriptInteraction();
+  const { phraseLinks, contextPhraseIds, updateMenuVisibility } = useTranscriptInteraction();
 
   const singlePhrase = contextPhraseIds.length === 1;
   const singleLink = phraseLinks[contextPhraseIds[0]]?.links?.length === 1;

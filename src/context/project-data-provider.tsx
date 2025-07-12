@@ -1,9 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import {
-  DefaultTOPSValues, OverallPhraseRole, Phrase, PhraseLink, PhraseLinkInfo, PhraseRole, 
-  PoeticStructure, PoeticStructureRelationshipType, Project, ProjectDataVersion, sortPhrases,
-  Transcript, TypeOfPoeticStructure
+  DefaultTOPSValues, Phrase, PoeticStructure, PoeticStructureRelationshipType,
+  Project, ProjectDataVersion, Transcript, TypeOfPoeticStructure
 } from 'data';
 import { ProjectDataContext } from './project-data-context';
 
@@ -30,104 +29,6 @@ export const ProjectDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [transcripts, setTranscripts] = useState<Transcript[]>([]);
   const [poeticStructures, setPoeticStructures] = useState<{ [structureId: string]: PoeticStructure }>({});
   const [topsOptions, setTopsOptions] = useState<TypeOfPoeticStructure[]>(DefaultTOPSValues);
-
-  // calculated values:
-  //   phraseLinks: mapping from phrase.id (for all defined phrases) to an array
-  //                of PhraseLink objects, which each describe the associated PoeticStructure
-  //                and the role the mapped phrase plays in that structure
-  //   
-  //   linePhrases: mapping from lineNumber (for all lines with defined phrases)
-  //                to array of phrases specific to each line
-  const { phraseLinks, linePhrases } = useMemo(() => {
-    const phraseMap = {} as { [phraseId: string]: Phrase};
-    const uniqueLinks = {} as { [phraseId: string]: { [structureId: string]: PhraseLink } };
-    const uniqueLinePhrases = {} as { [lineNumber: string]: { [phraseId: string]: Phrase } };
-
-    Object.values(poeticStructures).forEach(structure => {
-      // map the repetition
-      if (!uniqueLinks[structure.repetition.id]) {
-        uniqueLinks[structure.repetition.id] = {};
-      }
-      if (!uniqueLinePhrases[structure.repetition.lineNumber.toString()]) {
-        uniqueLinePhrases[structure.repetition.lineNumber.toString()] = {};
-      }
-      phraseMap[structure.repetition.id] = structure.repetition;
-      uniqueLinks[structure.repetition.id][structure.id] = { structure, role: PhraseRole.Repetition };
-      uniqueLinePhrases[structure.repetition.lineNumber.toString()][structure.repetition.id] = structure.repetition;
-
-      // map the source(s)
-      if (structure.relationshipType !== PoeticStructureRelationshipType.Unary) {
-        structure.sources.forEach(source => {
-          if (!uniqueLinks[source.id]) {
-            uniqueLinks[source.id] = {};
-          }
-          if (!uniqueLinePhrases[source.lineNumber.toString()]) {
-            uniqueLinePhrases[source.lineNumber.toString()] = {};
-          }
-          phraseMap[source.id] = source;
-          uniqueLinks[source.id][structure.id] = { structure, role: PhraseRole.Source };
-          uniqueLinePhrases[source.lineNumber.toString()][source.id] = source;
-        });
-      }
-    });
-
-    // simplify format
-    const links = {} as { [phraseId: string]: PhraseLinkInfo };
-    const lines = {} as { [lineNumber: string]: Phrase[] };
-
-    Object.keys(uniqueLinks).forEach(phraseId => {
-      const pLinks: PhraseLink[] = Object.values(uniqueLinks[phraseId]);
-
-      const allRepetitions: boolean = pLinks.every(pl => pl.role === PhraseRole.Repetition);
-      const allSources: boolean = pLinks.every(pl => pl.role === PhraseRole.Source);
-      const overallRole: OverallPhraseRole = allRepetitions
-        ? OverallPhraseRole.Repetition
-        : (allSources
-          ? OverallPhraseRole.Source
-          : OverallPhraseRole.Mixed
-        );
-
-      const linkedPhraseIdSet: Set<string> = new Set();
-      pLinks.forEach(link => {
-        linkedPhraseIdSet.add(link.structure.repetition.id);
-
-        if (link.structure.relationshipType !== PoeticStructureRelationshipType.Unary) {
-          link.structure.sources.forEach(phrase => {
-            linkedPhraseIdSet.add(phrase.id);
-          });
-        }
-      });
-
-      // rollup phrase info
-      links[phraseId] = {
-        phrase: phraseMap[phraseId],
-        overallRole,
-        links: pLinks,
-        linkedPhraseIds: Array.from(linkedPhraseIdSet)
-      };
-    });
-
-    Object.keys(uniqueLinePhrases).forEach(lineNumber => {
-      lines[lineNumber] = Object.values(uniqueLinePhrases[lineNumber]).sort(sortPhrases);
-    });
-
-    return {
-      phraseLinks: links,
-      linePhrases: lines
-    };
-  }, [poeticStructures]);
-
-  const getAllPhraseLinks = useCallback((phraseIds: string[]): PhraseLink[] => {
-    return Array.from(new Set(
-      phraseIds.flatMap((phraseId: string) => phraseLinks[phraseId]?.links || [])
-    ));
-  }, [phraseLinks]);
-
-  const getAllLinkedPhraseIds = useCallback((phraseIds: string[]): string[] => {
-    return Array.from(new Set(
-      phraseIds.flatMap((phraseId: string) => phraseLinks[phraseId]?.linkedPhraseIds || [])
-    ));
-  }, [phraseLinks]);
 
   const getAllStructurePhraseIds = useCallback((structureId: string): string[] => {
     const structure = poeticStructures[structureId];
@@ -228,15 +129,15 @@ export const ProjectDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     projectFileId, setProjectFileId, projectName, setProjectName,
     transcripts, addTranscript,
     poeticStructures, addPoeticStructure, replacePoeticStructure, removePoeticStructure,
-    phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
-    linePhrases, topsOptions, setTopsOptions, topsMap,
+    getAllStructurePhraseIds,
+    topsOptions, setTopsOptions, topsMap,
     loadDeserializedProjectData, unloadProjectData
   }), [
     projectFileId, setProjectFileId, projectName, setProjectName,
     transcripts, addTranscript,
     poeticStructures, addPoeticStructure, replacePoeticStructure, removePoeticStructure,
-    phraseLinks, getAllLinkedPhraseIds, getAllPhraseLinks, getAllStructurePhraseIds,
-    linePhrases, topsOptions, setTopsOptions, topsMap,
+    getAllStructurePhraseIds,
+    topsOptions, setTopsOptions, topsMap,
     loadDeserializedProjectData, unloadProjectData
   ]);
 

@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 
-import { PhraseAction, SplitTextSpanBubbleDefinition } from 'data';
+import { PhraseAction, SpanType, SplitTextSpanBubbleDefinition } from 'data';
 import { useTranscriptInteraction } from 'context/transcript-interaction-context';
 
 interface SplitTextSpanBubbleProps {
@@ -11,7 +11,7 @@ interface SplitTextSpanBubbleProps {
 export const SplitTextSpanBubble: React.FC<SplitTextSpanBubbleProps> = ({ span, children }) => {
   const { handlePhraseAction } = useTranscriptInteraction();
 
-  const classes = classNames(
+  const classes = span.spanType === SpanType.Text ? 'span-bubble text' : classNames(
     'span-bubble',
     span.spanType, // SpanType string enum values match class names in scss file
     {
@@ -26,7 +26,15 @@ export const SplitTextSpanBubble: React.FC<SplitTextSpanBubbleProps> = ({ span, 
     }
   );
 
-  return (
+  return span.spanType === SpanType.Text ? (
+    <span
+      // this attribute is used by the transcript grid event handler to determine the index of the highlighted text
+      data-span-start-idx={span.start}
+      className={classes}
+    >
+      { children }
+    </span>
+  ) : (
     <span
       // this attribute is used by the transcript grid event handler to determine the index of the highlighted text
       data-span-start-idx={span.start}

@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useContextMenu } from 'react-contexify';
 
 import { TranscriptInteractionContext } from './transcript-interaction-context';
-import { MenuAction, Phrase, PhraseAction, PhraseRole, PhraseViewState, Transcript } from 'data';
+import {
+  MenuAction, OverallPhraseRole, Phrase, PhraseAction, PhraseLink, PhraseLinkInfo,
+  PhraseRole, PhraseViewState, PoeticStructureRelationshipType, sortPhrases, Transcript
+} from 'data';
 import { useProjectData } from './project-data-context';
 import { EditState, useStructureEdit } from './structure-edit-context';
 import { TranscriptMenuId } from 'pages/project/transcript-view/menus/transcript-menus';
@@ -13,7 +16,7 @@ interface TranscriptHoverState {
 }
 
 export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { phraseLinks, transcripts, getAllLinkedPhraseIds, getAllStructurePhraseIds, removePoeticStructure } = useProjectData();
+  const { poeticStructures, transcripts, getAllStructurePhraseIds, removePoeticStructure } = useProjectData();
   const { editState, editInfo, setPendingPhrase, beginStructureEdit } = useStructureEdit();
   const { show: showContextMenu } = useContextMenu();
 
@@ -52,6 +55,102 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
 
   // TODO - remove when done with menu dev
   const [lme, setLme] = useState<React.MouseEvent | null>(null);
+
+  // calculated values:
+  //   phraseLinks: mapping from phrase.id (for all defined phrases) to an array
+  //                of PhraseLink objects, which each describe the associated PoeticStructure
+  //                and the role the mapped phrase plays in that structure
+  //   
+  //   linePhrases: mapping from lineNumber (for all lines with defined phrases)
+  //                to array of phrases specific to each line
+  const { phraseLinks, linePhrases } = useMemo(() => {
+    const phraseMap = {} as { [phraseId: string]: Phrase};
+    const uniqueLinks = {} as { [phraseId: string]: { [structureId: string]: PhraseLink } };
+    const uniqueLinePhrases = {} as { [lineNumber: string]: { [phraseId: string]: Phrase } };
+
+    Object.values(poeticStructures).forEach(structure => {
+      // map the repetition
+      if (structure.repetition.transcriptId === selectedTranscript?.id) {
+        if (!uniqueLinks[structure.repetition.id]) {
+          uniqueLinks[structure.repetition.id] = {};
+        }
+        if (!uniqueLinePhrases[structure.repetition.lineNumber.toString()]) {
+          uniqueLinePhrases[structure.repetition.lineNumber.toString()] = {};
+        }
+        phraseMap[structure.repetition.id] = structure.repetition;
+        uniqueLinks[structure.repetition.id][structure.id] = { structure, role: PhraseRole.Repetition };
+        uniqueLinePhrases[structure.repetition.lineNumber.toString()][structure.repetition.id] = structure.repetition;
+      }
+
+      // map the source(s)
+      if (structure.relationshipType !== PoeticStructureRelationshipType.Unary) {
+        structure.sources.forEach(source => {
+          if (source.transcriptId === selectedTranscript?.id) {
+            if (!uniqueLinks[source.id]) {
+              uniqueLinks[source.id] = {};
+            }
+            if (!uniqueLinePhrases[source.lineNumber.toString()]) {
+              uniqueLinePhrases[source.lineNumber.toString()] = {};
+            }
+            phraseMap[source.id] = source;
+            uniqueLinks[source.id][structure.id] = { structure, role: PhraseRole.Source };
+            uniqueLinePhrases[source.lineNumber.toString()][source.id] = source;
+          }
+        });
+      }
+    });
+
+    // simplify format
+    const links = {} as { [phraseId: string]: PhraseLinkInfo };
+    const lines = {} as { [lineNumber: string]: Phrase[] };
+
+    Object.keys(uniqueLinks).forEach(phraseId => {
+      const pLinks: PhraseLink[] = Object.values(uniqueLinks[phraseId]);
+
+      const allRepetitions: boolean = pLinks.every(pl => pl.role === PhraseRole.Repetition);
+      const allSources: boolean = pLinks.every(pl => pl.role === PhraseRole.Source);
+      const overallRole: OverallPhraseRole = allRepetitions
+        ? OverallPhraseRole.Repetition
+        : (allSources
+          ? OverallPhraseRole.Source
+          : OverallPhraseRole.Mixed
+        );
+
+      const linkedPhraseIdSet: Set<string> = new Set();
+      pLinks.forEach(link => {
+        linkedPhraseIdSet.add(link.structure.repetition.id);
+
+        if (link.structure.relationshipType !== PoeticStructureRelationshipType.Unary) {
+          link.structure.sources.forEach(phrase => {
+            linkedPhraseIdSet.add(phrase.id);
+          });
+        }
+      });
+
+      // rollup phrase info
+      links[phraseId] = {
+        phrase: phraseMap[phraseId],
+        overallRole,
+        links: pLinks,
+        linkedPhraseIds: Array.from(linkedPhraseIdSet)
+      };
+    });
+
+    Object.keys(uniqueLinePhrases).forEach(lineNumber => {
+      lines[lineNumber] = Object.values(uniqueLinePhrases[lineNumber]).sort(sortPhrases);
+    });
+
+    return {
+      phraseLinks: links,
+      linePhrases: lines
+    };
+  }, [poeticStructures, selectedTranscript]);
+
+  const getAllLinkedPhraseIds = useCallback((phraseIds: string[]): string[] => {
+    return Array.from(new Set(
+      phraseIds.flatMap((phraseId: string) => phraseLinks[phraseId]?.linkedPhraseIds || [])
+    ));
+  }, [phraseLinks]);
 
   // view states represent a modification to the way a standard phrase's span buuble is styled,
   // because something is hovered, which changes emphasis
@@ -180,11 +279,11 @@ export const TranscriptInteractionProvider: React.FC<{ children: React.ReactNode
   }, [allTranscriptMenusClosed, setHoverState, setContextPhraseIds, lme]);
 
   const value = useMemo(() => ({
-    selectedTranscript, setSelectedTranscriptId,
+    selectedTranscript, setSelectedTranscriptId, phraseLinks, linePhrases, getAllLinkedPhraseIds,
     phraseViewStates, handlePhraseAction, handleStructureSelectMenuAction, updateMenuVisibility,
     contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending
   }), [
-    selectedTranscript, setSelectedTranscriptId,
+    selectedTranscript, setSelectedTranscriptId, phraseLinks, linePhrases, getAllLinkedPhraseIds,
     phraseViewStates, handlePhraseAction, handleStructureSelectMenuAction, updateMenuVisibility,
     contextPhraseIds, highlightedPhrase, setHighlightedPhrase, makeHighlightedPhrasePending
   ]);

@@ -7,7 +7,6 @@ import {
 } from 'data';
 import { useTranscriptInteraction } from 'context/transcript-interaction-context';
 import { EditState, useStructureEdit } from 'context/structure-edit-context';
-import { useProjectData } from 'context/project-data-context';
 import { SplitTextSpanBubble } from './split-text-span-bubble';
 
 interface SplitTextCellProps extends StylableProps {
@@ -18,9 +17,8 @@ interface SplitTextCellProps extends StylableProps {
 export const SplitTextCell: React.FC<SplitTextCellProps> = props => {
   const { line, className, style, attributes } = props;
 
-  const { phraseLinks, linePhrases } = useProjectData();
   const { editState, editInfo, pendingLinePhrases } = useStructureEdit();
-  const { phraseViewStates } = useTranscriptInteraction();
+  const { phraseLinks, linePhrases, phraseViewStates } = useTranscriptInteraction();
 
   // flatten plain text and phrases into discreet SpanDefinitions, handling potential range overlaps 
   const spanDefinitions: SplitTextSpanBubbleDefinition[] = useMemo(() => {
@@ -130,15 +128,13 @@ export const SplitTextCell: React.FC<SplitTextCellProps> = props => {
     return defs;
   }, [line, phraseViewStates, editState, editInfo]);
 
-  const spanBubbles = useMemo(() => spanDefinitions.map(span => (
-    <SplitTextSpanBubble key={`${span.start}:${span.end}`} span={span}>
-      { line.text.substring(span.start, span.end) }
-    </SplitTextSpanBubble>
-  )), [spanDefinitions]);
-
   return (
-    <div className={classNames('px-2 py-2 relative whitespace-pre-wrap', className)} style={style} {...attributes}>
-      { spanBubbles }
+    <div className={classNames('px-2 py-2 relative', className)} style={style} {...attributes}>
+      { spanDefinitions.map(span => (
+        <SplitTextSpanBubble key={`${span.start}:${span.end}`} span={span}>
+          { line.text.substring(span.start, span.end) }
+        </SplitTextSpanBubble>
+      ))}
     </div>
   );
 };
